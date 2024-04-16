@@ -1,0 +1,10 @@
+# CMake
+build/
+docs/build/
+
+# IDEs
+.idea
+.vscode
+
+# Direnv
+.envrc
