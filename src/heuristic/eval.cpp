@@ -1,24 +1,11 @@
-/* Routine for evaluating population members  */
+/* Routine for extracting circuit features. */
 
 #include <iostream>
 #include <map>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-
-#include "eval.hpp"
-//#include "pass_runner/PassRunner.hpp"
-
-#include <llvm/ExecutionEngine/Orc/CompileOnDemandLayer.h>
-#include <llvm/ExecutionEngine/Orc/Core.h>
-#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
-#include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
-#include <llvm/IR/Module.h>
-#include "llvm/IR/InstrTypes.h"
 #include <unordered_set>
 
-using llvm::orc::ThreadSafeContext;
+#include "eval.hpp"
+
 using llvm::orc::ThreadSafeModule;
 
 using namespace llvm;
@@ -30,7 +17,7 @@ using namespace llvm;
  * @return A vector of original supermarq and 3 additional features
  */
 std::vector<double>
-evaluate_supermarq_plus(ThreadSafeModule &TSM,
+evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                         std::map<std::string, int> &gate_counts)
 {
     std::string QIS_START = "__quantum__qis_";
@@ -223,6 +210,15 @@ evaluate_supermarq_plus(ThreadSafeModule &TSM,
         two_qubit_gates_per_layer};
 }
 
+/*
+ * @brief Calculate the duration of a quantum circuit based on the gate times
+ * along its critical path
+ * @param TSM The quantum circuit to evaluate
+ * @param single_qubit_gate_time The time taken for a single qubit gate
+ * @param multi_qubit_gate_time The time taken for a multi qubit gate
+ * @param measurement_time The time taken for a measurement
+ * @return The duration of the circuit
+ */
 double calculate_circuit_duration(ThreadSafeModule &TSM,
                                   double single_qubit_gate_time,
                                   double multi_qubit_gate_time,
@@ -263,7 +259,7 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
                                 if (is_quantum)
                                 {
                                     double gate_time = 0.0;
-                                    if (op_name == "__quantum__qis__measure")
+                                    if (op_name == "__quantum__qis__mz__body")
                                     {
                                         gate_time = measurement_time;
                                     }
