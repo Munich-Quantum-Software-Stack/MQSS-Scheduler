@@ -1,19 +1,23 @@
-
-//#include <onnxruntime/core/session/onnxruntime_cxx_api.h>
-#include <onnxruntime/onnxruntime_cxx_api.h>
 #include "predictor.hpp"
 #include "eval.hpp"
-#include "qdmi.h"
+#include <fstream>
 #include <iostream>
 #include <map>
+#include <string>
+#include <unistd.h>
+#include <vector>
 
 /*
- * @brief Predict some figure of merit based on a pretrained ONNX model
+ * @brief Predict some figure of merit based on a pretrained ONNX model for each
+ * model
  * @param TSM The quantum circuit to evaluate
- * @return The predicted figure of merit
+ * @param models The trained models to predict some figure of merit
+ * @return The predicted figure of merit for each model
  */
-float predict(ThreadSafeModule &TSM, QDMI_Device device)
+std::map<std::string, float> predict(const ThreadSafeModule &TSM,
+                                     const std::vector<std::string> models)
 {
+    // Prepare circuit feature vector for model input
     std::map<std::string, int> gate_counts = {{"__quantum__qis__U3__body", 0},
                                               {"u2", 0},
                                               {"u1", 0},
@@ -58,29 +62,6 @@ float predict(ThreadSafeModule &TSM, QDMI_Device device)
                                               {"c4x", 0},
                                               {"__quantum__qis__mz__body", 0}};
 
-    // Initialize session options
-    Ort::SessionOptions session_options;
-    session_options.SetIntraOpNumThreads(1);
-
-    // Initialize the environment
-    Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "ModelPrediction");
-
-    // Declare the session pointer
-    Ort::Session *session = nullptr;
-
-    // Initialize the session
-    try
-    {
-        session = new Ort::Session(
-            env, // TODO: remove hardcoded path to the scheduler shared library
-            MODEL,
-            session_options);
-    }
-    catch (const Ort::Exception &exception)
-    {
-        throw;
-    }
-
     // Create a memory information object
     Ort::MemoryInfo memory_info =
         Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
@@ -90,7 +71,7 @@ float predict(ThreadSafeModule &TSM, QDMI_Device device)
         evaluate_supermarq_plus(TSM, gate_counts);
 
     // Prepare input tensor
-    std::array<float, 53> input_data;
+    std::array<float, 52> input_data;
     int i = 0;
     // Fill input_data with gate_counts values
     for (const auto &pair : gate_counts)
@@ -102,7 +83,7 @@ float predict(ThreadSafeModule &TSM, QDMI_Device device)
     {
         input_data[i++] = (float)(value);
     }
-    std::vector<int64_t> input_shape = {1, 53};
+    std::vector<int64_t> input_shape = {1, 52};
     Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
         memory_info, input_data.data(), input_data.size(), input_shape.data(),
         input_shape.size());
@@ -112,26 +93,77 @@ float predict(ThreadSafeModule &TSM, QDMI_Device device)
     std::vector<Ort::Value> input_tensors;
     input_tensors.push_back(std::move(input_tensor));
 
-    // Prepare output tensor
-    std::vector<const char *> output_node_names = {"variable"};
-    std::array<float, 1> output_data;
-    std::vector<int64_t> output_shape = {1, 1};
-    Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, output_data.data(), output_data.size(),
-        output_shape.data(), output_shape.size());
+    // Initialize session options
+    Ort::SessionOptions session_options;
+    session_options.SetIntraOpNumThreads(1);
 
-    // Add output_tensor to output_tensors
-    std::vector<Ort::Value> output_tensors;
-    output_tensors.push_back(std::move(output_tensor));
+    // Initialize the environment
+    Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "Predictor");
 
-    // Run the model
-    session->Run(Ort::RunOptions{nullptr}, input_node_names.data(),
-                 input_tensors.data(), input_tensors.size(),
-                 output_node_names.data(), output_tensors.data(),
-                 output_tensors.size());
-    float *floatarr = output_tensors[0].GetTensorMutableData<float>();
+    // Create a map to store the results
+    std::map<std::string, float> results;
 
-    // Delete the session after use
-    delete session;
-    return floatarr[0];
+    // Loop over all models
+    for (const std::string &model : models)
+    {
+        // Declare the session pointer
+        Ort::Session *session = nullptr;
+
+        std::string model_path; // Import the model for desired figure of merit
+        model_path =
+            "include/scheduler_runner/predictor_models/" + model + ".onnx";
+
+        std::ifstream file(model_path, std::ios::binary | std::ios::ate);
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        try
+        {
+            std::vector<char> buffer(size);
+            if (file.read(buffer.data(), size))
+            {
+                // Initialize the session
+                session = new Ort::Session(env, buffer.data(), buffer.size(),
+                                           session_options);
+            }
+            else
+            {
+                throw std::runtime_error("Failed to read model file: " +
+                                         model_path);
+            }
+        }
+        catch (const std::exception &ex)
+        {
+            std::cerr << "Error during model import: " << ex.what()
+                      << std::endl;
+        }
+
+        // Prepare output tensor
+        std::vector<const char *> output_node_names = {"variable"};
+        std::array<float, 1> output_data;
+        std::vector<int64_t> output_shape = {1, 1};
+        Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
+            memory_info, output_data.data(), output_data.size(),
+            output_shape.data(), output_shape.size());
+
+        // Add output_tensor to output_tensors
+        std::vector<Ort::Value> output_tensors;
+        output_tensors.push_back(std::move(output_tensor));
+
+        // Run the model
+        session->Run(Ort::RunOptions{nullptr}, input_node_names.data(),
+                     input_tensors.data(), input_tensors.size(),
+                     output_node_names.data(), output_tensors.data(),
+                     output_tensors.size());
+        float *floatarr = output_tensors[0].GetTensorMutableData<float>();
+
+        // Add the model string and model score to the map
+        results[model] = floatarr[0];
+
+        // Delete the session after use
+        delete session;
+    }
+
+    // Return the map of model strings and model scores
+    return results;
 }
