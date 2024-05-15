@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "make",
+            "command": "cmake .. && make",
             "options": {
                 "cwd": "${workspaceFolder}/build"
             },
