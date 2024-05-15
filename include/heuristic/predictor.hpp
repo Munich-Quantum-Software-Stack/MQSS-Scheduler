@@ -5,7 +5,7 @@
 #include <array>
 #include <cstdio>
 #include <map>
-#include <onnxruntime/onnxruntime_cxx_api.h>
+#include <onnxruntime/core/session/onnxruntime_cxx_api.h>
 #include <vector>
 
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
@@ -14,6 +14,7 @@
 using llvm::orc::ThreadSafeModule;
 
 #define MODEL "/home/ubuntu/scheduler/inputs/model.onnx"
-float predict(ThreadSafeModule &TSM, QDMI_Device device);
+std::map<std::string, float> predict(const ThreadSafeModule &TSM,
+                                     const std::vector<std::string> models);
 
 #endif // PREDICTOR_H
