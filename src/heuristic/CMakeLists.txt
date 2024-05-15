@@ -20,12 +20,12 @@ target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/qdmi-src/i
 target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/qinfo-src/include) # do better
 target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/fomac-src/include) # do better
 target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/submitter-src/include) # do better
+target_include_directories(HEURISTIC PUBLIC /home/ubuntu/onnxruntime/include) # do better
 
-find_path(ONNX_RUNTIME_SESSION_INCLUDE_DIRS onnxruntime_cxx_api.h HINTS /usr/local/include/onnxruntime/core/session/)
+find_library(ONNXRUNTIME_LIBRARY NAMES onnxruntime PATHS /home/ubuntu/onnxruntime/build/Linux/Release)
 
-find_library(ONNX_RUNTIME_LIB onnxruntime HINTS /usr/local/lib)
 
-target_link_libraries(HEURISTIC PRIVATE qdmi qinfo fomac LLVM  SUBMITTER ${ONNX_RUNTIME_LIB} )
+target_link_libraries(HEURISTIC PRIVATE qdmi qinfo fomac LLVM  SUBMITTER ${ONNXRUNTIME_LIBRARY} )
 #submitter 
 
 target_sources(HEURISTIC PRIVATE scheduler_heuristic.cpp eval.cpp predictor.cpp)
