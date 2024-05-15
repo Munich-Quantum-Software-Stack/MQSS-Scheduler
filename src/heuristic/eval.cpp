@@ -3,7 +3,7 @@
 #include <iostream>
 #include <map>
 #include <unordered_set>
-
+#include "llvm/IR/InstrTypes.h"
 #include "eval.hpp"
 
 using llvm::orc::ThreadSafeModule;
