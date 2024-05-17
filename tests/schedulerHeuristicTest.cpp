@@ -14,7 +14,7 @@
 #include "llvm/IRReader/IRReader.h"
 
 #include "Submitter.hpp"
-#include "qdmi.h"
+// #include "qdmi.h"
 
 using namespace llvm;
 using namespace llvm::orc;
@@ -27,7 +27,9 @@ int main(){
 
     err = QDMI_session_init(info, &session);
 
-    std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
+    // TODO: enable once FOMAC works
+    // std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
+    std::vector<My_QDMI_Device> devices = {My_QDMI_Device{"q5"}, My_QDMI_Device{"q20"}};
     
     SMDiagnostic error;
     ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
@@ -49,8 +51,8 @@ int main(){
     std::unique_ptr<Module> module2 = parseIRFile("/home/ubuntu/scheduler/inputs/example.ll", error, *(TSCtx2.getContext()));
     ThreadSafeModule TSM2 = ThreadSafeModule(std::move(module2),std::move(TSCtx2));
     mQuantumTask2.mThreadSafeModule =  std::move(TSM2);
-    mQuantumTask2.mPreferredQpus.push_back(devices.at(0));
     mQuantumTask2.mPreferredQpus.push_back(devices.at(1));
+    mQuantumTask2.mPreferredQpus.push_back(devices.at(0));
     mQuantumTask2.mDuration = 5;
     mQuantumTask2.mPriority = 2.;
     mQuantumTask2.mTaskId = 1;
@@ -58,7 +60,7 @@ int main(){
 
 
     Submiter2Device device2Submitter;
-    for (const QDMI_Device& device : devices) {
+    for (const My_QDMI_Device& device : devices) {
         auto submitter = std::make_shared<Submitter>(device); // Create Submitter using smart pointer
         device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
     }
@@ -66,8 +68,8 @@ int main(){
     scheduler(device2Submitter, tasks);
 
 
-    delete device2Submitter.at(0).get();
-    delete device2Submitter.at(0).get();
+    //delete device2Submitter.at(0).get();
+    //delete device2Submitter.at(0).get();
     
      
 }
