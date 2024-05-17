@@ -40,7 +40,7 @@ std::unordered_map<My_QDMI_Device, float> calculate_scores(QuantumTask *task)
         // TODO: once My_QDMI_Device can be ID'd by a string, use it to select the model
         std::vector<std::string> models;
         for (const auto& qpu : task->mPreferredQpus) {
-            models.push_back("q20_ga_critical_depth");
+            models.push_back(qpu.mName);
         }
 
         // Predict figure of merit for every device
@@ -276,9 +276,6 @@ extern "C" int scheduler(Submiter2Device device2Submitter, std::vector<QuantumTa
 
         // Queue the task on the chosen device and skip if necessary
         bool success = skipping_schedule(task, target_device, device2Submitter);
-
-        // TODO once FOMAC is available, set the QPU
-        // task.scheduled_qpu = target_device;
     }
 
     std::cout << "   [Scheduler]...........returning selected device."
