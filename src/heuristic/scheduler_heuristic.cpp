@@ -18,7 +18,7 @@
  * @param task The QuantumTask to be scheduled.
  * @return A map of devices to their respective scores.
  */
-std::unordered_map<My_QDMI_Device, float> calculate_scores(QuantumTask *task)
+std::unordered_map<My_QDMI_Device, float> calculate_scores(std::shared_ptr<QuantumTask>task)
 {
     std::unordered_map<My_QDMI_Device, float> scores;
 
@@ -64,7 +64,7 @@ std::unordered_map<My_QDMI_Device, float> calculate_scores(QuantumTask *task)
  * @return The name of the selected device.
  **/
 My_QDMI_Device
-choose_device(QuantumTask *task,
+choose_device(std::shared_ptr<QuantumTask>task,
               const std::unordered_map<My_QDMI_Device, float> &scores,
               Scheduler2Device device2SchedQueue)
 {
@@ -125,7 +125,7 @@ choose_device(QuantumTask *task,
  * @param pQueue The target device's queue to schedule the QuantumTask on.
  * @return The position where the new task was inserted in the queue.
  */
-int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
+int skipping_schedule(std::shared_ptr<QuantumTask>pNewTask, SchedulerQueue *pQueue)
 {
     // Extract the duration and priority of the new task
     float new_task_duration = pNewTask->mDuration;
@@ -142,7 +142,7 @@ int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
         // Iterate over the tasks in the queue in reverse order
         for (i = pQueue->mTasks.size(); i > 0; --i)
         {
-            QuantumTask *last_task = pQueue->mTasks[i-1];
+            std::shared_ptr<QuantumTask>last_task = pQueue->mTasks[i-1];
             float last_task_priority = last_task->mPriority;
 
             // Predict the end time of the new task if it is inserted after the
@@ -171,7 +171,7 @@ int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
             else if (new_task_priority == last_task_priority)
             {
                 // Determine the parent task of the current task
-                QuantumTask *parent_task = last_task->pParentTask != NULL
+                std::shared_ptr<QuantumTask>parent_task = last_task->pParentTask != NULL
                                                ? last_task->pParentTask
                                                : last_task;
                 float last_parent_end = parent_task->mEnd;
@@ -181,7 +181,7 @@ int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
                 if (predicted_end < last_parent_end)
                 {
                     // Determine the parent task of the new task
-                    QuantumTask *new_parent_task = pNewTask->pParentTask != NULL
+                    std::shared_ptr<QuantumTask>new_parent_task = pNewTask->pParentTask != NULL
                                                        ? pNewTask->pParentTask
                                                        : pNewTask;
 
@@ -229,11 +229,11 @@ int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
  * @return The selected device on which the task was scheduled.
  */
 extern "C" int scheduler(Scheduler2Device device2SchedQueue,
-                         std::vector<QuantumTask *> tasks)
+                         std::vector<std::shared_ptr<QuantumTask>> tasks)
 {
     // Sort tasks by priority and within that by duration
     std::sort(tasks.begin(), tasks.end(),
-              [](const QuantumTask *a, const QuantumTask *b)
+              [](const std::shared_ptr<QuantumTask>a, const std::shared_ptr<QuantumTask>b)
               {
                   if (a->mPriority == b->mPriority)
                   {
@@ -253,7 +253,7 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
     }
 
     // Process each task in the sorted list
-    for (QuantumTask *task : tasks)
+    for (std::shared_ptr<QuantumTask>task : tasks)
     {
         std::cout << "   [Scheduler]...........Processing QuantumTask with ID "
                   << task->mTaskId << std::endl;
@@ -281,6 +281,16 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
         // was inserted
         int position =
             skipping_schedule(task, device2SchedQueue[target_device].get());
+        
+        // DEBUG INFO
+        std::cout << "   [Scheduler]...........Current tasks in the queue for device "
+                  << target_device.mName << ": ";
+        for (std::shared_ptr<QuantumTask>task : device2SchedQueue[target_device]->mTasks)
+        {
+            std::cout << task->mTaskId << " ";
+        }
+        std::cout << std::endl;
+        std::cout << std::endl;
     }
 
     return 0;

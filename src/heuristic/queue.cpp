@@ -10,7 +10,7 @@
  * @param position The position in the queue where the task should be inserted
  * @return The execution order of the added task
  */
-int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
+int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> pQuantumTask, int position)
 {   
     if (pQuantumTask == nullptr) {
         throw std::invalid_argument("   [SchedulerQueue]......pQuantumTask is a null pointer");
@@ -29,13 +29,13 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 
     // If the task is inserted at the end of the (non-empty) queue
     else if (position == this->mTasks.size()) {
-        QuantumTask *prevTask = this->mTasks[position - 1];
+        std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
         mNewExecutionOrder = prevTask->mExecutionOrder + 1000;
     }
 
     // If the task is inserted at the beginning of the (non-empty) queue
     else if (position == 0) {
-        QuantumTask *nextTask = this->mTasks[0];
+        std::shared_ptr<QuantumTask> nextTask = this->mTasks[0];
 
         // Check that we don't run out of numbers
         if (nextTask->mExecutionOrder == 0) {
@@ -46,8 +46,8 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 
     // If the task is inserted in the middle of the (non-empty) queue
     else {
-        QuantumTask *prevTask = this->mTasks[position - 1];
-        QuantumTask *nextTask = this->mTasks[position];
+        std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
+        std::shared_ptr<QuantumTask> nextTask = this->mTasks[position];
         mNewExecutionOrder = (prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
 
         // Check that we don't run out of numbers
@@ -69,7 +69,7 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
     return mNewExecutionOrder;
 }
 
-int SchedulerQueue::removeTask(QuantumTask* pQuantumTask)
+int SchedulerQueue::removeTask(std::shared_ptr<QuantumTask> pQuantumTask)
 {
     // Find the task in the queue
     auto it = std::find(this->mTasks.begin(), this->mTasks.end(), pQuantumTask);

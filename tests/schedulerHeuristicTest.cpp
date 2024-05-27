@@ -15,7 +15,6 @@
 #include "QuantumTask.hpp"
 #include "Submitter.hpp"
 #include "queue.hpp"
-// #include "qdmi.h"
 
 using namespace llvm;
 using namespace llvm::orc;
@@ -44,18 +43,18 @@ int main(){
         device2SchedQueue.emplace(device, scheduler); 
     }
 
-    // Number of child tasks for each parent
+    // Simulate Generator by creating a bunch of tasks
     std::vector<int> numChildTasks = {5}; 
     int numParentTasks = numChildTasks.size();
-    std::vector<QuantumTask*> tasks;
+    // Collection of to-be-scheduled tasks
+    std::vector<std::shared_ptr<QuantumTask>> tasks;
     int taskID = 0; // Unique task ID for each task
 
     for (int i = 0; i < numParentTasks; ++i) {
-
-        QuantumTask* parentTask = new QuantumTask(taskID++);
-
+        // Create a new QuantumTask object for each parent task
+        auto parentTask = std::make_shared<QuantumTask>(taskID++);
         if (numChildTasks[i] == 0) {
-            // Create a new context and module for each parent task
+            // Simulate Generator could not cut the circuit
             SMDiagnostic error;
             ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
             std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/mqss/scheduler/inputs/example" + std::to_string(i%3) + ".ll", error, *(TSCtx.getContext()));
@@ -67,15 +66,15 @@ int main(){
             parentTask->mDuration = (i % 5) + 1; // Cycle through durations
             parentTask->mPriority = i % 3; // Cycle through priorities
 
-            // If the parent task has no children, schedule the parent task alone
-            scheduler(device2SchedQueue, {parentTask});
             tasks.push_back(parentTask);
-        } else {
-            std::vector<QuantumTask*> lastChildTasks;
-            // If the parent task has children, schedule all child tasks together
+            scheduler(device2SchedQueue, {tasks});
+            } else {
+            // Simulate Generator could cut the circuit into child tasks
+            std::vector<std::shared_ptr<QuantumTask>> lastChildTasks = {};
+
             for (int j = 0; j < numChildTasks[i]; ++j) {
                 // Create a new QuantumTask object for each child task
-                QuantumTask* childTask = new QuantumTask(taskID++);
+                auto childTask = std::make_shared<QuantumTask>(taskID++);
 
                 // Create a new context and module for each task
                 SMDiagnostic error;
@@ -92,7 +91,7 @@ int main(){
                 childTask->mDuration = (taskID % 5) + 1; // Cycle through durations
                 childTask->mPriority = taskID % 3; // Cycle through priorities
 
-                // Add the child task to the scheduled tasks vector
+                // Add the child task to the to-be-scheduled tasks vector
                 tasks.push_back(childTask);
                 lastChildTasks.push_back(childTask);
             }            
@@ -101,15 +100,23 @@ int main(){
         }
     }
 
-    // Iterate over all scheduled tasks
+    // At this point the tasks would be further obtimized to the respective devices
+
+    // Iterate over all scheduled tasks and send them to the respective Submitter
     for (auto task: tasks){
         std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
-        SchedulerQueue* scheduler = device2SchedQueue.at(task->mScheduledQpu).get();
-        // print ids in scheduler queue
-        for (auto task : scheduler->mTasks) {
+        std::shared_ptr<SchedulerQueue> scheduler = device2SchedQueue.at(task->mScheduledQpu);
+        
+        // DEBUG INFO
+        std::cout << "   [Scheduler]...........Current tasks in the queue for device "
+                  << task->mScheduledQpu.mName << ": ";
+        for (auto task : device2SchedQueue[task->mScheduledQpu]->mTasks)
+        {
             std::cout << task->mTaskId << " ";
         }
         std::cout << std::endl;
+        std::cout << std::endl;
+
         submitter->insertTask(task);
     }
 }

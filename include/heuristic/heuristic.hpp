@@ -8,4 +8,4 @@ typedef std::unordered_map<My_QDMI_Device, std::shared_ptr<Submitter>> Submitter
 typedef std::unordered_map<My_QDMI_Device, std::shared_ptr<SchedulerQueue>> Scheduler2Device;
 
 
-extern "C" int scheduler(Scheduler2Device device2SchedQueue, std::vector<QuantumTask *> tasks);
+extern "C" int scheduler(Scheduler2Device device2SchedQueue, std::vector<std::shared_ptr<QuantumTask>> tasks);

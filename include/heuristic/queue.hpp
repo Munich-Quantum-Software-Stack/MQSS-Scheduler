@@ -16,22 +16,22 @@ class SchedulerQueue : public ISubmitterObserver {
 
     public:
         // Method to add a task at a specific position in the queue
-        int addTask(QuantumTask* pQuantumTask, int position);
+        int addTask(std::shared_ptr<QuantumTask> pQuantumTask, int position);
 
         // Method to remove a specific task from the queue
-        int removeTask(QuantumTask* pQuantumTask);
+        int removeTask(std::shared_ptr<QuantumTask> pQuantumTask);
 
         // Total duration of all tasks in the queue
         double mTotalDuration = 0;
 
         // Deque to hold the tasks in the queue
-        std::deque<QuantumTask *> mTasks = {};
+        std::deque<std::shared_ptr<QuantumTask>> mTasks = {};
 
         // Constructor that takes a pointer to a Submitter object
         explicit SchedulerQueue(Submitter *pSubmitter) : mpSubmitter(pSubmitter) {}
 
         // Method to update the SchedulerQueue state when a task is popped from the Submitter's queue
-        void onTaskPopped(QuantumTask* task) override {
+        void onTaskPopped(std::shared_ptr<QuantumTask> task) override {
             removeTask(task);
         }
 };
