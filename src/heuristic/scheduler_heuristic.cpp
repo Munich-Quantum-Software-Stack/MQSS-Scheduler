@@ -43,21 +43,15 @@ std::unordered_map<My_QDMI_Device, float> calculate_scores(QuantumTask *task)
             models.push_back(qpu.mName);
         }
 
-        // Predict figure of merit for every device
+        // Predict figure of merit (FOM) for every device
         std::map<std::string, float> predictions =
             predict(task->mThreadSafeModule, models);
 
         for (const auto &device : task->mPreferredQpus)
-        {
-            scores[device] = predictions[device.mName];
+        {   
+            // Example FOM is "depth" -> lower is better
+            scores[device] = 1 / predictions[device.mName];
         }
-    }
-
-    // Print the scores for debugging
-    std::cout << "   [Scheduler]...........Scores: ";
-    for (const auto &score : scores)
-    {
-        std::cout << score.first.mName << ": " << score.second << std::endl;
     }
 
     return scores;
@@ -98,14 +92,12 @@ choose_device(QuantumTask *task,
         }
     }
 
-    // Print the names of the top 3 devices
-    std::cout << std::endl
-              << "   [Scheduler]...........Choosing target My_QDMI_Device from"
-              << " the following devices: ";
+    std::cout << "   [Scheduler]...........Choosing target from top 3 devices: ";
     for (auto &device : devices)
     {
         std::cout << device.mName << " ";
     }
+    std::cout << std::endl;
 
     // Find the queue with shortest end time among the three devices
     float min_end_time = std::numeric_limits<float>::max();
@@ -148,9 +140,9 @@ int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
     if (pQueue->mTasks.size() != 0)
     {
         // Iterate over the tasks in the queue in reverse order
-        for (i = pQueue->mTasks.size() - 1; i >= 0; --i)
+        for (i = pQueue->mTasks.size(); i > 0; --i)
         {
-            QuantumTask *last_task = pQueue->mTasks[i];
+            QuantumTask *last_task = pQueue->mTasks[i-1];
             float last_task_priority = last_task->mPriority;
 
             // Predict the end time of the new task if it is inserted after the
@@ -239,10 +231,6 @@ int skipping_schedule(QuantumTask *pNewTask, SchedulerQueue *pQueue)
 extern "C" int scheduler(Scheduler2Device device2SchedQueue,
                          std::vector<QuantumTask *> tasks)
 {
-    // Print the number of available devices
-    std::cout << "   [Scheduler]..........." << device2SchedQueue.size()
-              << " available device(s)" << std::endl;
-
     // Sort tasks by priority and within that by duration
     std::sort(tasks.begin(), tasks.end(),
               [](const QuantumTask *a, const QuantumTask *b)
@@ -256,30 +244,43 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
                   return a->mPriority > b->mPriority;
               });
 
+    for (int i = 0; i < tasks.size(); ++i) {
+        std::cout << "   [Scheduler]..........."
+                << ": Task ID: " << tasks[i]->mTaskId
+                << ", Duration: " << tasks[i]->mDuration
+                << ", Priority: " << tasks[i]->mPriority
+                << std::endl;
+    }
+
     // Process each task in the sorted list
     for (QuantumTask *task : tasks)
     {
+        std::cout << "   [Scheduler]...........Processing QuantumTask with ID "
+                  << task->mTaskId << std::endl;
+                  
         // Calculate scores for each (preferred) device based on the task
         std::unordered_map<My_QDMI_Device, float> scores =
             calculate_scores(task);
+        
+        std::cout << "   [Scheduler]...........Scores: ";
+        for (const auto &score : scores)
+        {
+            std::cout << score.first.mName << ": " << score.second << " ";
+        }
+        std::cout << std::endl;
 
         // Choose the device with the shortest queue out of top 3 scored devices
         My_QDMI_Device target_device =
             choose_device(task, scores, device2SchedQueue);
 
-        std::cout << "   [Scheduler]...........Inserting QuantumTask with ID "
-                  << task->mTaskId << " into the queue for device "
+        std::cout << "   [Scheduler]...........Inserting QuantumTask into the queue for device "
                   << target_device.mName << std::endl;
+        task->mScheduledQpu = target_device;
 
         // Schedule the task on the chosen device and get the position where it
         // was inserted
         int position =
             skipping_schedule(task, device2SchedQueue[target_device].get());
-
-        // Print the position where the task was inserted
-        std::cout
-            << "   [Scheduler]...........QuantumTask inserted at position "
-            << position << std::endl;
     }
 
     return 0;

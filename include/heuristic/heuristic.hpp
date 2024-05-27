@@ -4,7 +4,7 @@
 #include "queue.hpp"
 #include <qdmi.h>
 
-typedef std::unordered_map<My_QDMI_Device, std::shared_ptr<Submitter>> Submiter2Device;
+typedef std::unordered_map<My_QDMI_Device, std::shared_ptr<Submitter>> Submitter2Device;
 typedef std::unordered_map<My_QDMI_Device, std::shared_ptr<SchedulerQueue>> Scheduler2Device;
 
 

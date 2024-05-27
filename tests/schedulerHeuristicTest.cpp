@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <numeric>
 #include <unistd.h>
 #include <unordered_map>
 #include <utility>
@@ -29,55 +30,86 @@ int main(){
 
     // TODO: enable once FOMAC works
     // std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
-    std::vector<My_QDMI_Device> devices = {My_QDMI_Device{"q5"}, My_QDMI_Device{"q20"}};
+    std::vector<My_QDMI_Device> devices = {My_QDMI_Device{"q5"}, My_QDMI_Device{"q20"}, My_QDMI_Device{"wmi"}};
     
-    SMDiagnostic error;
-    ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
-    std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/scheduler/inputs/bell_state.ll", error, *(TSCtx.getContext()));
-    ThreadSafeModule TSM = ThreadSafeModule(std::move(module),std::move(TSCtx));
+    Submitter2Device device2Submitter;
+    Scheduler2Device device2SchedQueue;
 
-    std::vector<QuantumTask*> tasks;
-    QuantumTask mQuantumTask;
-    mQuantumTask.mThreadSafeModule =  std::move(TSM);
-    mQuantumTask.mPreferredQpus.push_back(devices.at(0));
-    mQuantumTask.mPreferredQpus.push_back(devices.at(1));
-    mQuantumTask.mDuration = 5;
-    mQuantumTask.mPriority = 1.;
-    mQuantumTask.mTaskId = 0;
-    tasks.push_back(&mQuantumTask);
-
-    QuantumTask mQuantumTask2;
-    ThreadSafeContext TSCtx2(std::make_unique<LLVMContext>());
-    std::unique_ptr<Module> module2 = parseIRFile("/home/ubuntu/scheduler/inputs/example.ll", error, *(TSCtx2.getContext()));
-    ThreadSafeModule TSM2 = ThreadSafeModule(std::move(module2),std::move(TSCtx2));
-    mQuantumTask2.mThreadSafeModule =  std::move(TSM2);
-    mQuantumTask2.mPreferredQpus.push_back(devices.at(1));
-    mQuantumTask2.mPreferredQpus.push_back(devices.at(0));
-    mQuantumTask2.mDuration = 5;
-    mQuantumTask2.mPriority = 2.;
-    mQuantumTask2.mTaskId = 1;
-    tasks.push_back(&mQuantumTask2);
-
-
-    Submiter2Device device2Submitter;
     for (const My_QDMI_Device& device : devices) {
         auto submitter = std::make_shared<Submitter>(device); // Create Submitter using smart pointer
         device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
-    }
 
-    Scheduler2Device device2SchedQueue;
-    for (const My_QDMI_Device& device : devices) {
-        auto submitter = device2Submitter.at(device);
         auto scheduler = std::make_shared<SchedulerQueue>(submitter.get());
+        submitter->addObserver(scheduler.get()); // Add the SchedulerQueue as an observer
         device2SchedQueue.emplace(device, scheduler); 
     }
 
-    scheduler(device2SchedQueue, tasks);
+    // Number of child tasks for each parent
+    std::vector<int> numChildTasks = {5}; 
+    int numParentTasks = numChildTasks.size();
+    std::vector<QuantumTask*> tasks;
+    int taskID = 0; // Unique task ID for each task
 
+    for (int i = 0; i < numParentTasks; ++i) {
 
-    //delete device2Submitter.at(0).get();
-    //delete device2Submitter.at(0).get();
-    
-     
+        QuantumTask* parentTask = new QuantumTask(taskID++);
+
+        if (numChildTasks[i] == 0) {
+            // Create a new context and module for each parent task
+            SMDiagnostic error;
+            ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
+            std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/mqss/scheduler/inputs/example" + std::to_string(i%3) + ".ll", error, *(TSCtx.getContext()));
+            ThreadSafeModule TSM = ThreadSafeModule(std::move(module),std::move(TSCtx));
+            parentTask->mThreadSafeModule =  std::move(TSM);
+            for (int j = 0; j < devices.size(); ++j) {
+                parentTask->mPreferredQpus.push_back(devices.at((i + j) % devices.size())); // Cycle through devices
+            }
+            parentTask->mDuration = (i % 5) + 1; // Cycle through durations
+            parentTask->mPriority = i % 3; // Cycle through priorities
+
+            // If the parent task has no children, schedule the parent task alone
+            scheduler(device2SchedQueue, {parentTask});
+            tasks.push_back(parentTask);
+        } else {
+            std::vector<QuantumTask*> lastChildTasks;
+            // If the parent task has children, schedule all child tasks together
+            for (int j = 0; j < numChildTasks[i]; ++j) {
+                // Create a new QuantumTask object for each child task
+                QuantumTask* childTask = new QuantumTask(taskID++);
+
+                // Create a new context and module for each task
+                SMDiagnostic error;
+                ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
+                std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/mqss/scheduler/inputs/example" + std::to_string(taskID%3) + ".ll", error, *(TSCtx.getContext()));
+                ThreadSafeModule TSM = ThreadSafeModule(std::move(module),std::move(TSCtx));
+
+                // Initialize task
+                childTask->mThreadSafeModule =  std::move(TSM);
+                childTask->pParentTask = parentTask; // Assign parent task
+                for (int k = 0; k < devices.size(); ++k) {
+                    childTask->mPreferredQpus.push_back(devices.at((taskID + k) % devices.size())); // Cycle through devices
+                }
+                childTask->mDuration = (taskID % 5) + 1; // Cycle through durations
+                childTask->mPriority = taskID % 3; // Cycle through priorities
+
+                // Add the child task to the scheduled tasks vector
+                tasks.push_back(childTask);
+                lastChildTasks.push_back(childTask);
+            }            
+            // Schedule all child tasks of one common parent together
+            scheduler(device2SchedQueue, lastChildTasks);
+        }
+    }
+
+    // Iterate over all scheduled tasks
+    for (auto task: tasks){
+        std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
+        SchedulerQueue* scheduler = device2SchedQueue.at(task->mScheduledQpu).get();
+        // print ids in scheduler queue
+        for (auto task : scheduler->mTasks) {
+            std::cout << task->mTaskId << " ";
+        }
+        std::cout << std::endl;
+        submitter->insertTask(task);
+    }
 }
-    

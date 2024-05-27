@@ -9,7 +9,7 @@
 #include <QuantumTask.hpp>
 
 // SchedulerQueue class definition
-class SchedulerQueue {
+class SchedulerQueue : public ISubmitterObserver {
     private: 
         // Pointer to a Submitter object
         Submitter *mpSubmitter;
@@ -29,6 +29,11 @@ class SchedulerQueue {
 
         // Constructor that takes a pointer to a Submitter object
         explicit SchedulerQueue(Submitter *pSubmitter) : mpSubmitter(pSubmitter) {}
+
+        // Method to update the SchedulerQueue state when a task is popped from the Submitter's queue
+        void onTaskPopped(QuantumTask* task) override {
+            removeTask(task);
+        }
 };
 
 #endif

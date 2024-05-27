@@ -2,6 +2,7 @@
 
 #include <queue.hpp>
 #include "QuantumTask.hpp"
+#include <iostream>
 
 /*
  * @brief Add a QuantumTask to the SchedulerQueue at a specific position
@@ -12,11 +13,11 @@
 int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 {   
     if (pQuantumTask == nullptr) {
-        throw std::invalid_argument("pQuantumTask is a null pointer");
+        throw std::invalid_argument("   [SchedulerQueue]......pQuantumTask is a null pointer");
     }
 
     if (position < 0 || position > this->mTasks.size()) {
-        throw std::out_of_range("Position is out of range");
+        throw std::out_of_range("   [SchedulerQueue]......Position is out of range");
     }
 
     int mNewExecutionOrder = 0;
@@ -38,7 +39,7 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 
         // Check that we don't run out of numbers
         if (nextTask->mExecutionOrder == 0) {
-            throw std::runtime_error("Ran out of execution order numbers");
+            throw std::runtime_error("   [SchedulerQueue]......Ran out of execution order numbers");
         }
         mNewExecutionOrder = nextTask->mExecutionOrder / 2;
     }
@@ -51,7 +52,7 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 
         // Check that we don't run out of numbers
         if (mNewExecutionOrder == prevTask->mExecutionOrder) {
-            throw std::runtime_error("Ran out of execution order numbers");
+            throw std::runtime_error("   [SchedulerQueue]......Ran out of execution order numbers");
         }
     }
 
@@ -64,6 +65,7 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
     // Update the total duration of the queue
     this->mTotalDuration += pQuantumTask->mDuration;
 
+    std::cout << "   [SchedulerQueue]......Task " << pQuantumTask->mTaskId << " added in SchedulerQueue at position " << position << " with execution order " << mNewExecutionOrder << std::endl;
     return mNewExecutionOrder;
 }
 
@@ -74,7 +76,12 @@ int SchedulerQueue::removeTask(QuantumTask* pQuantumTask)
 
     // If the task is not in the queue
     if (it == this->mTasks.end()) {
-        return -1;
+        std::cerr << "   [SchedulerQueue]......Task " << pQuantumTask->mTaskId << " not found in SchedulerQueue within tasks: ";
+        for (auto task : this->mTasks) {
+            std::cerr << task->mTaskId << " ";
+        }
+        std::cerr << std::endl;
+        return -1; // Return an error code
     }
 
     // Remove the task from the queue
@@ -83,5 +90,6 @@ int SchedulerQueue::removeTask(QuantumTask* pQuantumTask)
     // Update the total duration of the queue
     this->mTotalDuration -= pQuantumTask->mDuration;
 
+    std::cout << "   [SchedulerQueue]......Task " << pQuantumTask->mTaskId << " removed from SchedulerQueue" << std::endl;
     return 0;
 }
