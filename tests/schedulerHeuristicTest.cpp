@@ -38,13 +38,13 @@ int main(){
         auto submitter = std::make_shared<Submitter>(device); // Create Submitter using smart pointer
         device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
 
-        auto scheduler = std::make_shared<SchedulerQueue>(submitter.get());
-        submitter->addObserver(scheduler.get()); // Add the SchedulerQueue as an observer
+        auto scheduler = std::make_shared<SchedulerQueue>(submitter);
+        submitter->addObserver(scheduler); // Add the SchedulerQueue as an observer
         device2SchedQueue.emplace(device, scheduler); 
     }
 
     // Simulate Generator by creating a bunch of tasks
-    std::vector<int> numChildTasks = {5}; 
+    std::vector<int> numChildTasks = {5, 2, 0, 2}; 
     int numParentTasks = numChildTasks.size();
     // Collection of to-be-scheduled tasks
     std::vector<std::shared_ptr<QuantumTask>> tasks;
@@ -67,8 +67,8 @@ int main(){
             parentTask->mPriority = i % 3; // Cycle through priorities
 
             tasks.push_back(parentTask);
-            scheduler(device2SchedQueue, {tasks});
-            } else {
+            scheduler(device2SchedQueue, {parentTask});
+        } else {
             // Simulate Generator could cut the circuit into child tasks
             std::vector<std::shared_ptr<QuantumTask>> lastChildTasks = {};
 
@@ -97,6 +97,7 @@ int main(){
             }            
             // Schedule all child tasks of one common parent together
             scheduler(device2SchedQueue, lastChildTasks);
+            lastChildTasks.clear();
         }
     }
 
@@ -105,18 +106,33 @@ int main(){
     // Iterate over all scheduled tasks and send them to the respective Submitter
     for (auto task: tasks){
         std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
-        std::shared_ptr<SchedulerQueue> scheduler = device2SchedQueue.at(task->mScheduledQpu);
-        
-        // DEBUG INFO
-        std::cout << "   [Scheduler]...........Current tasks in the queue for device "
-                  << task->mScheduledQpu.mName << ": ";
-        for (auto task : device2SchedQueue[task->mScheduledQpu]->mTasks)
-        {
-            std::cout << task->mTaskId << " ";
-        }
-        std::cout << std::endl;
-        std::cout << std::endl;
+        //std::shared_ptr<SchedulerQueue> scheduler = device2SchedQueue.at(task->mScheduledQpu);
+        //
+        //// DEBUG INFO
+        //std::cout << "   [Scheduler]...........Current tasks in the queue for device "
+        //          << task->mScheduledQpu.mName << ": ";
+        //for (auto task : device2SchedQueue[task->mScheduledQpu]->mTasks)
+        //{
+        //    std::cout << task->mTaskId << " ";
+        //}
+        //std::cout << std::endl;
+        //std::cout << std::endl;
 
         submitter->insertTask(task);
     }
+
+    // Wait for all tasks to be executed (removed from the queue)
+    while (true) {
+        bool allFinished = true;
+        for (auto& [device, scheduler] : device2SchedQueue) {
+            if (!scheduler->mTasks.empty()) {
+                allFinished = false;
+                break;
+            }
+        }
+        if (allFinished) {
+            break;
+        }
+        usleep(1000);
+    } 
 }

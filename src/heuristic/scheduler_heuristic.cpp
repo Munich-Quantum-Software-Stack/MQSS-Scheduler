@@ -285,7 +285,7 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
         // Schedule the task on the chosen device and get the position where it
         // was inserted
         int position =
-            skipping_schedule(task, device2SchedQueue[target_device].get());
+            skipping_schedule(task, device2SchedQueue[target_device]);
 
         // DEBUG INFO
         std::cout
