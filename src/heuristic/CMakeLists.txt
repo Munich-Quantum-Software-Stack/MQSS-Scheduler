@@ -19,13 +19,12 @@ find_package(submitter REQUIRED)
 target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/qdmi-src/include) # do better
 target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/qinfo-src/include) # do better
 target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/fomac-src/include) # do better
-target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/submitter-src/include) # do better
+target_include_directories(HEURISTIC PUBLIC /home/ubuntu/mqss/submitter/include) # do better
 target_include_directories(HEURISTIC PUBLIC /home/ubuntu/onnxruntime/include) # do better
 
 find_library(ONNXRUNTIME_LIBRARY NAMES onnxruntime PATHS /home/ubuntu/onnxruntime/build/Linux/Release)
 
 
 target_link_libraries(HEURISTIC PRIVATE qdmi qinfo fomac LLVM  SUBMITTER ${ONNXRUNTIME_LIBRARY} )
-#submitter 
 
-target_sources(HEURISTIC PRIVATE scheduler_heuristic.cpp eval.cpp predictor.cpp)
+target_sources(HEURISTIC PRIVATE scheduler_heuristic.cpp eval.cpp predictor.cpp queue.cpp)

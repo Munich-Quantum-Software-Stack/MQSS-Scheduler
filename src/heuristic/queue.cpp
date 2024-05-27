@@ -1,32 +1,40 @@
 /* Scheduler Queues. */
 
-#include "QuantumTask.hpp"
 #include <queue.hpp>
+#include "QuantumTask.hpp"
 
 /*
- * @brief Extract supermarq+ features from a quantum circuit
- * @param TSM The quantum circuit to evaluate
- * @param gate_counts The counts of each gate in the circuit
- * @return A vector of original supermarq and 3 additional features
+ * @brief Add a QuantumTask to the SchedulerQueue at a specific position
+ * @param pQuantumTask The QuantumTask to be added
+ * @param position The position in the queue where the task should be inserted
+ * @return The execution order of the added task
  */
 int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 {   
+    if (pQuantumTask == nullptr) {
+        throw std::invalid_argument("pQuantumTask is a null pointer");
+    }
+
+    if (position < 0 || position > this->mTasks.size()) {
+        throw std::out_of_range("Position is out of range");
+    }
+
     int mNewExecutionOrder = 0;
 
     // If queue is empty
-    if (tasks.size() == 0) {
+    if (this->mTasks.size() == 0) {
         mNewExecutionOrder = 1000;
     }
 
     // If the task is inserted at the end of the (non-empty) queue
-    else if (position == tasks.size()) {
-        QuantumTask *prevTask = tasks[position];
+    else if (position == this->mTasks.size()) {
+        QuantumTask *prevTask = this->mTasks[position - 1];
         mNewExecutionOrder = prevTask->mExecutionOrder + 1000;
     }
 
     // If the task is inserted at the beginning of the (non-empty) queue
     else if (position == 0) {
-        QuantumTask *nextTask = tasks[0];
+        QuantumTask *nextTask = this->mTasks[0];
 
         // Check that we don't run out of numbers
         if (nextTask->mExecutionOrder == 0) {
@@ -37,8 +45,8 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 
     // If the task is inserted in the middle of the (non-empty) queue
     else {
-        QuantumTask *prevTask = tasks[position - 1];
-        QuantumTask *nextTask = tasks[position];
+        QuantumTask *prevTask = this->mTasks[position - 1];
+        QuantumTask *nextTask = this->mTasks[position];
         mNewExecutionOrder = (prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
 
         // Check that we don't run out of numbers
@@ -51,10 +59,10 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
     pQuantumTask->mExecutionOrder = mNewExecutionOrder;
 
     // Insert the task at the specified position in the queue
-    tasks.insert(tasks.begin() + position, pQuantumTask);
+    this->mTasks.insert(this->mTasks.begin() + position, pQuantumTask);
 
     // Update the total duration of the queue
-    mTotalDuration += pQuantumTask->mDuration;
+    this->mTotalDuration += pQuantumTask->mDuration;
 
     return mNewExecutionOrder;
 }
@@ -62,23 +70,18 @@ int SchedulerQueue::addTask(QuantumTask* pQuantumTask, int position)
 int SchedulerQueue::removeTask(QuantumTask* pQuantumTask)
 {
     // Find the task in the queue
-    auto it = std::find(tasks.begin(), tasks.end(), pQuantumTask);
+    auto it = std::find(this->mTasks.begin(), this->mTasks.end(), pQuantumTask);
 
     // If the task is not in the queue
-    if (it == tasks.end()) {
+    if (it == this->mTasks.end()) {
         return -1;
     }
 
     // Remove the task from the queue
-    tasks.erase(it);
+    this->mTasks.erase(it);
 
     // Update the total duration of the queue
-    mTotalDuration -= pQuantumTask->mDuration;
+    this->mTotalDuration -= pQuantumTask->mDuration;
 
     return 0;
-}
-
-double SchedulerQueue::getTotalDuration()
-{
-    return mTotalDuration;
 }

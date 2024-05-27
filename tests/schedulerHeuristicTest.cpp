@@ -1,4 +1,3 @@
-
 #include "heuristic.hpp"
 #include "iostream"
 #include <cstddef>
@@ -12,8 +11,9 @@
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/IRReader/IRReader.h"
-
+#include "QuantumTask.hpp"
 #include "Submitter.hpp"
+#include "queue.hpp"
 // #include "qdmi.h"
 
 using namespace llvm;
@@ -65,7 +65,14 @@ int main(){
         device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
     }
 
-    scheduler(device2Submitter, tasks);
+    Scheduler2Device device2SchedQueue;
+    for (const My_QDMI_Device& device : devices) {
+        auto submitter = device2Submitter.at(device);
+        auto scheduler = std::make_shared<SchedulerQueue>(submitter.get());
+        device2SchedQueue.emplace(device, scheduler); 
+    }
+
+    scheduler(device2SchedQueue, tasks);
 
 
     //delete device2Submitter.at(0).get();
