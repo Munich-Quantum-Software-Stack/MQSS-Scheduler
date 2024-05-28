@@ -27,4 +27,4 @@ find_library(ONNXRUNTIME_LIBRARY NAMES onnxruntime PATHS /home/ubuntu/onnxruntim
 
 target_link_libraries(HEURISTIC PRIVATE qdmi qinfo fomac LLVM  SUBMITTER ${ONNXRUNTIME_LIBRARY} )
 
-target_sources(HEURISTIC PRIVATE scheduler_heuristic.cpp eval.cpp predictor.cpp queue.cpp)
+target_sources(HEURISTIC PRIVATE scheduler.cpp eval.cpp predictor.cpp queue.cpp)

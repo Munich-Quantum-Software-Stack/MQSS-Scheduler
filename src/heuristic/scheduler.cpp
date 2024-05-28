@@ -2,6 +2,7 @@
  * @file scheduler.cpp
  * @brief Implementation of a ML guided scheduler.
  */
+#include "QuantumTask.hpp"
 #include "Submitter.hpp"
 #include "predictor.hpp"
 #include "queue.hpp"
@@ -21,41 +22,57 @@
 std::unordered_map<My_QDMI_Device, float>
 calculate_scores(std::shared_ptr<QuantumTask> task)
 {
-    std::unordered_map<My_QDMI_Device, float> scores;
+    std::unordered_map<My_QDMI_Device, float> deviceScores = {};
+    // TODO: get available devices from FOMAC/QDMI
+    std::unordered_map<My_QDMI_Device, string> device2Model = {
+        {My_QDMI_Device("q20"), "q20"},
+        {My_QDMI_Device("q5"), "q5"},
+        {My_QDMI_Device("wmi"), "wmi"}};
+    std::vector<string> models;
 
     // If the user only wants to use a single QPU
     if (task->mPreferredQpus.size() == 1)
     {
         // Assign maximum score to the only QPU
-        scores = {{task->mPreferredQpus.front(), 1.0}};
+        deviceScores = {{task->mPreferredQpus.front(), 1.0}};
+        return deviceScores;
     }
-    // If the user wants to use some QPUs more than others
-    // TODO: Implement this case
-    // else if (user wants to use some QPUs more than others):
-    //      scores = task.preferred_qpus
+    // If the user preference is not specified, use the ML model
+    else if (task->mPreferredQpus.size() == 0)
+    {
+        for (const auto &d2M : device2Model)
+        {
+            models.push_back(d2M.second);
+        }
+    }
+    // If choice is not forced or the user preference is equally distributed
     else
     {
-        // If choice is not forced or the user preference is equally distributed
-        // TODO: Once My_QDMI_Device can be ID'd by a string, use it to select
-        // the model
-        std::vector<std::string> models;
         for (const auto &qpu : task->mPreferredQpus)
         {
-            models.push_back(qpu.mName);
-        }
-
-        // Predict figure of merit (FOM) for every device
-        std::map<std::string, float> predictions =
-            predict(task->mThreadSafeModule, models);
-
-        for (const auto &device : task->mPreferredQpus)
-        {
-            // Example FOM is "depth" -> lower is better
-            scores[device] = 1 / predictions[device.mName];
+            models.push_back(device2Model[qpu]);
         }
     }
 
-    return scores;
+    // Predict figure of merit (FOM) for every device
+    std::map<std::string, float> predictions =
+        predict(task->mThreadSafeModule, models);
+
+    // Assign scores to the devices based on the predictions
+    for (const auto &model : models)
+    {
+        // Get device associated with the model
+        auto it = std::find_if(device2Model.begin(), device2Model.end(),
+                               [&model](const auto &d2M)
+                               { return d2M.second == model; });
+        if (it != device2Model.end())
+        {
+            My_QDMI_Device device = it->first;
+            // Example FOM is "depth" -> lower is better
+            deviceScores[device] = 1 / predictions[model];
+        }
+    }
+    return deviceScores;
 }
 
 /**
@@ -224,6 +241,7 @@ int skipping_schedule(std::shared_ptr<QuantumTask> pNewTask,
     return i;
 }
 
+
 /**
  * @brief Entry point for the scheduler.
  * @param device2SchedQueue Mapping from devices to their respective scheduler
@@ -279,26 +297,13 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
 
         std::cout << "   [Scheduler]...........Inserting QuantumTask into the "
                      "queue for device "
-                  << target_device.mName << std::endl;
+                  << target_device.mName << std::endl << std::endl;
         task->mScheduledQpu = target_device;
 
         // Schedule the task on the chosen device and get the position where it
         // was inserted
         int position =
             skipping_schedule(task, device2SchedQueue[target_device]);
-
-        // DEBUG INFO
-        std::cout
-            << "   [Scheduler]...........Current tasks in the queue for device "
-            << target_device.mName << ": ";
-        for (std::shared_ptr<QuantumTask> task :
-             device2SchedQueue[target_device]->mTasks)
-        {
-            std::cout << task->mTaskId << " ";
-        }
-        std::cout << std::endl;
-        std::cout << std::endl;
     }
-
     return 0;
 }
