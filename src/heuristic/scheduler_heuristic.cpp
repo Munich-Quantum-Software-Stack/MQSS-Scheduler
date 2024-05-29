@@ -3,7 +3,6 @@
  * @brief Implementation of a ML guided scheduler.
  */
 #include <heuristic.hpp>
-#include "Submitter.hpp"
 #include "predictor.hpp"
 #include <iostream>
 #include <memory>
@@ -84,10 +83,12 @@ std::map<QDMI_Device, float> calculate_scores(QuantumTask *task)
 
     std::cout << std::endl << "   [Scheduler]...........Choosing target QDMI_Device from"
               << " the following devices: ";
+/* 
     for (auto &device : devices)
     {
         std::cout << device->library.libname << std::endl;
     }
+*/             
 
     // Get current queue from metadata
     //QirPassRunner &QPR = QirPassRunner::getInstance();
@@ -146,8 +147,7 @@ bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Submite
      float age_increment = 0.5;
 
      std::cout << "   [Scheduler]...........Inserting QuantumTask with ID "
-               << new_task->mTaskId << " into the queue for device "
-               << target_device->library.libname << std::endl;
+               << new_task->mTaskId << " into the queue for device " << std::endl;
 
 
 

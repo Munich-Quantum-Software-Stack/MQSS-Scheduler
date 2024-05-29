@@ -27,8 +27,16 @@ int main(){
 
     err = QDMI_session_init(info, &session);
 
-    std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
-    
+    std::vector<QDMI_Device> devices;
+    int count;
+    QDMI_core_device_count(NULL, &count);
+
+    for(int i = 0; i < count; i++){
+        QDMI_Device device;
+        QDMI_core_open_device(NULL, i , &info, &device);
+        devices.push_back(device);
+    }
+
     SMDiagnostic error;
     ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
     std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/scheduler/inputs/bell_state.ll", error, *(TSCtx.getContext()));
@@ -38,7 +46,7 @@ int main(){
     QuantumTask mQuantumTask;
     mQuantumTask.mThreadSafeModule =  std::move(TSM);
     mQuantumTask.mPreferredQpus.push_back(devices.at(0));
-    mQuantumTask.mPreferredQpus.push_back(devices.at(1));
+    //mQuantumTask.mPreferredQpus.push_back(devices.at(1));
     mQuantumTask.mDuration = 5;
     mQuantumTask.mPriority = 1.;
     mQuantumTask.mTaskId = 0;
@@ -50,7 +58,7 @@ int main(){
     ThreadSafeModule TSM2 = ThreadSafeModule(std::move(module2),std::move(TSCtx2));
     mQuantumTask2.mThreadSafeModule =  std::move(TSM2);
     mQuantumTask2.mPreferredQpus.push_back(devices.at(0));
-    mQuantumTask2.mPreferredQpus.push_back(devices.at(1));
+    //mQuantumTask2.mPreferredQpus.push_back(devices.at(1));
     mQuantumTask2.mDuration = 5;
     mQuantumTask2.mPriority = 2.;
     mQuantumTask2.mTaskId = 1;
@@ -59,8 +67,8 @@ int main(){
 
     Submiter2Device device2Submitter;
     for (const QDMI_Device& device : devices) {
-        auto submitter = std::make_shared<Submitter>(device); // Create Submitter using smart pointer
-        device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
+        auto submitter = std::make_shared<Submitter>(device); 
+        device2Submitter.emplace(device, submitter); 
     }
 
     scheduler(device2Submitter, tasks);

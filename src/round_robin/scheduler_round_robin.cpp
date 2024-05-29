@@ -4,8 +4,8 @@
  */
 
 #include <iostream>
-#include <fomac.hpp>
 #include <round_robin.hpp>
+#include "Submitter.hpp"
 
 
 /**
@@ -15,33 +15,35 @@
  *
  * @return const char *
  */
-extern "C" int scheduler(std::vector<QuantumTask> *childQuantumTasks)
+extern "C" int scheduler(Submiter2Device device2Submitter, std::vector<QuantumTask *> tasks)
 {
     // Query the available devices
-    std::vector<QDMI_Device> devices = FOMAC_available_devices();
 
-    if (devices.size() == 0)
+    if (device2Submitter.size() == 0)
     {
         
         std::cout << "   [Scheduler]...........Error: no devices found" << std::endl;
         return 1;
     }
 
-    std::cout << "   [Scheduler]..........." << devices.size()
+    std::cout << "   [Scheduler]..........." << device2Submitter.size()
               << " available device(s)" << std::endl;
 
-    for (auto &childQuantumTask : *childQuantumTasks)
-    {
-        QDMI_Device device = devices.back();
+    
 
-        const char *libname = strrchr(device->library.libname, '/');
+    for (auto &childQuantumTask : tasks)
+    {
+        QDMI_Device device = device2Submitter.begin()->first;
+
+        const char *libname = "the first lib";
+        //strrchr(device->library.libname, '/');
 
         std::cout << "   [Scheduler]...........Setting "
                   << libname << " as target device "
-                  << "for job with ID " << childQuantumTask.task_id
+                  << "for job with ID " << childQuantumTask->mTaskId
                   << std::endl;
 
-        childQuantumTask.scheduled_qpu = device;
+        childQuantumTask->mScheduledQpu = device;
     }
 
     return 0; 

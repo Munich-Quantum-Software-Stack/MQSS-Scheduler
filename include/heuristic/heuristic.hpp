@@ -1,8 +1,5 @@
-
-#include "fomac.hpp"
-#include "QuantumTask.hpp"
-#include <Submitter.hpp>
-#include <qdmi.h>
+#include "Submitter.hpp"
+#include "qdmi.h"
 
 typedef std::unordered_map<QDMI_Device, std::shared_ptr<Submitter>> Submiter2Device;
 
