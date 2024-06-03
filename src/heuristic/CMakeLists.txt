@@ -1,30 +1,10 @@
-
-#set(CMAKE_PREFIX_PATH "/home/ubuntu/bin/cmake/" ${CMAKE_PREFIX_PATH})
-#message($CMAKE_MODULE_PATH)
-
-
-#find_package(qinfo REQUIRED CONFIG)
-#find_package(qdmi REQUIRED CONFIG)
-#find_package(fomac REQUIRED)
-
-
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake" ${CMAKE_MODULE_PATH})
-find_package(qdmi REQUIRED)
-find_package(qinfo REQUIRED)
-find_package(fomac REQUIRED)
 find_package(submitter REQUIRED)
 
-#message(${CMAKE_BINARY_DIR}/_deps/fomac-src/include)
+target_include_directories(heuristic PUBLIC SUBMITTER_INCLUDE_DIRS) 
 
-target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/qdmi-src/include) # do better
-target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/qinfo-src/include) # do better
-target_include_directories(HEURISTIC PUBLIC ${CMAKE_BINARY_DIR}/_deps/fomac-src/include) # do better
-target_include_directories(HEURISTIC PUBLIC /home/ubuntu/mqss/submitter/include) # do better
-target_include_directories(HEURISTIC PUBLIC /home/ubuntu/onnxruntime/include) # do better
+find_path(ONNX_RUNTIME_SESSION_INCLUDE_DIRS onnxruntime_cxx_api.h HINTS /usr/local/include/onnxruntime/core/session/)
+find_library(ONNX_RUNTIME_LIB onnxruntime HINTS /usr/local/lib)
 
-find_library(ONNXRUNTIME_LIBRARY NAMES onnxruntime PATHS /home/ubuntu/onnxruntime/build/Linux/Release)
+target_link_libraries(heuristic PUBLIC qdmi qinfo LLVM submitter ${ONNX_RUNTIME_LIB} )
 
-
-target_link_libraries(HEURISTIC PRIVATE qdmi qinfo fomac LLVM  SUBMITTER ${ONNXRUNTIME_LIBRARY} )
-
-target_sources(HEURISTIC PRIVATE scheduler.cpp eval.cpp predictor.cpp queue.cpp)
+target_sources(heuristic PUBLIC scheduler_heuristic.cpp eval.cpp predictor.cpp)
