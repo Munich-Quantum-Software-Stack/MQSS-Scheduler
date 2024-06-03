@@ -24,10 +24,11 @@ calculate_scores(std::shared_ptr<QuantumTask> task)
 {
     std::unordered_map<My_QDMI_Device, float> deviceScores = {};
     // TODO: get available devices from FOMAC/QDMI
+    // Note: these are only test models and not ready for deployment
     std::unordered_map<My_QDMI_Device, string> device2Model = {
-        {My_QDMI_Device("q20"), "q20"},
-        {My_QDMI_Device("q5"), "q5"},
-        {My_QDMI_Device("wmi"), "wmi"}};
+        {My_QDMI_Device("q20"), "q5_ga_depth.onnx"},
+        {My_QDMI_Device("q5"), "q20_ga_depth.onnx"},
+        {My_QDMI_Device("wmi"), "wmi_ga_depth.onnx"}};
     std::vector<string> models;
 
     // If the user only wants to use a single QPU
@@ -125,7 +126,7 @@ choose_device(std::shared_ptr<QuantumTask> task,
     for (auto &device : devices)
     {
         // Get the total duration of the queue for the current device
-        double queueDuration = device2SchedQueue[device]->mTotalDuration;
+        float queueDuration = device2SchedQueue[device]->mTotalDuration;
         // If this duration is less than the current minimum, update the minimum
         // and set the current device as the target device
         if (queueDuration < min_end_time)
@@ -148,11 +149,14 @@ int skipping_schedule(std::shared_ptr<QuantumTask> pNewTask,
                       std::shared_ptr<SchedulerQueue> pQueue)
 {
     // Extract the duration and priority of the new task
-    float new_task_duration = pNewTask->mDuration;
-    int new_task_priority = pNewTask->mPriority;
+    float newTaskDuration = pNewTask->mDuration;
+    int newTaskPriority = pNewTask->mPriority;
+    std::shared_ptr<QuantumTask> newParentTask =
+        pNewTask->pParentTask != NULL ? pNewTask->pParentTask : pNewTask;
+    float newParentEnd = newParentTask->mEnd;
 
     // Define the increment for the age of a task when it is skipped
-    float age_increment = 0.5;
+    float ageIncrement = 0.5;
 
     int i = 0;
 
@@ -162,80 +166,77 @@ int skipping_schedule(std::shared_ptr<QuantumTask> pNewTask,
         // Iterate over the tasks in the queue in reverse order
         for (i = pQueue->mTasks.size(); i > 0; --i)
         {
-            std::shared_ptr<QuantumTask> last_task = pQueue->mTasks[i - 1];
-            float last_task_priority = last_task->mPriority;
+            // Get the last task in the queue at position i - 1
+            std::shared_ptr<QuantumTask> lastTask = pQueue->mTasks[i - 1];
+            float lastTaskPriority = lastTask->mPriority;
+            float lastTaskEnd = lastTask->mEnd;
+            float lastTaskAge = lastTask->mAge;
 
-            // Predict the end time of the new task if it is inserted after the
-            // current task
-            float predicted_end = last_task->mEnd + new_task_duration;
+            // Determine the parent task of the last task
+            std::shared_ptr<QuantumTask> lastParentTask =
+                lastTask->pParentTask != NULL ? lastTask->pParentTask : lastTask;
 
-            // If the new task has a higher priority, it can skip the current
-            // task
-            if (new_task_priority >
-                std::floor(last_task_priority + last_task->mAge))
+            float lastParentEnd = lastParentTask->mEnd;
+
+            // End time of the new task if it is inserted after the last task
+            float updatedEnd = lastTaskEnd + newTaskDuration;
+
+            // Skip if new task has a higher priority
+            if (newTaskPriority >
+                std::floor(lastTaskPriority + lastTaskAge))
             {
-                // Update the end time of the current task if necessary
-                if (predicted_end > last_task->mEnd)
-                {
-                    last_task->mEnd = predicted_end;
-                }
+                // Update the end time of the last (to-be-skipped) task
+                lastTask->mEnd = updatedEnd;
 
-                // Increase the age of the current (skipped) task
-                last_task->mAge += age_increment;
+                // Update the end time of the last parent task
+                if (updatedEnd > lastParentEnd)
+                {
+                    lastParentTask->mEnd = updatedEnd;
+                }
+                // Increase the age of the last (to-be-skipped) task
+                lastTask->mAge += ageIncrement;
 
                 // Continue with the next task in the queue
                 continue;
             }
-            // If the new task has the same priority, it can sometimes skip the
-            // current task
-            else if (new_task_priority == last_task_priority)
+            // Possibly skip if the new task has the same priority
+            else if (newTaskPriority == lastTaskPriority)
             {
-                // Determine the parent task of the current task
-                std::shared_ptr<QuantumTask> parent_task =
-                    last_task->pParentTask != NULL ? last_task->pParentTask
-                                                   : last_task;
-                float last_parent_end = parent_task->mEnd;
-
-                // If the new task can be inserted without delaying the parent
-                // task, it can skip the current task
-                if (predicted_end < last_parent_end)
+                // Possibly skip if the new task can be inserted without delaying the last parent task
+                if (updatedEnd < lastParentEnd)
                 {
-                    // Determine the parent task of the new task
-                    std::shared_ptr<QuantumTask> new_parent_task =
-                        pNewTask->pParentTask != NULL ? pNewTask->pParentTask
-                                                      : pNewTask;
-
-                    // If the new task can be inserted without delaying its
-                    // parent task, it should skip the current task
-                    if (new_parent_task->mEnd < last_parent_end)
+                    // Skip if we actually gain something
+                    if (newParentEnd < lastParentEnd)
                     {
-                        // Update the end time of the current task if necessary
-                        if (predicted_end > last_task->mEnd)
-                        {
-                            last_task->mEnd = predicted_end;
-                        }
+                        // Update the end time of the last (to-be-skipped) task
+                        lastTask->mEnd = updatedEnd;
 
-                        // Increase the age of the current (skipped) task
-                        last_task->mAge += age_increment;
+                        // Increase the age of the last (to-be-skipped) task
+                        lastTask->mAge += ageIncrement;
 
                         // Continue with the next task in the queue
                         continue;
                     }
                 }
             }
-            // If the new task cannot skip the current task, stop the search
+            // Stop the search, if the new task cannot skip (any more)
+            // Update the end time of the new task
+            pNewTask->mEnd = updatedEnd;
             break;
-        }
+        } 
+    } else {
+        // Queue is empty
+        // Update the end time of the new task
+        pNewTask->mEnd = newTaskDuration;
+    }
+
+    // Update the end time of the parent task of the new task
+    if (newParentEnd < pNewTask->mEnd) {
+        newParentTask->mEnd = pNewTask->mEnd;
     }
 
     // Insert the new task at the found position in the queue
     pQueue->addTask(pNewTask, i);
-
-    // Update the end time of the new task if necessary
-    if (new_task_duration > pNewTask->mEnd)
-    {
-        pNewTask->mEnd = new_task_duration;
-    }
 
     // Return the position where the new task was inserted
     return i;
@@ -251,7 +252,15 @@ int skipping_schedule(std::shared_ptr<QuantumTask> pNewTask,
  */
 extern "C" int scheduler(Scheduler2Device device2SchedQueue,
                          std::vector<std::shared_ptr<QuantumTask>> tasks)
-{
+{   
+    // Predict the expected duration for each (optimized) circuit
+    // Note: this is only a test model and not ready for deployment
+    for (std::shared_ptr<QuantumTask> task : tasks)
+    {
+        std::map<std::string, float> prediction = predict(task->mThreadSafeModule, {"ga_depth.onnx"});
+        task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
+    }
+
     // Sort tasks by priority and within that by duration
     std::sort(tasks.begin(), tasks.end(),
               [](const std::shared_ptr<QuantumTask> a,

@@ -29,7 +29,7 @@ int main(){
 
     // TODO: enable once FOMAC works
     // std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
-    std::vector<My_QDMI_Device> devices = {My_QDMI_Device{"q5"}, My_QDMI_Device{"q20"}, My_QDMI_Device{"wmi"}};
+    std::vector<My_QDMI_Device> devices = {My_QDMI_Device("q5")};//, My_QDMI_Device("q20"), My_QDMI_Device("wmi")};
     
     Submitter2Device device2Submitter;
     Scheduler2Device device2SchedQueue;
@@ -44,7 +44,7 @@ int main(){
     }
 
     // Simulate Generator by creating a bunch of tasks
-    std::vector<int> numChildTasks = {5, 2, 0, 2}; 
+    std::vector<int> numChildTasks = {5, 5, 5};//, 2, 3, 0, 3, 1}; 
     int numParentTasks = numChildTasks.size();
     // Collection of to-be-scheduled tasks
     std::vector<std::shared_ptr<QuantumTask>> tasks;
@@ -60,16 +60,17 @@ int main(){
             std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/mqss/scheduler/inputs/example" + std::to_string(i%3) + ".ll", error, *(TSCtx.getContext()));
             ThreadSafeModule TSM = ThreadSafeModule(std::move(module),std::move(TSCtx));
             parentTask->mThreadSafeModule =  std::move(TSM);
+            // Add some preferred QPUs
             for (int j = 0; j < devices.size(); ++j) {
                 parentTask->mPreferredQpus.push_back(devices.at((i + j) % devices.size())); // Cycle through devices
             }
-            parentTask->mDuration = (i % 5) + 1; // Cycle through durations
             parentTask->mPriority = i % 3; // Cycle through priorities
+            parentTask->mNumberShots = 100; // Set number of shots
 
             tasks.push_back(parentTask);
             scheduler(device2SchedQueue, {parentTask});
         } else {
-            // Simulate Generator could cut the circuit into child tasks
+            // Simulate Generator cut the circuit into child tasks
             std::vector<std::shared_ptr<QuantumTask>> lastChildTasks = {};
 
             for (int j = 0; j < numChildTasks[i]; ++j) {
@@ -85,11 +86,12 @@ int main(){
                 // Initialize task
                 childTask->mThreadSafeModule =  std::move(TSM);
                 childTask->pParentTask = parentTask; // Assign parent task
+                // Add some preferred QPUs
                 for (int k = 0; k < devices.size(); ++k) {
                     childTask->mPreferredQpus.push_back(devices.at((taskID + k) % devices.size())); // Cycle through devices
                 }
-                childTask->mDuration = (taskID % 5) + 1; // Cycle through durations
                 childTask->mPriority = taskID % 3; // Cycle through priorities
+                parentTask->mNumberShots = 100; // Set number of shots
 
                 // Add the child task to the to-be-scheduled tasks vector
                 tasks.push_back(childTask);
@@ -106,18 +108,6 @@ int main(){
     // Iterate over all scheduled tasks and send them to the respective Submitter
     for (auto task: tasks){
         std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
-        //std::shared_ptr<SchedulerQueue> scheduler = device2SchedQueue.at(task->mScheduledQpu);
-        //
-        //// DEBUG INFO
-        //std::cout << "   [Scheduler]...........Current tasks in the queue for device "
-        //          << task->mScheduledQpu.mName << ": ";
-        //for (auto task : device2SchedQueue[task->mScheduledQpu]->mTasks)
-        //{
-        //    std::cout << task->mTaskId << " ";
-        //}
-        //std::cout << std::endl;
-        //std::cout << std::endl;
-
         submitter->insertTask(task);
     }
 

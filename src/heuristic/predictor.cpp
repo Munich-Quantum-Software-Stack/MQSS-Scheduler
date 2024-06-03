@@ -110,7 +110,7 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
         Ort::Session *session = nullptr;
 
         std::string model_path; // Import the model for desired figure of merit
-        model_path = "/home/ubuntu/mqss/scheduler/models/" + model + "_ga_depth.onnx";
+        model_path = "/home/ubuntu/mqss/scheduler/models/" + model;
 
         std::ifstream file(model_path, std::ios::binary | std::ios::ate);
         std::streamsize size = file.tellg();
