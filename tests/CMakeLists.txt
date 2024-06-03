@@ -1,3 +1,3 @@
-add_executable(schedulerHeuristicTest schedulerHeuristicTest.cpp)
-target_link_libraries(schedulerHeuristicTest heuristic LLVM)
-add_test(NAME schedulerHeuristicTest COMMAND schedulerHeuristicTest)
+add_executable(schedulerBackfillingTest schedulerBackfillingTest.cpp)
+target_link_libraries(schedulerBackfillingTest backfilling LLVM)
+add_test(NAME schedulerBackfillingTest COMMAND schedulerBackfillingTest)

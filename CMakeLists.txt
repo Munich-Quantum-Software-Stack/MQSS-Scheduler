@@ -9,10 +9,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-g")
 
 add_library(round_robin SHARED)
-add_library(heuristic SHARED)
+add_library(backfilling SHARED)
 
 target_include_directories(round_robin PUBLIC include/round_robin)
-target_include_directories(heuristic PUBLIC include/heuristic)
+target_include_directories(backfilling PUBLIC include/backfilling)
 
 find_package(LLVM REQUIRED CONFIG)
 include_directories(${LLVM_INCLUDE_DIRS})

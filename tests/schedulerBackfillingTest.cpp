@@ -1,4 +1,4 @@
-#include "heuristic.hpp"
+#include "scheduler.hpp"
 #include "iostream"
 #include <cstddef>
 #include <map>
@@ -66,7 +66,7 @@ int main(){
     }
 
     // Simulate Generator by creating a bunch of tasks
-    std::vector<int> numChildTasks = {5, 5, 5};//, 2, 3, 0, 3, 1}; 
+    std::vector<int> numChildTasks = {3, 3};//, 2, 3, 0, 3, 1}; 
     int numParentTasks = numChildTasks.size();
     int taskID = 0; // Unique task ID for each task
 

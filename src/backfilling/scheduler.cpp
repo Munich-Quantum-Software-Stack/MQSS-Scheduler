@@ -6,7 +6,7 @@
 #include "Submitter.hpp"
 #include "predictor.hpp"
 #include "queue.hpp"
-#include <heuristic.hpp>
+#include <scheduler.hpp>
 #include <iostream>
 #include <memory>
 #include <ostream>
