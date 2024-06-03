@@ -140,12 +140,12 @@ choose_device(std::shared_ptr<QuantumTask> task,
 }
 
 /**
- * @brief Schedule a QuantumTask on a target device using skipping strategy.
+ * @brief Schedule a QuantumTask on a target device using backfilling strategy.
  * @param pNewTask The QuantumTask to be scheduled.
  * @param pQueue The target device's queue to schedule the QuantumTask on.
  * @return The position where the new task was inserted in the queue.
  */
-int skipping_schedule(std::shared_ptr<QuantumTask> pNewTask,
+int backfilling(std::shared_ptr<QuantumTask> pNewTask,
                       std::shared_ptr<SchedulerQueue> pQueue)
 {
     // Extract the duration and priority of the new task
@@ -312,7 +312,7 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
         // Schedule the task on the chosen device and get the position where it
         // was inserted
         int position =
-            skipping_schedule(task, device2SchedQueue[target_device]);
+            backfilling(task, device2SchedQueue[target_device]);
     }
     return 0;
 }
