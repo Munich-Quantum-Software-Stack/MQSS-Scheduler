@@ -35,7 +35,7 @@ std::shared_ptr<QuantumTask> createTask(int taskID, const std::vector<My_QDMI_De
     for (int k = 0; k < devices.size(); ++k) {
         task->mPreferredQpus.push_back(devices.at((taskID + k) % devices.size())); // Cycle through devices
     }
-    task->mPriority = taskID % 3; // Cycle through priorities
+    task->mPriority = parentTask ? parentTask->mPriority : taskID % 3; // Set priority
     task->mNumberShots = 100; // Set number of shots
 
     return task;

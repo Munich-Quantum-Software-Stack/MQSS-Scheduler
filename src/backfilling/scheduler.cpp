@@ -156,7 +156,7 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
     float newParentEnd = newParentTask->mEnd;
 
     // Define the increment for the age of a task when it is skipped
-    float ageIncrement = 0.5;
+    float ageIncrement = 0.25; // TODO: tune this parameter
 
     int i = 0;
 
