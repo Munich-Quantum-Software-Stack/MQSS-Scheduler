@@ -68,11 +68,12 @@ int main(){
     // Simulate Generator by creating a bunch of tasks
     std::vector<int> numChildTasks = {5, 5, 5};//, 2, 3, 0, 3, 1}; 
     int numParentTasks = numChildTasks.size();
-    // Collection of to-be-scheduled tasks
-    std::vector<std::shared_ptr<QuantumTask>> tasks;
     int taskID = 0; // Unique task ID for each task
 
     for (int i = 0; i < numParentTasks; ++i) {
+        // Collection of to-be-scheduled tasks
+        std::vector<std::shared_ptr<QuantumTask>> tasks;
+
         auto parentTask = createTask(taskID++, devices);
         if (numChildTasks[i] == 0) {
             tasks.push_back(parentTask);
@@ -87,13 +88,14 @@ int main(){
             scheduler(device2SchedQueue, lastChildTasks);
             lastChildTasks.clear();
         }
-    }
-    // At this point the tasks would be further obtimized to the respective devices
 
-    // Iterate over all scheduled tasks and send them to the respective Submitter
-    for (auto task: tasks){
-        std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
-        submitter->insertTask(task);
+        // At this point the tasks would be further obtimized to the respective devices
+
+        // Iterate over all scheduled tasks and send them to the respective Submitter
+        for (auto task: tasks){
+            std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
+            submitter->insertTask(task);
+        }
     }
 
     // Wait for all tasks to be executed (removed from the queue)
