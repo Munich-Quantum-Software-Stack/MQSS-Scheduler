@@ -16,4 +16,6 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
                                   double multi_qubit_gate_time,
                                   double measurement_time);
 
+int evaluate_num_qubits(const ThreadSafeModule &TSM);
+
 #endif // EVAL_HPP

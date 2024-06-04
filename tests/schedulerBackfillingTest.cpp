@@ -51,7 +51,7 @@ int main(){
 
     // TODO: enable once FOMAC works
     // std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
-    std::vector<My_QDMI_Device> devices = {My_QDMI_Device("q5")};//, My_QDMI_Device("q20"), My_QDMI_Device("wmi")};
+    std::vector<My_QDMI_Device> devices = {My_QDMI_Device("q5"), My_QDMI_Device("q20"), My_QDMI_Device("wmi")};
     
     Submitter2Device device2Submitter;
     Scheduler2Device device2SchedQueue;

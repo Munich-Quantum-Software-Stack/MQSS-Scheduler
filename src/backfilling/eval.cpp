@@ -312,3 +312,80 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
 
     return circuit_duration;
 }
+
+
+/*
+ * @brief Extract the number of active qubits from a quantum circuit
+ * @param TSM The quantum circuit to evaluate
+ * @return The number of active qubits
+ */
+int evaluate_num_qubits(const ThreadSafeModule &TSM)
+{
+    std::string QIS_START = "__quantum__qis_";
+    std::unordered_map<std::string, int> qubit_counts;
+
+    if (!TSM)
+    {
+        std::cerr << "ThreadSafeModule is null" << std::endl;
+        return 0;
+    }
+
+    TSM.withModuleDo(
+        [&](Module &module)
+        {
+            LLVMContext &Context = module.getContext();
+            StructType *qubitType = StructType::getTypeByName(Context, "Qubit");
+            for (auto &function : module)
+            {
+                for (auto &block : function)
+                {
+                    for (auto &instruction : block)
+                    {
+                        if (auto call_instr = dyn_cast<CallBase>(&instruction))
+                        {
+                            if (auto f = call_instr->getCalledFunction())
+                            {
+                                auto op_name =
+                                    static_cast<std::string>(f->getName());
+
+                                bool is_quantum =
+                                    (op_name.size() >= QIS_START.size() &&
+                                     op_name.substr(0, QIS_START.size()) ==
+                                         QIS_START);
+
+                                if (is_quantum)
+                                {
+                                    // Look for qubits affected by the gate
+                                    for (Use &operand : call_instr->operands())
+                                    {
+                                        if (auto *val =
+                                                dyn_cast<Value>(&operand))
+                                        {
+                                            if (val->getType() ==
+                                                PointerType::get(qubitType, 0))
+                                            {
+                                                std::string qubit;
+                                                llvm::raw_string_ostream stream(
+                                                    qubit);
+                                                operand.get()->printAsOperand(
+                                                    stream, true);
+                                                stream.flush();
+                                                // Count operations on each
+                                                // qubit
+                                                qubit_counts[qubit]++;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+    // Number of active qubits in the circuit
+    int num_qubits = qubit_counts.size();
+
+    return num_qubits;
+}
