@@ -15,7 +15,7 @@ target_include_directories(round_robin PUBLIC include/round_robin)
 target_include_directories(heuristic PUBLIC include/heuristic)
 
 find_package(LLVM REQUIRED CONFIG)
-include_directories(${LLVM_INCLUDE_DIRS})
+include_directories(${LLVM_INCLUDE_DIRS} include)
 add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(src)

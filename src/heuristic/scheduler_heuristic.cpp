@@ -58,7 +58,7 @@ std::map<QDMI_Device, float> calculate_scores(QuantumTask *task)
  
  QDMI_Device choose_device(QuantumTask* task,
                           const std::map<QDMI_Device, float> &scores, 
-        Submiter2Device device2Submitter)
+        Device2SubmitterType device2Submitter)
 {
     // Find the devices with the three highest final scores
     std::vector<QDMI_Device> devices;
@@ -129,7 +129,7 @@ std::map<QDMI_Device, float> calculate_scores(QuantumTask *task)
  * @param target_device The target device to schedule the QuantumTask on.
  * @return True if the QuantumTask was successfully scheduled, false otherwise.
  */
-bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Submiter2Device device2Submitter)
+bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Device2SubmitterType device2Submitter)
  {
      // Get current queue from metadata
      //QirPassRunner &QPR = QirPassRunner::getInstance();
@@ -234,7 +234,7 @@ bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Submite
  * @param task The QuantumTask to be scheduled.
  * @return The selected device on which the task was scheduled.
  */
-extern "C" int scheduler(Submiter2Device device2Submitter, std::vector<QuantumTask *> tasks)
+extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<QuantumTask *> tasks)
 {
     // TODO uncomment when FOMAC is available
     //std::vector<QDMI_Device> devices = FOMAC_available_devices();

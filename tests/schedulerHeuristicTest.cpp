@@ -65,7 +65,7 @@ int main(){
     tasks.push_back(&mQuantumTask2);
 
 
-    Submiter2Device device2Submitter;
+    Device2SubmitterType device2Submitter;
     for (const QDMI_Device& device : devices) {
         auto submitter = std::make_shared<Submitter>(device); 
         device2Submitter.emplace(device, submitter); 

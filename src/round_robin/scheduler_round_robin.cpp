@@ -15,7 +15,7 @@
  *
  * @return const char *
  */
-extern "C" int scheduler(Submiter2Device device2Submitter, std::vector<QuantumTask *> tasks)
+extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<QuantumTask *> tasks)
 {
     // Query the available devices
 

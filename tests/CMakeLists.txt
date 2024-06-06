@@ -1,3 +1,7 @@
 add_executable(schedulerHeuristicTest schedulerHeuristicTest.cpp)
 target_link_libraries(schedulerHeuristicTest heuristic LLVM)
 add_test(NAME schedulerHeuristicTest COMMAND schedulerHeuristicTest)
+
+add_executable(schedulerRoundRobinTest schedulerRoundRobinTest.cpp)
+target_link_libraries(schedulerRoundRobinTest round_robin LLVM)
+add_test(NAME schedulerRoundRobinTest COMMAND schedulerRoundRobinTest)
