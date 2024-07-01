@@ -15,6 +15,7 @@
 #include "QuantumTask.hpp"
 #include "Submitter.hpp"
 #include "queue.hpp"
+#include <filesystem>
 
 using namespace llvm;
 using namespace llvm::orc;
@@ -22,11 +23,15 @@ using namespace llvm::orc;
 std::shared_ptr<QuantumTask> createTask(int taskID, const std::vector<My_QDMI_Device>& devices, std::shared_ptr<QuantumTask> parentTask = nullptr) {
     auto task = std::make_shared<QuantumTask>(taskID);
 
+    std::filesystem::path currentFilePath = __FILE__; // Get the current file path
+    std::filesystem::path currentDir = currentFilePath.parent_path(); // Get the directory of the current file
+    std::filesystem::path inputFilePath = currentDir / ("inputs/example" + std::to_string(taskID % 3) + ".ll"); // Construct the relative path
+
     // Create a new context and module for each task
     SMDiagnostic error;
     ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
-    std::unique_ptr<Module> module = parseIRFile("/home/ubuntu/mqss/scheduler/tests/inputs/example" + std::to_string(taskID%3) + ".ll", error, *(TSCtx.getContext()));
-    ThreadSafeModule TSM = ThreadSafeModule(std::move(module),std::move(TSCtx));
+    std::unique_ptr<Module> module = parseIRFile(inputFilePath.string(), error, *(TSCtx.getContext()));
+    ThreadSafeModule TSM = ThreadSafeModule(std::move(module), std::move(TSCtx));
 
     // Initialize task
     task->mThreadSafeModule =  std::move(TSM);

@@ -6,6 +6,7 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <filesystem>
 
 /*
  * @brief Predict some figure of merit based on a pretrained ONNX model for each
@@ -102,6 +103,12 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
 
     // Create a map to store the results
     std::map<std::string, float> results;
+    
+    // Get the current file path
+    std::filesystem::path currentFilePath = __FILE__;
+    std::filesystem::path currentDir = currentFilePath.parent_path();
+    // Navigate up to the 'scheduler' directory, then to the 'models' directory
+    std::filesystem::path modelsDir = currentDir.parent_path().parent_path() / "models";
 
     // Loop over all models
     for (const std::string &model : models)
@@ -109,10 +116,10 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
         // Declare the session pointer
         Ort::Session *session = nullptr;
 
-        std::string model_path; // Import the model for desired figure of merit
-        model_path = "/home/ubuntu/mqss/scheduler/models/" + model;
+        // Import the model for desired figure of merit
+        std::filesystem::path modelPath = modelsDir / model;
 
-        std::ifstream file(model_path, std::ios::binary | std::ios::ate);
+        std::ifstream file(modelPath, std::ios::binary | std::ios::ate);
         std::streamsize size = file.tellg();
         file.seekg(0, std::ios::beg);
 
@@ -128,7 +135,7 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
             else
             {
                 throw std::runtime_error("Failed to read model file: " +
-                                         model_path);
+                                         modelPath.string());
             }
         }
         catch (const std::exception &ex)
