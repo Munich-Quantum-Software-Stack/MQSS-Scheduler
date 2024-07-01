@@ -15,7 +15,7 @@
  *
  * @return const char *
  */
-extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<QuantumTask *> tasks)
+extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<QuantumTask> *tasks)
 {
     // Query the available devices
 
@@ -31,7 +31,7 @@ extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<Quan
 
     
 
-    for (auto &childQuantumTask : tasks)
+    for (auto &childQuantumTask : *tasks)
     {
         QDMI_Device device = device2Submitter.begin()->first;
 
@@ -40,10 +40,10 @@ extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<Quan
 
         std::cout << "   [Scheduler]...........Setting "
                   << libname << " as target device "
-                  << "for job with ID " << childQuantumTask->mTaskId
+                  << "for job with ID " << childQuantumTask.mTaskId
                   << std::endl;
 
-        childQuantumTask->mScheduledQpu = device;
+        childQuantumTask.mScheduledQpu = device;
     }
 
     return 0; 
