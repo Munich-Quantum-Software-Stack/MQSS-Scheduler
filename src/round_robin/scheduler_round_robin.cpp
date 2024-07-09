@@ -33,7 +33,7 @@ extern "C" int scheduler(Submiter2Device device2Submitter, std::vector<QuantumTa
 
     for (auto &childQuantumTask : tasks)
     {
-        My_QDMI_Device device = device2Submitter.begin()->first;
+        QDMI_Device device = device2Submitter.begin()->first;
 
         const char *libname = "the first lib";
         //strrchr(device->library.libname, '/');

@@ -21,7 +21,9 @@ if(NOT ONNXRUNTIME_BUILD_RESULT EQUAL "0")
     message(FATAL_ERROR "Failed to build ONNX Runtime")
 endif()
 
+find_package(qdmi REQUIRED)
 target_include_directories(backfilling PUBLIC 
+    ${QDMI_INCLUDE_DIRS}
     ${SUBMITTER_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/build/_deps/onnxruntime-src/include/onnxruntime/core/session/
 )

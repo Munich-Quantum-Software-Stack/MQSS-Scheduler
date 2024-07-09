@@ -1,3 +1,4 @@
+#include "qdmi.h"
 #include "scheduler.hpp"
 #include "iostream"
 #include <cstddef>
@@ -20,7 +21,7 @@
 using namespace llvm;
 using namespace llvm::orc;
 
-std::shared_ptr<QuantumTask> createTask(int taskID, const std::vector<My_QDMI_Device>& devices, std::shared_ptr<QuantumTask> parentTask = nullptr) {
+std::shared_ptr<QuantumTask> createTask(int taskID, const std::vector<QDMI_Device>& devices, std::shared_ptr<QuantumTask> parentTask = nullptr) {
     auto task = std::make_shared<QuantumTask>(taskID);
 
     std::filesystem::path currentFilePath = __FILE__; // Get the current file path
@@ -36,7 +37,7 @@ std::shared_ptr<QuantumTask> createTask(int taskID, const std::vector<My_QDMI_De
     // Initialize task
     task->mThreadSafeModule =  std::move(TSM);
     task->pParentTask = parentTask; // Assign parent task
-    // Add some preferred QPUs
+    // Add some preferred QPUs in random order
     for (int k = 0; k < devices.size(); ++k) {
         task->mPreferredQpus.push_back(devices.at((taskID + k) % devices.size())); // Cycle through devices
     }
@@ -51,23 +52,32 @@ int main(){
     QInfo info;
     QDMI_Session session = NULL;
     int err = QInfo_create(&info);
-
     err = QDMI_session_init(info, &session);
 
-    // TODO: enable once FOMAC works
-    // std::vector<QDMI_Device> devices = FOMAC_available_devices(true);
-    std::vector<My_QDMI_Device> devices = {My_QDMI_Device("q5"), My_QDMI_Device("q20"), My_QDMI_Device("wmi")};
+    int count = -1;
+    err = QDMI_core_device_count(&session, &count);
+    std::vector<QDMI_Device> devices;
+    for(int i = 0; i < count; i++){
+        QDMI_Device device;
+        err = QDMI_core_open_device(&session, i, &info, &device);
+        devices.push_back(device);
+        // TODO: remove once there are more than one device available
+        devices.push_back(device);
+        devices.push_back(device);
+        devices.push_back(device);
+        devices.push_back(device);
+    } 
     
     Submitter2Device device2Submitter;
     Scheduler2Device device2SchedQueue;
 
-    for (const My_QDMI_Device& device : devices) {
+    for (const QDMI_Device& device : devices) {
         auto submitter = std::make_shared<Submitter>(device); // Create Submitter using smart pointer
         device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
 
         auto scheduler = std::make_shared<SchedulerQueue>(submitter);
         submitter->addObserver(scheduler); // Add the SchedulerQueue as an observer
-        device2SchedQueue.emplace(device, scheduler); 
+        device2SchedQueue.emplace(device, scheduler);
     }
 
     // Simulate Generator by creating a bunch of tasks

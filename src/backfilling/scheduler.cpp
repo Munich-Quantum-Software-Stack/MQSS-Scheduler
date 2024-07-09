@@ -5,6 +5,7 @@
 #include "QuantumTask.hpp"
 #include "Submitter.hpp"
 #include "predictor.hpp"
+#include "qdmi.h"
 #include "queue.hpp"
 #include <scheduler.hpp>
 #include <iostream>
@@ -19,17 +20,10 @@
  * @param task The QuantumTask to be scheduled.
  * @return A map of devices to their respective scores.
  */
-std::unordered_map<My_QDMI_Device, float>
+std::unordered_map<QDMI_Device, float>
 calculate_scores(std::shared_ptr<QuantumTask> task)
-{
-    std::unordered_map<My_QDMI_Device, float> deviceScores = {};
-    // TODO: get available devices from FOMAC/QDMI
-    // Note: these are only test models and not ready for deployment
-    std::unordered_map<My_QDMI_Device, string> device2Model = {
-        {My_QDMI_Device("q20"), "q5_ga_depth.onnx"},
-        {My_QDMI_Device("q5"), "q20_ga_depth.onnx"},
-        {My_QDMI_Device("wmi"), "wmi_ga_depth.onnx"}};
-    std::vector<string> models;
+{   
+    std::unordered_map<QDMI_Device, float> deviceScores = {};
 
     // If the user only wants to use a single QPU
     if (task->mPreferredQpus.size() == 1)
@@ -38,20 +32,41 @@ calculate_scores(std::shared_ptr<QuantumTask> task)
         deviceScores = {{task->mPreferredQpus.front(), 1.0}};
         return deviceScores;
     }
-    // If the user preference is not specified, use the ML model
-    else if (task->mPreferredQpus.size() == 0)
+
+    // TODO: get count from QDMI_core_device_count(&session, &count);
+    int count = task->mPreferredQpus.size();
+
+    std::unordered_map<QDMI_Device, std::string> device2Model = {};
+    for(int i = 0; i < count; i++){
+        QDMI_Device device;
+        // TODO: get device from QDMI_core_open_device(&session, i, &info, &device);
+        device = task->mPreferredQpus.at(i);
+
+        // Associate each device with a model
+        device2Model[device] = "ga_depth.onnx";
+    } 
+
+    std::vector<string> models;
+
+    // If the user preference is not specified
+    if (task->mPreferredQpus.size() == 0)
     {
+        // Score all available devices
         for (const auto &d2M : device2Model)
         {
             models.push_back(d2M.second);
         }
-    }
-    // If choice is not forced or the user preference is equally distributed
-    else
-    {
+    } else { // If the user preference is specified
         for (const auto &qpu : task->mPreferredQpus)
-        {
-            models.push_back(device2Model[qpu]);
+        {   
+            // Check user preference is within the available devices
+            if (device2Model.find(qpu) == device2Model.end())
+            {
+                std::cerr << "   [Scheduler]...........Device not found in the list of available devices." << std::endl;
+                continue;
+            } else {
+                models.push_back(device2Model[qpu]);
+            }
         }
     }
 
@@ -68,7 +83,7 @@ calculate_scores(std::shared_ptr<QuantumTask> task)
                                { return d2M.second == model; });
         if (it != device2Model.end())
         {
-            My_QDMI_Device device = it->first;
+            QDMI_Device device = it->first;
             // Example FOM is "depth" -> lower is better
             deviceScores[device] = 1 / predictions[model];
         }
@@ -82,13 +97,13 @@ calculate_scores(std::shared_ptr<QuantumTask> task)
  * @param scores The scores of the devices.
  * @return The name of the selected device.
  **/
-My_QDMI_Device
+QDMI_Device
 choose_device(std::shared_ptr<QuantumTask> task,
-              const std::unordered_map<My_QDMI_Device, float> &scores,
+              const std::unordered_map<QDMI_Device, float> &scores,
               Scheduler2Device device2SchedQueue)
 {
     // Find the devices with the three highest final scores
-    std::vector<My_QDMI_Device> devices;
+    std::vector<QDMI_Device> devices;
     for (auto &score : scores)
     {
         // If we have less than 3 devices, just add the current device
@@ -115,13 +130,16 @@ choose_device(std::shared_ptr<QuantumTask> task,
         << "   [Scheduler]...........Choosing target from top 3 devices: ";
     for (auto &device : devices)
     {
-        std::cout << device.mName << " ";
+        QDMI_Device_property prop;
+        int name = -1;
+        int result = QDMI_query_device_property_i(device, prop, &name);
+        std::cout << name << " ";
     }
     std::cout << std::endl;
 
     // Find the queue with shortest end time among the three devices
     float min_end_time = std::numeric_limits<float>::max();
-    My_QDMI_Device target_device = devices.front();
+    QDMI_Device target_device = devices.front();
 
     for (auto &device : devices)
     {
@@ -290,23 +308,31 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
                   << task->mTaskId << std::endl;
 
         // Calculate scores for each (preferred) device based on the task
-        std::unordered_map<My_QDMI_Device, float> scores =
+        std::unordered_map<QDMI_Device, float> scores =
             calculate_scores(task);
 
-        std::cout << "   [Scheduler]...........Scores: ";
+        std::cout << "   [Scheduler]...........Scores for devices:";
         for (const auto &score : scores)
         {
-            std::cout << score.first.mName << ": " << score.second << " ";
+            auto device = score.first;
+            QDMI_Device_property prop;
+            int name = -1;
+            int result = QDMI_query_device_property_i(device, prop, &name);
+            std::cout << name << ": " << score.second << " ";
         }
         std::cout << std::endl;
 
         // Choose the device with the shortest queue out of top 3 scored devices
-        My_QDMI_Device target_device =
+        QDMI_Device target_device =
             choose_device(task, scores, device2SchedQueue);
 
-        std::cout << "   [Scheduler]...........Inserting QuantumTask into the "
-                     "queue for device "
-                  << target_device.mName << std::endl << std::endl;
+        QDMI_Device_property prop;
+        int name = -1;
+        int result = QDMI_query_device_property_i(target_device, prop, &name);
+
+        std::cout << "   [Scheduler]...........Inserting QuantumTask into the queue for device "
+                  << name << std::endl << std::endl;
+        
         task->mScheduledQpu = target_device;
 
         // Schedule the task on the chosen device and get the position where it
