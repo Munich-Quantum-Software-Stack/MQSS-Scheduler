@@ -109,7 +109,7 @@ int main(){
         // Iterate over all scheduled tasks and send them to the respective Submitter
         for (auto task: tasks){
             std::shared_ptr<Submitter> submitter = device2Submitter.at(task->mScheduledQpu);
-            submitter->insertTask(task);
+            submitter->enqueue(task);
         }
     }
 
