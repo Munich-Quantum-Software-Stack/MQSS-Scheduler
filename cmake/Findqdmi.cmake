@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
     qdmi
     GIT_REPOSITORY git@github.com:Munich-Quantum-Software-Stack/qdmi.git
-    GIT_TAG issue/17
+    GIT_TAG develop
 )
 
 FetchContent_MakeAvailable(qdmi)

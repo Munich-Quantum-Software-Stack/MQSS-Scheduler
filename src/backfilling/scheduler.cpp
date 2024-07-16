@@ -315,9 +315,8 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
         for (const auto &score : scores)
         {
             auto device = score.first;
-            QDMI_Device_property prop;
-            int name = -1;
-            int result = QDMI_query_device_property_i(device, prop, &name);
+            char* name;
+            int isErr = QDMI_query_device_property_c(device, BACKEND_NAME, &name);
             std::cout << name << ": " << score.second << " ";
         }
         std::cout << std::endl;

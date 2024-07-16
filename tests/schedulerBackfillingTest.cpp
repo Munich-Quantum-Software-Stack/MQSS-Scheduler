@@ -72,7 +72,7 @@ int main(){
     Scheduler2Device device2SchedQueue;
 
     for (const QDMI_Device& device : devices) {
-        auto submitter = std::make_shared<Submitter>(device); // Create Submitter using smart pointer
+        auto submitter = std::make_shared<Submitter>(device, 3); // Create Submitter using smart pointer
         device2Submitter.emplace(device, submitter); // Store Submitter in map using smart pointer
 
         auto scheduler = std::make_shared<SchedulerQueue>(submitter);
