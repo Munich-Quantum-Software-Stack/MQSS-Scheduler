@@ -26,6 +26,7 @@ target_include_directories(backfilling PUBLIC
     ${QDMI_INCLUDE_DIRS}
     ${SUBMITTER_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/build/_deps/onnxruntime-src/include/onnxruntime/core/session/
+    ${CMAKE_SOURCE_DIR}/include
 )
 
 set(ONNXRUNTIME_LIB_DIR ${CMAKE_SOURCE_DIR}/build/_deps/onnxruntime-src/build/Linux/Release)
@@ -37,4 +38,10 @@ target_link_libraries(backfilling
     submitter
 )
 
-target_sources(backfilling PUBLIC scheduler.cpp eval.cpp predictor.cpp queue.cpp)
+target_sources(backfilling 
+    PUBLIC
+    eval.cpp
+    predictor.cpp
+    scheduler_backfilling.cpp
+    ../queue.cpp
+) 

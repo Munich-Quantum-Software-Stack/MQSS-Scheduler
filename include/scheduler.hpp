@@ -1,4 +1,3 @@
-
 #include "Submitter.hpp"
 #include "queue.hpp"
 #include "eval.hpp"
