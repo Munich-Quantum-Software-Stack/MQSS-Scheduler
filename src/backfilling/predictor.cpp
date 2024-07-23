@@ -19,7 +19,7 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
                                      const std::vector<std::string> models)
 {
     // Prepare circuit feature vector for model input
-    std::map<std::string, int> gate_counts = {{"__quantum__qis__U3__body", 0},
+    std::map<std::string, int> gateCounts = {{"__quantum__qis__U3__body", 0},
                                               {"u2", 0},
                                               {"u1", 0},
                                               {"__quantum__qis__cnot__body", 0},
@@ -64,39 +64,39 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
                                               {"__quantum__qis__mz__body", 0}};
 
     // Create a memory information object
-    Ort::MemoryInfo memory_info =
+    Ort::MemoryInfo memoryInfo =
         Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
     // Generate supermarq+ features
-    std::vector<double> supermarq_plus =
-        evaluate_supermarq_plus(TSM, gate_counts);
+    std::vector<double> supermarqPlus =
+        evaluate_supermarq_plus(TSM, gateCounts);
 
     // Prepare input tensor
-    std::array<float, 52> input_data;
+    std::array<float, 52> inputData;
     int i = 0;
-    // Fill input_data with gate_counts values
-    for (const auto &pair : gate_counts)
+    // Fill inputData with gateCounts values
+    for (const auto &pair : gateCounts)
     {
-        input_data[i++] = (float)(pair.second);
+        inputData[i++] = (float)(pair.second);
     }
-    // Fill the rest of input_data with supermarq_plus values
-    for (const double &value : supermarq_plus)
+    // Fill the rest of inputData with supermarqPlus values
+    for (const double &value : supermarqPlus)
     {
-        input_data[i++] = (float)(value);
+        inputData[i++] = (float)(value);
     }
-    std::vector<int64_t> input_shape = {1, 52};
-    Ort::Value input_tensor = Ort::Value::CreateTensor<float>(
-        memory_info, input_data.data(), input_data.size(), input_shape.data(),
-        input_shape.size());
+    std::vector<int64_t> inputShape = {1, 52};
+    Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
+        memoryInfo, inputData.data(), inputData.size(), inputShape.data(),
+        inputShape.size());
 
     // Set the input
-    std::vector<const char *> input_node_names = {"float_input"};
-    std::vector<Ort::Value> input_tensors;
-    input_tensors.push_back(std::move(input_tensor));
+    std::vector<const char *> inputNodeNames = {"float_input"};
+    std::vector<Ort::Value> inputTensors;
+    inputTensors.push_back(std::move(inputTensor));
 
     // Initialize session options
-    Ort::SessionOptions session_options;
-    session_options.SetIntraOpNumThreads(1);
+    Ort::SessionOptions sessionOptions;
+    sessionOptions.SetIntraOpNumThreads(1);
 
     // Initialize the environment
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "Predictor");
@@ -130,7 +130,7 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
             {
                 // Initialize the session
                 session = new Ort::Session(env, buffer.data(), buffer.size(),
-                                           session_options);
+                                           sessionOptions);
             }
             else
             {
@@ -145,23 +145,23 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
         }
 
         // Prepare output tensor
-        std::vector<const char *> output_node_names = {"variable"};
-        std::array<float, 1> output_data;
-        std::vector<int64_t> output_shape = {1, 1};
-        Ort::Value output_tensor = Ort::Value::CreateTensor<float>(
-            memory_info, output_data.data(), output_data.size(),
-            output_shape.data(), output_shape.size());
+        std::vector<const char *> outputNodeNames = {"variable"};
+        std::array<float, 1> outputData;
+        std::vector<int64_t> outputShape = {1, 1};
+        Ort::Value outputTensor = Ort::Value::CreateTensor<float>(
+            memoryInfo, outputData.data(), outputData.size(),
+            outputShape.data(), outputShape.size());
 
         // Add output_tensor to output_tensors
-        std::vector<Ort::Value> output_tensors;
-        output_tensors.push_back(std::move(output_tensor));
+        std::vector<Ort::Value> outputTensors;
+        outputTensors.push_back(std::move(outputTensor));
 
         // Run the model
-        session->Run(Ort::RunOptions{nullptr}, input_node_names.data(),
-                     input_tensors.data(), input_tensors.size(),
-                     output_node_names.data(), output_tensors.data(),
-                     output_tensors.size());
-        float *floatarr = output_tensors[0].GetTensorMutableData<float>();
+        session->Run(Ort::RunOptions{nullptr}, inputNodeNames.data(),
+                     inputTensors.data(), inputTensors.size(),
+                     outputNodeNames.data(), outputTensors.data(),
+                     outputTensors.size());
+        float *floatarr = outputTensors[0].GetTensorMutableData<float>();
 
         // Add the model string and model score to the map
         results[model] = floatarr[0];
