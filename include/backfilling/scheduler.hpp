@@ -1,6 +1,7 @@
 
 #include "Submitter.hpp"
 #include "queue.hpp"
+#include "eval.hpp"
 #include "qdmi.h"
 
 typedef std::unordered_map<QDMI_Device, std::shared_ptr<Submitter>> Submitter2Device;

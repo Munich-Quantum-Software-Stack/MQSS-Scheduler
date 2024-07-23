@@ -266,13 +266,16 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
  */
 extern "C" int scheduler(Scheduler2Device device2SchedQueue,
                          std::vector<std::shared_ptr<QuantumTask>> tasks)
-{   
-    // Predict the expected duration for each (optimized) circuit
-    // TODO: this is only a test model and not ready for deployment
+{
+    // Calculate expected duration for each circuit
     for (std::shared_ptr<QuantumTask> task : tasks)
     {
-        std::map<std::string, float> prediction = predict(task->mThreadSafeModule, {"ga_depth.onnx"});
-        task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
+        // Since we dont know the target device yet, we use generic values (resembling IQM gate times)
+        double singleQubitGateTime = 1.0;
+        double twoQubitGateTime = 3 * singleQubitGateTime;
+        double measurementTime = 350 * singleQubitGateTime;
+        double duration = calculate_circuit_duration(task->mThreadSafeModule, singleQubitGateTime, twoQubitGateTime, measurementTime);
+        task->mDuration = duration * task->mNumberShots;
     }
 
     // Sort tasks by priority and within that by duration
@@ -330,8 +333,11 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
         
         task->mScheduledQpu = target_device;
 
-        // Schedule the task on the chosen device and get the position where it
-        // was inserted
+        // Update the expected duration of the task based on the chosen device
+        std::map<std::string, float> prediction = predict(task->mThreadSafeModule,{"ga_depth.onnx"});
+        task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
+
+        // Schedule the task on the chosen device using backfilling strategy
         int position =
             backfilling(task, device2SchedQueue[target_device]);
     }
