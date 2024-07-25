@@ -9,7 +9,6 @@
 #include <thread>
 #include <QuantumTask.hpp>
 
-// SchedulerQueue class definition
 class SchedulerQueue : public ISubmitterObserver {
     public:
         // Pointer to a Submitter object

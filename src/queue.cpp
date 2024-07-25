@@ -6,13 +6,13 @@
 
 /*
  * @brief Add a QuantumTask to the SchedulerQueue at a specific position
- * @param pQuantumTask The QuantumTask to be added
+ * @param quantumTask The QuantumTask to be added
  * @param position The position in the queue where the task should be inserted
  * @return The execution order of the added task
  */
-int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> pQuantumTask, int position)
+int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> quantumTask, int position)
 {   
-    if (pQuantumTask == nullptr) {
+    if (quantumTask == nullptr) {
         throw std::invalid_argument("   [SchedulerQueue]......pQuantumTask is a null pointer");
     }
 
@@ -20,17 +20,18 @@ int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> pQuantumTask, int posit
         throw std::out_of_range("   [SchedulerQueue]......Position is out of range");
     }
 
-    int mNewExecutionOrder = 0;
+    double newExecutionOrder = 0.0;
+    double executionOrderIncrement = 1.0e12;
 
     // If queue is empty
     if (this->mTasks.size() == 0) {
-        mNewExecutionOrder = 1000;
+        newExecutionOrder = executionOrderIncrement;
     }
 
     // If the task is inserted at the end of the (non-empty) queue
     else if (position == this->mTasks.size()) {
         std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
-        mNewExecutionOrder = prevTask->mExecutionOrder + 1000;
+        newExecutionOrder = prevTask->mExecutionOrder + executionOrderIncrement;
     }
 
     // If the task is inserted at the beginning of the (non-empty) queue
@@ -41,42 +42,42 @@ int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> pQuantumTask, int posit
         if (nextTask->mExecutionOrder == 0) {
             throw std::runtime_error("   [SchedulerQueue]......Ran out of execution order numbers");
         }
-        mNewExecutionOrder = nextTask->mExecutionOrder / 2;
+        newExecutionOrder = nextTask->mExecutionOrder / 2;
     }
 
     // If the task is inserted in the middle of the (non-empty) queue
     else {
         std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
         std::shared_ptr<QuantumTask> nextTask = this->mTasks[position];
-        mNewExecutionOrder = (prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
+        newExecutionOrder = (prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
 
         // Check that we don't run out of numbers
-        if (mNewExecutionOrder == prevTask->mExecutionOrder) {
+        if (newExecutionOrder == prevTask->mExecutionOrder) {
             throw std::runtime_error("   [SchedulerQueue]......Ran out of execution order numbers");
         }
     }
 
     // Set the execution order of the new task
-    pQuantumTask->mExecutionOrder = mNewExecutionOrder;
+    quantumTask->mExecutionOrder = newExecutionOrder;
 
     // Insert the task at the specified position in the queue
-    this->mTasks.insert(this->mTasks.begin() + position, pQuantumTask);
+    this->mTasks.insert(this->mTasks.begin() + position, quantumTask);
 
     // Update the total duration of the queue
-    this->mTotalDuration += pQuantumTask->mDuration;
+    this->mTotalDuration += quantumTask->mDuration;
 
-    std::cout << "   [SchedulerQueue]......Task " << pQuantumTask->mTaskId << " added in SchedulerQueue at position " << position << " with execution order " << mNewExecutionOrder << std::endl;
-    return mNewExecutionOrder;
+    std::cout << "   [SchedulerQueue]......Task " << quantumTask->mTaskId << " added in SchedulerQueue at position " << position << " with execution order " << newExecutionOrder << std::endl;
+    return newExecutionOrder;
 }
 
-int SchedulerQueue::removeTask(std::shared_ptr<QuantumTask> pQuantumTask)
+int SchedulerQueue::removeTask(std::shared_ptr<QuantumTask> quantumTask)
 {
     // Find the task in the queue
-    auto it = std::find(this->mTasks.begin(), this->mTasks.end(), pQuantumTask);
+    auto it = std::find(this->mTasks.begin(), this->mTasks.end(), quantumTask);
 
     // If the task is not in the queue
     if (it == this->mTasks.end()) {
-        std::cerr << "   [SchedulerQueue]......Task " << pQuantumTask->mTaskId << " not found in SchedulerQueue within tasks: ";
+        std::cerr << "   [SchedulerQueue]......Task " << quantumTask->mTaskId << " not found in SchedulerQueue within tasks: ";
         for (auto task : this->mTasks) {
             std::cerr << task->mTaskId << " ";
         }
@@ -88,8 +89,8 @@ int SchedulerQueue::removeTask(std::shared_ptr<QuantumTask> pQuantumTask)
     this->mTasks.erase(it);
 
     // Update the total duration of the queue
-    this->mTotalDuration -= pQuantumTask->mDuration;
+    this->mTotalDuration -= quantumTask->mDuration;
 
-    std::cout << "   [SchedulerQueue]......Task " << pQuantumTask->mTaskId << " removed from SchedulerQueue" << std::endl;
+    std::cout << "   [SchedulerQueue]......Task " << quantumTask->mTaskId << " removed from SchedulerQueue" << std::endl;
     return 0;
 }
