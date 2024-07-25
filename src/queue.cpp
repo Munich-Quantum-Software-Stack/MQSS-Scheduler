@@ -66,7 +66,6 @@ int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> quantumTask, int positi
     // Update the total duration of the queue
     this->mTotalDuration += quantumTask->mDuration;
 
-    std::cout << "   [SchedulerQueue]......Task " << quantumTask->mTaskId << " added in SchedulerQueue at position " << position << " with execution order " << newExecutionOrder << std::endl;
     return newExecutionOrder;
 }
 
@@ -91,6 +90,5 @@ int SchedulerQueue::removeTask(std::shared_ptr<QuantumTask> quantumTask)
     // Update the total duration of the queue
     this->mTotalDuration -= quantumTask->mDuration;
 
-    std::cout << "   [SchedulerQueue]......Task " << quantumTask->mTaskId << " removed from SchedulerQueue" << std::endl;
     return 0;
 }

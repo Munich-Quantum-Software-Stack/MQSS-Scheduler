@@ -66,7 +66,6 @@ calculate_scores(std::shared_ptr<QuantumTask> task)
     // If none of the user preferences are available, score all available devices
     if (chosenModels.size() == 0)
     {
-        std::cout << "   [Scheduler]...........No user preference found. Scoring all available devices." << std::endl;
         for (const auto &d2M : availableQPUs2Model)
         {
             chosenModels.push_back(d2M.second);
@@ -122,17 +121,6 @@ choose_device(std::shared_ptr<QuantumTask> task,
             }
         }
     }
-
-    std::cout
-        << "   [Scheduler]...........Choosing target from top 3 devices: ";
-    for (auto &device : topDevices)
-    {
-        QDMI_Device_property prop;
-        int name = -1;
-        int result = QDMI_query_device_property_i(device, prop, &name);
-        std::cout << name << " ";
-    }
-    std::cout << std::endl;
 
     // Find the queue with shortest end time among the three devices
     float minEndTime = std::numeric_limits<float>::max();
@@ -310,44 +298,16 @@ extern "C" int scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQ
                   return a->mPriority > b->mPriority;
               });
 
-    for (int i = 0; i < tasks.size(); ++i)
-    {
-        std::cout << "   [Scheduler]..........."
-                  << ": Task ID: " << tasks[i]->mTaskId
-                  << ", Duration: " << tasks[i]->mDuration
-                  << ", Priority: " << tasks[i]->mPriority << std::endl;
-    }
-
     // Process each task in the sorted list
     for (std::shared_ptr<QuantumTask> task : tasks)
     {
-        std::cout << "   [Scheduler]...........Processing QuantumTask with ID "
-                  << task->mTaskId << std::endl;
-
         // Calculate scores for each (preferred) device based on the task
         std::unordered_map<QDMI_Device, float> scores =
             calculate_scores(task);
 
-        std::cout << "   [Scheduler]...........Scores for devices:";
-        for (const auto &score : scores)
-        {
-            auto device = score.first;
-            char* name;
-            int isErr = QDMI_query_device_property_c(device, BACKEND_NAME, &name);
-            std::cout << name << ": " << score.second << " ";
-        }
-        std::cout << std::endl;
-
         // Choose the device with the shortest queue out of top 3 scored devices
         QDMI_Device targetDevice =
             choose_device(task, scores, schedulerQueues);
-
-        QDMI_Device_property prop;
-        int name = -1;
-        int result = QDMI_query_device_property_i(targetDevice, prop, &name);
-
-        std::cout << "   [Scheduler]...........Inserting QuantumTask into the queue for device "
-                  << name << std::endl << std::endl;
         
         task->mScheduledQpu = targetDevice;
 

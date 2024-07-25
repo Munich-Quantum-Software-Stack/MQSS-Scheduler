@@ -18,18 +18,11 @@
 extern "C" int scheduler(Submiter2Device device2Submitter, std::vector<QuantumTask *> tasks)
 {
     // Query the available devices
-
     if (device2Submitter.size() == 0)
     {
-        
-        std::cout << "   [Scheduler]...........Error: no devices found" << std::endl;
+        std::cerr << "   [Scheduler]...........Error: no devices found" << std::endl;
         return 1;
     }
-
-    std::cout << "   [Scheduler]..........." << device2Submitter.size()
-              << " available device(s)" << std::endl;
-
-    
 
     for (auto &childQuantumTask : tasks)
     {
