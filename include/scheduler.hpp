@@ -1,9 +1,5 @@
 #include "Submitter.hpp"
 #include "queue.hpp"
-#include "eval.hpp"
 #include "qdmi.h"
 
-typedef std::unordered_map<QDMI_Device, std::shared_ptr<Submitter>> Submitter2Device;
-typedef std::unordered_map<QDMI_Device, std::shared_ptr<SchedulerQueue>> Scheduler2Device;
-
-extern "C" int scheduler(Scheduler2Device device2SchedQueue, std::vector<std::shared_ptr<QuantumTask>> tasks);
+extern "C" int scheduler(std::vector<std::shared_ptr<SchedulerQueue>> SchedulerQueues, std::vector<std::shared_ptr<QuantumTask>> tasks);

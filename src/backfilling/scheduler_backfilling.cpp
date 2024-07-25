@@ -3,6 +3,7 @@
  * @brief Implementation of a ML guided scheduler.
  */
 #include "QuantumTask.hpp"
+#include "backfilling.hpp"
 #include "Submitter.hpp"
 #include "predictor.hpp"
 #include "qdmi.h"
@@ -96,22 +97,22 @@ calculate_scores(std::shared_ptr<QuantumTask> task)
 QDMI_Device
 choose_device(std::shared_ptr<QuantumTask> task,
               const std::unordered_map<QDMI_Device, float> &scores,
-              Scheduler2Device device2SchedQueue)
+              std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues)
 {
     // Find the devices with the three highest final scores
-    std::vector<QDMI_Device> devices;
+    std::vector<QDMI_Device> topDevices;
     for (auto &score : scores)
     {
         // If we have less than 3 devices, just add the current device
-        if (devices.size() < 3)
+        if (topDevices.size() < 3)
         {
-            devices.push_back(score.first);
+            topDevices.push_back(score.first);
         }
         else
         {
             // If we already have 3 devices, replace the one with the lowest
             // score if the current device has a higher score
-            for (auto &device : devices)
+            for (auto &device : topDevices)
             {
                 if (score.second > scores.at(device))
                 {
@@ -124,7 +125,7 @@ choose_device(std::shared_ptr<QuantumTask> task,
 
     std::cout
         << "   [Scheduler]...........Choosing target from top 3 devices: ";
-    for (auto &device : devices)
+    for (auto &device : topDevices)
     {
         QDMI_Device_property prop;
         int name = -1;
@@ -135,12 +136,23 @@ choose_device(std::shared_ptr<QuantumTask> task,
 
     // Find the queue with shortest end time among the three devices
     float minEndTime = std::numeric_limits<float>::max();
-    QDMI_Device targetDevice = devices.front();
+    QDMI_Device targetDevice = topDevices.front();
 
-    for (auto &device : devices)
+    for (auto &device : topDevices)
     {
+        // Get the associated queue for the selected device
+        SchedulerQueue *schedulerQueue = nullptr;
+        for (const auto &queue : schedulerQueues)
+        {
+            if (queue->mpSubmitter->mDevice == device)
+            {
+                schedulerQueue = queue.get();
+                break;
+            }
+        }
         // Get the total duration of the queue for the current device
-        float queueDuration = device2SchedQueue[device]->mTotalDuration;
+        float queueDuration = schedulerQueue->mTotalDuration;
+
         // If this duration is less than the current minimum, update the minimum
         // and set the current device as the target device
         if (queueDuration < minEndTime)
@@ -259,14 +271,20 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
 
 /**
  * @brief Entry point for the scheduler.
- * @param device2SchedQueue Mapping from devices to their respective scheduler
- * queues.
+ * @param schedulerQueues Vector of queues for each device.
  * @param tasks Vector of tasks to be scheduled.
  * @return The selected device on which the task was scheduled.
  */
-extern "C" int scheduler(Scheduler2Device device2SchedQueue,
+extern "C" int scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
                          std::vector<std::shared_ptr<QuantumTask>> tasks)
 {
+    // Get all available devices
+    std::vector<QDMI_Device> availableDevices = {};
+    for(const auto &queue : schedulerQueues)
+    {
+        availableDevices.push_back(queue->mpSubmitter->mDevice);
+    }
+
     // Calculate expected duration for each circuit to sort tasks accordingly
     for (std::shared_ptr<QuantumTask> task : tasks)
     {
@@ -322,7 +340,7 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
 
         // Choose the device with the shortest queue out of top 3 scored devices
         QDMI_Device targetDevice =
-            choose_device(task, scores, device2SchedQueue);
+            choose_device(task, scores, schedulerQueues);
 
         QDMI_Device_property prop;
         int name = -1;
@@ -337,9 +355,19 @@ extern "C" int scheduler(Scheduler2Device device2SchedQueue,
         std::map<std::string, float> prediction = predict(task->mThreadSafeModule,{"ga_depth.onnx"});
         task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
 
+        // Get the corresponding queue for the selected device
+        std::shared_ptr<SchedulerQueue> schedulerQueue = nullptr;
+        for (const auto &queue : schedulerQueues)
+        {
+            if (queue->mpSubmitter->mDevice == targetDevice)
+            {
+                schedulerQueue = queue;
+                break;
+            }
+        }
         // Schedule the task on the chosen device using backfilling strategy
         int position =
-            backfilling(task, device2SchedQueue[targetDevice]);
+            backfilling(task, schedulerQueue);
     }
     return 0;
 }

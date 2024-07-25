@@ -67,9 +67,9 @@ int main(){
         devices.push_back(device);
         devices.push_back(device);
     } 
-    
-    Submitter2Device device2Submitter;
-    Scheduler2Device device2SchedQueue;
+        
+    std::unordered_map<QDMI_Device, std::shared_ptr<Submitter>> device2Submitter;
+    std::vector<std::shared_ptr<SchedulerQueue>> queues;
 
     for (const QDMI_Device& device : devices) {
         auto submitter = std::make_shared<Submitter>(device, 3); // Create Submitter using smart pointer
@@ -77,7 +77,7 @@ int main(){
 
         auto scheduler = std::make_shared<SchedulerQueue>(submitter);
         submitter->addObserver(scheduler); // Add the SchedulerQueue as an observer
-        device2SchedQueue.emplace(device, scheduler);
+        queues.push_back(scheduler); // Store the SchedulerQueue in a vector
     }
 
     // Simulate Generator by creating a bunch of tasks
@@ -92,7 +92,7 @@ int main(){
         auto parentTask = createTask(taskID++, devices);
         if (numChildTasks[i] == 0) {
             tasks.push_back(parentTask);
-            scheduler(device2SchedQueue, {parentTask});
+            scheduler(queues, {parentTask});
         } else {
             std::vector<std::shared_ptr<QuantumTask>> lastChildTasks = {};
             for (int j = 0; j < numChildTasks[i]; ++j) {
@@ -100,7 +100,7 @@ int main(){
                 tasks.push_back(childTask);
                 lastChildTasks.push_back(childTask);
             }            
-            scheduler(device2SchedQueue, lastChildTasks);
+            scheduler(queues, lastChildTasks);
             lastChildTasks.clear();
         }
 
@@ -116,8 +116,8 @@ int main(){
     // Wait for all tasks to be executed (removed from the queue)
     while (true) {
         bool allFinished = true;
-        for (auto& [device, scheduler] : device2SchedQueue) {
-            if (!scheduler->mTasks.empty()) {
+        for (auto queue : queues) {
+            if (!queue->mTasks.empty()) {
                 allFinished = false;
                 break;
             }
