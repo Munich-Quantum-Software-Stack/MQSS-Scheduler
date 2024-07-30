@@ -1,5 +1,7 @@
 #include "Submitter.hpp"
-#include "queue.hpp"
 #include "qdmi.h"
+#include "queue.hpp"
 
-extern "C" int scheduler(std::vector<std::shared_ptr<SchedulerQueue>> SchedulerQueues, std::vector<std::shared_ptr<QuantumTask>> tasks);
+extern "C" int
+scheduler(std::vector<std::shared_ptr<SchedulerQueue>> SchedulerQueues,
+          std::vector<std::shared_ptr<QuantumTask>> tasks);
