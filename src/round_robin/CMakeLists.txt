@@ -1,3 +1,4 @@
+find_package(qdmi REQUIRED)
 find_package(submitter REQUIRED)
 
 target_include_directories(round_robin PUBLIC SUBMITTER_INCLUDE_DIRS) 

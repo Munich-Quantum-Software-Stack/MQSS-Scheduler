@@ -11,4 +11,3 @@ FetchContent_MakeAvailable(qdmi)
 FetchContent_GetProperties(qdmi)
 
 set(QDMI_INCLUDE_DIRS "${qdmi_SOURCE_DIR}/include")
-
