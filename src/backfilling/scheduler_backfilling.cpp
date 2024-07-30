@@ -28,27 +28,16 @@
  * @return A map of devices to their respective scores.
  */
 std::unordered_map<QDMI_Device, float>
-calculate_scores(std::shared_ptr<QuantumTask> task) {
+calculate_scores(std::shared_ptr<QuantumTask> task,
+                 std::vector<QDMI_Device> availableDevices) {
+
   std::unordered_map<QDMI_Device, float> deviceScores = {};
-
-  // TODO: get count from QDMI_core_device_count(&session, &count);
-  // Get the number of all available devices
-  int count = task->mPreferredQpus.size();
-
-  if (count == 0) {
-    std::cerr << "   [Scheduler]...........No available devices found."
-              << std::endl;
-    return deviceScores;
-  }
 
   // Associate each available device with a model
   std::unordered_map<QDMI_Device, std::string> availableQPUs2Model = {};
   std::unordered_map<std::string, QDMI_Device> model2availableQPUs = {};
-  for (int i = 0; i < count; i++) {
-    QDMI_Device device;
-    // TODO: get device from QDMI_core_open_device(&session, i, &info, &device);
-    device = task->mPreferredQpus.at(i);
-    // TODO: use actual model names
+  for (const auto &device : availableDevices) {
+    // TODO: use correct model names once trained models are available
     availableQPUs2Model[device] = "ga_depth.onnx";
     model2availableQPUs["ga_depth.onnx"] = device;
   }
@@ -290,7 +279,8 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
   // Process each task in the sorted list
   for (std::shared_ptr<QuantumTask> task : tasks) {
     // Calculate scores for each (preferred) device based on the task
-    std::unordered_map<QDMI_Device, float> scores = calculate_scores(task);
+    std::unordered_map<QDMI_Device, float> scores =
+        calculate_scores(task, availableDevices);
 
     // Choose the device with the shortest queue out of top 3 scored devices
     QDMI_Device targetDevice = choose_device(task, scores, schedulerQueues);

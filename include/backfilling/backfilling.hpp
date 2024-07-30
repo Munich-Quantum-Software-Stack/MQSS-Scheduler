@@ -4,7 +4,8 @@
 #include <qdmi.h>
 
 std::unordered_map<QDMI_Device, float>
-calculate_scores(std::shared_ptr<QuantumTask> task);
+calculate_scores(std::shared_ptr<QuantumTask> task,
+                 std::vector<QDMI_Device> availableDevices);
 
 QDMI_Device
 choose_device(std::shared_ptr<QuantumTask> task,
