@@ -1,6 +1,6 @@
-#include "Submitter.hpp"
-#include "qdmi.h"
 #include "queue.hpp"
+#include <Submitter.hpp>
+#include <qdmi.h>
 
 extern "C" int
 scheduler(std::vector<std::shared_ptr<SchedulerQueue>> SchedulerQueues,

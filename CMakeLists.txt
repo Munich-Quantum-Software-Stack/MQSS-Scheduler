@@ -17,7 +17,7 @@ target_include_directories(backfilling PUBLIC include/backfilling)
 target_include_directories(queue PUBLIC include)
 
 find_package(LLVM REQUIRED CONFIG)
-include_directories(${LLVM_INCLUDE_DIRS})
+include_directories(${LLVM_INCLUDE_DIRS} include)
 add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(src)

@@ -1,5 +1,6 @@
 #include "eval.hpp"
 #include "queue.hpp"
+#include "scheduler.hpp"
 #include <Submitter.hpp>
 #include <qdmi.h>
 
@@ -14,7 +15,3 @@ choose_device(std::shared_ptr<QuantumTask> task,
 
 int backfilling(std::shared_ptr<QuantumTask> pNewTask,
                 std::shared_ptr<SchedulerQueue> pQueue);
-
-extern "C" int
-scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
-          std::vector<std::shared_ptr<QuantumTask>> tasks);

@@ -1,13 +1,13 @@
 /**
  * @file scheduler.cpp
- * @brief Implementation of a ML guided scheduler.
+ * @brief Implementation of a ML guided scheduler with backfilling.
  */
-#include "QuantumTask.hpp"
-#include "Submitter.hpp"
 #include "backfilling.hpp"
 #include "predictor.hpp"
 #include "qdmi.h"
 #include "queue.hpp"
+#include <QuantumTask.hpp>
+#include <Submitter.hpp>
 #include <iostream>
 #include <memory>
 #include <ostream>
