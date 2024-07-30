@@ -18,9 +18,12 @@
 
 /**
  * @brief Calculate scores for the devices based on user preference, ML model,
- * or both. {preferredQPUs} ⋂ {availableQPUs} = {matchingQPUs} ≠ {} ->
- * predictScore(matchingQPUs) {preferredQPUs} ⋂ {availableQPUs} = {} ->
- * predictScore(availableQPUs) {availableQPUs} = {} -> ERROR
+ * or both.
+ * {preferredQPUs} ⋂ {availableQPUs} = {matchingQPUs} ≠ {} ->
+ * predictScore(matchingQPUs)
+ * {preferredQPUs} ⋂ {availableQPUs} = {} ->
+ * predictScore(availableQPUs)
+ * {availableQPUs} = {} -> ERROR
  * @param task The QuantumTask to be scheduled.
  * @return A map of devices to their respective scores.
  */
