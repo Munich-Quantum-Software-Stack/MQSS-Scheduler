@@ -1,31 +1,22 @@
 /**
- * @file scheduler.cpp
+ * @file scheduler_backfilling.cpp
  * @brief Implementation of a ML guided scheduler with backfilling.
  */
 #include "backfilling.hpp"
+#include "eval.hpp"
 #include "predictor.hpp"
-#include "qdmi.h"
-#include "queue.hpp"
-#include <QuantumTask.hpp>
-#include <Submitter.hpp>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <ostream>
-#include <scheduler.hpp>
+#include "scheduler.hpp"
 #include <string>
-#include <unordered_map>
-#include <vector>
 
 /**
  * @brief Calculate scores for the available devices based on user preference,
  * ML model, or both.
  *
- * {preferredQPUs} ⋂ {availableQPUs} = {matchingQPUs} ≠ {} ->
- * predictScore(matchingQPUs)
- * {preferredQPUs} ⋂ {availableQPUs} = {} ->
- * predictScore(availableQPUs)
- * {availableQPUs} = {} -> ERROR
+ * {preferredDevices} ⋂ {availableDevices} = {matchingDevices} ≠ {} ->
+ * predictScore(matchingDevices)
+ * {preferredDevices} ⋂ {availableDevices} = {} ->
+ * predictScore(availableDevices)
+ * {availableDevices} = {} -> ERROR
  *
  * @param task The QuantumTask to be scheduled.
  * @param availableDevices The list of available devices.
@@ -38,42 +29,42 @@ calculate_scores(std::shared_ptr<QuantumTask> task,
   std::unordered_map<QDMI_Device, float> deviceScores = {};
 
   // Associate each available device with a model
-  std::unordered_map<QDMI_Device, std::string> availableQPUs2Model = {};
-  std::unordered_map<std::string, QDMI_Device> model2availableQPUs = {};
+  std::unordered_map<QDMI_Device, std::string> availableDevices2Model = {};
+  std::unordered_map<std::string, QDMI_Device> model2availableDevices = {};
   for (const auto &device : availableDevices) {
     // TODO: use correct model names once trained models are available
-    availableQPUs2Model[device] = "ga_depth.onnx";
-    model2availableQPUs["ga_depth.onnx"] = device;
+    availableDevices2Model[device] = "ga_depth.onnx";
+    model2availableDevices["ga_depth.onnx"] = device;
   }
 
   std::vector<string> chosenModels;
-  // Select all models, from the user's preferred QPUs that are available
-  for (const auto &qpu : task->mPreferredQpus) {
-    if (availableQPUs2Model.find(qpu) == availableQPUs2Model.end()) {
+  // Select all models, from the user's preferred Devices that are available
+  for (const auto &device : task->mPreferredQpus) {
+    if (availableDevices2Model.find(device) == availableDevices2Model.end()) {
       std::cerr << "   [Scheduler]...........Device not found in the list of "
                    "available devices."
                 << std::endl;
       continue;
     } else {
-      chosenModels.push_back(availableQPUs2Model[qpu]);
+      chosenModels.push_back(availableDevices2Model[device]);
     }
   }
 
   // If none of the user preferences are available, score all available devices
   if (chosenModels.size() == 0) {
-    for (const auto &d2M : availableQPUs2Model) {
+    for (const auto &d2M : availableDevices2Model) {
       chosenModels.push_back(d2M.second);
     }
   }
 
   // Predict figure of merit (FOM) for all chosen models
-  std::map<std::string, float> predictions =
+  std::unordered_map<std::string, float> predictions =
       predict(task->mThreadSafeModule, chosenModels);
 
   // Assign scores to the devices based on the predictions
   for (const auto &model : chosenModels) {
     // Get device associated with the model
-    QDMI_Device device = model2availableQPUs[model];
+    QDMI_Device device = model2availableDevices[model];
     // Example FOM is "depth" -> lower is better
     deviceScores[device] = 1 / predictions[model];
   }
@@ -248,7 +239,8 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
           std::vector<std::shared_ptr<QuantumTask>> tasks) {
   // For easy access collect all available devices
   std::vector<QDMI_Device> availableDevices = {};
-  std::map<QDMI_Device, std::shared_ptr<SchedulerQueue>> device2Queue = {};
+  std::unordered_map<QDMI_Device, std::shared_ptr<SchedulerQueue>>
+      device2Queue = {};
   for (const auto &queue : schedulerQueues) {
     availableDevices.push_back(queue->mpSubmitter->mDevice);
     device2Queue[queue->mpSubmitter->mDevice] = queue;
@@ -291,7 +283,7 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
     task->mScheduledQpu = targetDevice;
 
     // Update the expected duration of the task based on the chosen device
-    std::map<std::string, float> prediction =
+    std::unordered_map<std::string, float> prediction =
         predict(task->mThreadSafeModule, {"ga_depth.onnx"});
     task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
 

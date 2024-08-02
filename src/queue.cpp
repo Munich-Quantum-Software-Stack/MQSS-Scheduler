@@ -1,6 +1,5 @@
 /* Scheduler Queues. */
 
-#include <QuantumTask.hpp>
 #include <iostream>
 #include <queue.hpp>
 

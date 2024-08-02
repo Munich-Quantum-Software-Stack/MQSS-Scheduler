@@ -2,8 +2,8 @@
 #define EVAL_HPP
 
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
-#include <llvm/IR/Module.h>
 #include <map>
+#include <vector>
 
 using llvm::orc::ThreadSafeModule;
 
@@ -18,4 +18,4 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
 
 int evaluate_num_qubits(const ThreadSafeModule &TSM);
 
-#endif // EVAL_HPP
+#endif

@@ -1,13 +1,10 @@
-#ifndef SUBMITTER_H
-#define SUBMITTER_H
+#ifndef SCHEDULER_QUEUE_H
+#define SCHEDULER_QUEUE_H
 
 #include <QuantumTask.hpp>
 #include <Submitter.hpp>
-#include <cstddef>
+#include <deque>
 #include <memory>
-#include <qdmi.h>
-#include <queue>
-#include <thread>
 
 class SchedulerQueue : public ISubmitterObserver {
 public:

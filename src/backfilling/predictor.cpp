@@ -1,11 +1,19 @@
+/**
+ * @file predictor.cpp
+ * @brief Here the ML related code is implemented. The predict function does
+ * inference on the given quantum circuit using the trained models passed to it.
+ */
 #include "predictor.hpp"
 #include "eval.hpp"
+#include <array>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <onnxruntime_cxx_api.h>
 #include <string>
 #include <unistd.h>
+#include <unordered_map>
 #include <vector>
 
 /*
@@ -13,11 +21,11 @@
  * model
  * @param TSM The quantum circuit to evaluate
  * @param models The trained models to predict some figure of merit
- * @return The predicted figure of merit for each model
+ * @return A map from each model to the predicted figure of merit
  */
-std::map<std::string, float> predict(const ThreadSafeModule &TSM,
-                                     const std::vector<std::string> models) {
-  // Prepare circuit feature vector for model input
+std::unordered_map<std::string, float>
+predict(const ThreadSafeModule &TSM, const std::vector<std::string> models) {
+  // Prepare circuit feature vector for model input (order is important)
   std::map<std::string, int> gateCounts = {{"__quantum__qis__U3__body", 0},
                                            {"u2", 0},
                                            {"u1", 0},
@@ -98,7 +106,7 @@ std::map<std::string, float> predict(const ThreadSafeModule &TSM,
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "Predictor");
 
   // Create a map to store the results
-  std::map<std::string, float> results;
+  std::unordered_map<std::string, float> results;
 
   // Get the current file path
   std::filesystem::path currentFilePath = __FILE__;

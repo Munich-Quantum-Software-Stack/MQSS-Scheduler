@@ -5,12 +5,12 @@
  *
  * The main purpose of this test is to verify that the Scheduler can correctly
  * handle and schedule QuantumTasks, including tasks with parent-child
- * relationships and tasks with specific QPU preferences. This includes the
- * interplay between the Submitters and SchedulerQueues. It is assumed, there
- * will be one SchedulerQueue and one corresponding Submitter per device. The
- * test simulates the quantum resource manager by creating a set of devices and
- * associated Submitters. It launches tasks, assignes priorities and preferred
- * QPUs to the tasks, and then schedules them using the Scheduler.
+ * relationships and tasks with specific device preferences. This includes the
+ * interplay between the Submitter instances and SchedulerQueues. It is assumed,
+ * there will be one SchedulerQueue and one corresponding Submitter per device.
+ * The test simulates the quantum resource manager (QRM) by creating a set of
+ * devices and associated Submitters. It launches tasks, assignes priorities and
+ * preferred devices to the tasks, and then schedules them using the Scheduler.
  */
 #include "iostream"
 #include "qdmi.h"
@@ -23,9 +23,7 @@
 #include <Submitter.hpp>
 #include <cstddef>
 #include <filesystem>
-// #include <map>
 #include <memory>
-// #include <numeric>
 #include <ostream>
 #include <unistd.h>
 #include <unordered_map>
@@ -68,7 +66,7 @@ createTask(int taskID, const std::vector<QDMI_Device> &devices,
   // Initialize task
   task->mThreadSafeModule = std::move(TSM);
   task->pParentTask = parentTask; // Assign parent task
-  // Add some preferred QPUs in random order
+  // Add some preferred Devices in random order
   for (int k = 0; k < devices.size(); ++k) {
     task->mPreferredQpus.push_back(
         devices.at((taskID + k) % devices.size())); // Cycle through devices
@@ -157,7 +155,7 @@ int main() {
       int result =
           QDMI_query_device_property_i(parentTask->mScheduledQpu, prop, &name);
       std::cout << "   [Test]................Task " << parentTask->mTaskId
-                << " to QPU " << name << ", with priority "
+                << " to Device " << name << ", with priority "
                 << parentTask->mPriority << " and execution order  "
                 << parentTask->mExecutionOrder << std::endl;
     } else {
@@ -180,9 +178,9 @@ int main() {
             QDMI_query_device_property_i(task->mScheduledQpu, prop, &name);
 
         std::cout << "   [Test]................Task " << task->mTaskId
-                  << " to QPU " << name << ", with priority " << task->mPriority
-                  << " and execution order  " << task->mExecutionOrder
-                  << std::endl;
+                  << " to Device " << name << ", with priority "
+                  << task->mPriority << " and execution order  "
+                  << task->mExecutionOrder << std::endl;
       }
       lastChildTasks.clear();
     }

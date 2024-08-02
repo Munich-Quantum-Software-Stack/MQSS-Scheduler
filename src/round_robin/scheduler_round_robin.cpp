@@ -1,53 +1,37 @@
 /**
  * @file scheduler_round_robin.cpp
- * @brief Implementation of a dummy scheduler.
+ * @brief Implementation of a simple round robin scheduler.
  */
 
 #include "queue.hpp"
-#include <Submitter.hpp>
-#include <iostream>
-#include <round_robin.hpp>
+#include "round_robin.hpp"
 
 /**
  * @brief The main entry point of the program.
  *
- * The Scheduler.
+ * A round robin scheduler that assigns tasks by looping through the available
+ * devices.
  *
- * @return const char *
+ * @return 0 once all tasks have been scheduled.
  */
 extern "C" int
-scheduler(std::vector<std::shared_ptr<SchedulerQueue>> SchedulerQueues,
+scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
           std::vector<std::shared_ptr<QuantumTask>> tasks) {
-  // Query the available devices
-
-  if (SchedulerQueues.size() == 0) {
-
-    std::cout << "   [Scheduler]...........Error: no devices found"
-              << std::endl;
-    return 1;
-  }
-
-  std::cout << "   [Scheduler]..........." << SchedulerQueues.size()
-            << " available device(s)" << std::endl;
-
   int idx = 0; // Round-robin device index
+
   for (auto &childQuantumTask : tasks) {
-    QDMI_Device device = SchedulerQueues[idx]->mpSubmitter->mDevice;
 
-    const char *libname = "the first lib";
-    // strrchr(device->library.libname, '/');
+    // Assign the idx device to the task
+    childQuantumTask->mScheduledQpu =
+        schedulerQueues[idx]->mpSubmitter->mDevice;
 
-    std::cout << "   [Scheduler]...........Setting " << libname
-              << " as target device "
-              << "for job with ID " << childQuantumTask->mTaskId << std::endl;
-
-    int queueSize = SchedulerQueues[idx]->mTasks.size();
-
-    childQuantumTask->mScheduledQpu = device;
+    // Add task to the end of the queue
+    int queueSize = schedulerQueues[idx]->mTasks.size();
     childQuantumTask->mExecutionOrder =
-        SchedulerQueues[idx]->addTask(childQuantumTask, queueSize);
+        schedulerQueues[idx]->addTask(childQuantumTask, queueSize);
 
-    idx = (idx + 1) % SchedulerQueues.size();
+    // Increment the index for next task
+    idx = (idx + 1) % schedulerQueues.size();
   }
 
   return 0;

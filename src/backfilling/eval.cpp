@@ -1,20 +1,20 @@
-/* Routine for extracting circuit features. */
-
+/**
+ * @file eval.cpp
+ * @brief This file contains the implementation of the functions to evaluate and
+ * extract information from a quantum circuit (no ML required).
+ */
 #include "eval.hpp"
 #include "llvm/IR/InstrTypes.h"
 #include <iostream>
-#include <map>
 #include <unordered_set>
-
-using llvm::orc::ThreadSafeModule;
 
 using namespace llvm;
 
 /*
- * @brief Extract supermarq+ features from a quantum circuit
+ * @brief Extract features from a quantum circuit
  * @param TSM The quantum circuit to evaluate
  * @param gate_counts The counts of each gate in the circuit
- * @return A vector of original supermarq and 3 additional features
+ * @return A vector of the supermarq (plus 3 additional) features
  */
 std::vector<double>
 evaluate_supermarq_plus(const ThreadSafeModule &TSM,
@@ -23,12 +23,13 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
   int num_gates = 0, num_two_qubit_gates = 0;
   std::unordered_map<std::string, int> qubit_counts, two_qubit_gate_counts;
   std::unordered_map<std::string, std::unordered_set<std::string>>
-      qubit_connections, di_qubit_connections;
+      qubit_connections, dir_qubit_connections;
 
   if (!TSM) {
     std::cerr << "ThreadSafeModule is null" << std::endl;
     return std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   }
+  // Standard way to traverse the QIR circuit
   TSM.withModuleDo([&](Module &module) {
     LLVMContext &Context = module.getContext();
     StructType *qubitType = StructType::getTypeByName(Context, "Qubit");
@@ -62,18 +63,16 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                       llvm::raw_string_ostream stream(qubit);
                       operand.get()->printAsOperand(stream, true);
                       stream.flush();
-                      // Count operations on each
-                      // qubit
+                      // Count operations on each qubit
                       qubit_counts[qubit]++;
 
-                      // Count connections between
-                      // qubits
+                      // Count connections between qubits
                       if (prev_qubit != "") {
                         // Undirected graph
                         qubit_connections[qubit].insert(prev_qubit);
                         qubit_connections[prev_qubit].insert(qubit);
                         // Directed graph
-                        di_qubit_connections[prev_qubit].insert(qubit);
+                        dir_qubit_connections[prev_qubit].insert(qubit);
                       }
                       prev_qubit = qubit;
 
@@ -118,7 +117,7 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
   for (const auto &pair : qubit_connections) {
     degree_sum += pair.second.size();
   }
-  for (const auto &pair : di_qubit_connections) {
+  for (const auto &pair : dir_qubit_connections) {
     degree_sum_di += pair.second.size();
   }
   double program_communication =
@@ -164,14 +163,14 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
       // original supermarq features
       program_communication, critical_depth, entanglement_ratio, parallelism,
       liveness,
-      // plus features
+      // plus additional features
       directed_program_communication, one_qubit_gates_per_layer,
       two_qubit_gates_per_layer};
 }
 
 /*
  * @brief Calculate the duration of a quantum circuit based on the gate times
- * along its critical path
+ * along its critical path (longest in circuit graph).
  * @param TSM The quantum circuit to evaluate
  * @param single_qubit_gate_time The time taken for a single qubit gate
  * @param multi_qubit_gate_time The time taken for a multi qubit gate
@@ -184,12 +183,14 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
                                   double measurement_time) {
   std::string QIS_START = "__quantum__qis_";
   double circuit_duration = 0.0;
+  // To sum the operation times on each qubit
   std::unordered_map<std::string, double> qubit_times;
 
   if (!TSM) {
     std::cerr << "ThreadSafeModule is null" << std::endl;
     return 0.0;
   }
+  // Standard way to traverse the QIR circuit
   TSM.withModuleDo([&](Module &module) {
     LLVMContext &Context = module.getContext();
     StructType *qubitType = StructType::getTypeByName(Context, "Qubit");
@@ -223,7 +224,7 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
                       operand.get()->printAsOperand(stream, true);
                       stream.flush();
 
-                      // Add gate time to qubit time
+                      // Add gate time to qubits time
                       qubit_times[qubit] += gate_time;
                     }
                   }
@@ -236,13 +237,12 @@ double calculate_circuit_duration(ThreadSafeModule &TSM,
     }
   });
 
-  // Find the maximum qubit time
+  // Return the maximum qubit time
   for (const auto &pair : qubit_times) {
     if (pair.second > circuit_duration) {
       circuit_duration = pair.second;
     }
   }
-
   return circuit_duration;
 }
 
@@ -259,7 +259,7 @@ int evaluate_num_qubits(const ThreadSafeModule &TSM) {
     std::cerr << "ThreadSafeModule is null" << std::endl;
     return 0;
   }
-
+  // Standard way to traverse the QIR circuit
   TSM.withModuleDo([&](Module &module) {
     LLVMContext &Context = module.getContext();
     StructType *qubitType = StructType::getTypeByName(Context, "Qubit");

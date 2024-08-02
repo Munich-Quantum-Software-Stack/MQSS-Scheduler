@@ -1,8 +1,9 @@
-#include "eval.hpp"
 #include "queue.hpp"
-#include "scheduler.hpp"
-#include <Submitter.hpp>
+#include <QuantumTask.hpp>
+#include <memory>
 #include <qdmi.h>
+#include <unordered_map>
+#include <vector>
 
 std::unordered_map<QDMI_Device, float>
 calculate_scores(std::shared_ptr<QuantumTask> task,
