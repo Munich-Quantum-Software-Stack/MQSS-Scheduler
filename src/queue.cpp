@@ -39,10 +39,10 @@ int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> quantumTask,
   else if (position == 0) {
     std::shared_ptr<QuantumTask> nextTask = this->mTasks[0];
 
-    // Check that we don't run out of numbers
+    // If we run out of numbers, throw a warning
     if (nextTask->mExecutionOrder == 0) {
-      throw std::runtime_error(
-          "   [SchedulerQueue]......Ran out of execution order numbers");
+      std::cerr << "   [SchedulerQueue]......Ran out of execution order numbers"
+                << std::endl;
     }
     newExecutionOrder = nextTask->mExecutionOrder / 2;
   }
@@ -54,10 +54,10 @@ int SchedulerQueue::addTask(std::shared_ptr<QuantumTask> quantumTask,
     newExecutionOrder =
         (prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
 
-    // Check that we don't run out of numbers
+    // If we run out of numbers, throw a warning
     if (newExecutionOrder == prevTask->mExecutionOrder) {
-      throw std::runtime_error(
-          "   [SchedulerQueue]......Ran out of execution order numbers");
+      std::cerr << "   [SchedulerQueue]......Ran out of execution order numbers"
+                << std::endl;
     }
   }
 

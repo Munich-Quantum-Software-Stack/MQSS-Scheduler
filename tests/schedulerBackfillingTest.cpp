@@ -105,15 +105,14 @@ int main() {
     CHECK_ERR(err, "QDMI_core_open_device");
     devices.push_back(device);
 
-    // TODO: remove loop once we have multiple available devices
-    for (int i = 0; i < 3; i++) {
-      // Init and store Submitter in map for later use
-      auto submitter = std::make_shared<Submitter>(device, 3);
-      device2Submitter.emplace(device, submitter);
-      // Init and store SchedulerQueue in vector for later use
-      auto schedulerQueue = std::make_shared<SchedulerQueue>(submitter);
-      queues.push_back(schedulerQueue);
-    }
+    // Init and store Submitter in map for later use
+    auto submitter = std::make_shared<Submitter>(device, 3);
+    device2Submitter.emplace(device, submitter);
+    // Init and store SchedulerQueue in vector for later use
+    auto schedulerQueue = std::make_shared<SchedulerQueue>(submitter);
+    // Init observer pattern (must be done after initialization)
+    schedulerQueue->initialize();
+    queues.push_back(schedulerQueue);
   }
 
   std::cout << "   [Test]................Created Scheduler(Queue) and "
@@ -200,7 +199,7 @@ int main() {
           device2Submitter.at(task->mScheduledQpu);
       submitter->enqueue(task);
       std::cout << "   [Test]................Task " << task->mTaskId
-                << " has been enqueued to Submitter " << task->mScheduledQpu
+                << " was sent to Submitter " << task->mScheduledQpu
                 << std::endl;
     }
   }

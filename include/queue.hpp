@@ -6,7 +6,8 @@
 #include <deque>
 #include <memory>
 
-class SchedulerQueue : public ISubmitterObserver {
+class SchedulerQueue : public ISubmitterObserver,
+                       public std::enable_shared_from_this<SchedulerQueue> {
 public:
   // Pointer to a Submitter object
   std::shared_ptr<Submitter> mpSubmitter;
@@ -19,9 +20,10 @@ public:
 
   // Constructor that takes a pointer to a Submitter object
   explicit SchedulerQueue(std::shared_ptr<Submitter> submitter)
-      : mpSubmitter(submitter) {
-    mpSubmitter->addObserver(std::shared_ptr<ISubmitterObserver>(this));
-  }
+      : mpSubmitter(submitter) {}
+
+  // Must not be done in the constructor
+  void initialize() { mpSubmitter->addObserver(shared_from_this()); }
 
   // Method to add a task at a specific position in the queue
   int addTask(std::shared_ptr<QuantumTask> quantumTask, int position);
