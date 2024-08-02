@@ -9,6 +9,7 @@
 #include <QuantumTask.hpp>
 #include <Submitter.hpp>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <ostream>
 #include <scheduler.hpp>
@@ -17,14 +18,17 @@
 #include <vector>
 
 /**
- * @brief Calculate scores for the devices based on user preference, ML model,
- * or both.
+ * @brief Calculate scores for the available devices based on user preference,
+ * ML model, or both.
+ *
  * {preferredQPUs} ⋂ {availableQPUs} = {matchingQPUs} ≠ {} ->
  * predictScore(matchingQPUs)
  * {preferredQPUs} ⋂ {availableQPUs} = {} ->
  * predictScore(availableQPUs)
  * {availableQPUs} = {} -> ERROR
+ *
  * @param task The QuantumTask to be scheduled.
+ * @param availableDevices The list of available devices.
  * @return A map of devices to their respective scores.
  */
 std::unordered_map<QDMI_Device, float>
@@ -79,8 +83,8 @@ calculate_scores(std::shared_ptr<QuantumTask> task,
 /**
  * @brief Select the shortest queue among the top 3 scored devices.
  * @param task The QuantumTask to be scheduled.
- * @param scores The scores of the devices.
- * @return The name of the selected device.
+ * @param scores A map of devices to their respective scores.
+ * @return The selected device.
  **/
 QDMI_Device
 choose_device(std::shared_ptr<QuantumTask> task,
@@ -103,7 +107,6 @@ choose_device(std::shared_ptr<QuantumTask> task,
       }
     }
   }
-
   // Find the queue with shortest end time among the three devices
   float minEndTime = std::numeric_limits<float>::max();
   QDMI_Device targetDevice = topDevices.front();
@@ -133,30 +136,32 @@ choose_device(std::shared_ptr<QuantumTask> task,
 
 /**
  * @brief Schedule a QuantumTask on a target device using backfilling strategy.
- * @param pNewTask The QuantumTask to be scheduled.
- * @param pQueue The target device's queue to schedule the QuantumTask on.
- * @return The position where the new task was inserted in the queue.
+ * @param newTask The QuantumTask to be scheduled.
+ * @param queue The target device's queue to schedule the QuantumTask on.
+ * @return The position where the new task should be inserted in the queue.
  */
-int backfilling(std::shared_ptr<QuantumTask> pNewTask,
-                std::shared_ptr<SchedulerQueue> pQueue) {
+int backfilling(std::shared_ptr<QuantumTask> newTask,
+                std::shared_ptr<SchedulerQueue> queue) {
   // Extract the duration and priority of the new task
-  float newTaskDuration = pNewTask->mDuration;
-  int newTaskPriority = pNewTask->mPriority;
+  float newTaskDuration = newTask->mDuration;
+  int newTaskPriority = newTask->mPriority;
+  // Parent task of the new task is the new task itself if it has no parent
   std::shared_ptr<QuantumTask> newParentTask =
-      pNewTask->pParentTask != NULL ? pNewTask->pParentTask : pNewTask;
+      newTask->pParentTask != NULL ? newTask->pParentTask : newTask;
   float newParentEnd = newParentTask->mEnd;
 
   // Define the increment for the age of a task when it is skipped
   float ageIncrement = 0.25; // TODO: tune this parameter
 
+  // Position to insert the new task in the queue
   int i = 0;
 
   // If the queue is not empty, try to find a position for the new task
-  if (pQueue->mTasks.size() != 0) {
+  if (queue->mTasks.size() != 0) {
     // Iterate over the tasks in the queue in reverse order
-    for (i = pQueue->mTasks.size(); i > 0; --i) {
+    for (i = queue->mTasks.size(); i > 0; --i) {
       // Get the last task in the queue at position i - 1
-      std::shared_ptr<QuantumTask> lastTask = pQueue->mTasks[i - 1];
+      std::shared_ptr<QuantumTask> lastTask = queue->mTasks[i - 1];
       float lastTaskPriority = lastTask->mPriority;
       float lastTaskEnd = lastTask->mEnd;
       float lastTaskAge = lastTask->mAge;
@@ -164,7 +169,6 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
       // Determine the parent task of the last task
       std::shared_ptr<QuantumTask> lastParentTask =
           lastTask->pParentTask != NULL ? lastTask->pParentTask : lastTask;
-
       float lastParentEnd = lastParentTask->mEnd;
 
       // End time of the new task if it is inserted after the last task
@@ -205,22 +209,19 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
       }
       // Stop the search, if the new task cannot skip (any more)
       // Update the end time of the new task
-      pNewTask->mEnd = updatedEnd;
+      newTask->mEnd = updatedEnd;
       break;
     }
   } else {
     // Queue is empty
     // Update the end time of the new task
-    pNewTask->mEnd = newTaskDuration;
+    newTask->mEnd = newTaskDuration;
   }
 
   // Update the end time of the parent task of the new task
-  if (newParentEnd < pNewTask->mEnd) {
-    newParentTask->mEnd = pNewTask->mEnd;
+  if (newParentEnd < newTask->mEnd) {
+    newParentTask->mEnd = newTask->mEnd;
   }
-
-  // Insert the new task at the found position in the queue
-  pQueue->addTask(pNewTask, i);
 
   // Return the position where the new task was inserted
   return i;
@@ -231,11 +232,12 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
  *
  * For each task in the list, the scheduler calculates the expected duration
  * (device independent) and sorts the tasks by priority and duration. Then, for
- * each task, the scheduler calculates scores for each device based on a trained
- * ML model and chooses the device with the shortest queue out of the top 3
- * scored devices. The task is then scheduled on the chosen device using a
- * backfilling strategy that tries to minimize the overall time the common
- * parent task takes to complete.
+ * each task, the scheduler calculates scores for the available or prefered
+ * devices (based on a trained ML model). The device with the shortest queue out
+ * of the top 3 scored devices will be selected for scheduling. The task is then
+ * scheduled on the chosen device using a backfilling strategy that tries to
+ * minimize the overall time a task takes to complete (i.e. time between its
+ * first child task start and last child task end of execution).
  *
  * @param schedulerQueues Vector of queues for each device.
  * @param tasks Vector of tasks to be scheduled.
@@ -244,10 +246,12 @@ int backfilling(std::shared_ptr<QuantumTask> pNewTask,
 extern "C" int
 scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
           std::vector<std::shared_ptr<QuantumTask>> tasks) {
-  // Get all available devices
+  // For easy access collect all available devices
   std::vector<QDMI_Device> availableDevices = {};
+  std::map<QDMI_Device, std::shared_ptr<SchedulerQueue>> device2Queue = {};
   for (const auto &queue : schedulerQueues) {
     availableDevices.push_back(queue->mpSubmitter->mDevice);
+    device2Queue[queue->mpSubmitter->mDevice] = queue;
   }
 
   // Calculate expected duration for each circuit to sort tasks accordingly
@@ -284,7 +288,6 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
 
     // Choose the device with the shortest queue out of top 3 scored devices
     QDMI_Device targetDevice = choose_device(task, scores, schedulerQueues);
-
     task->mScheduledQpu = targetDevice;
 
     // Update the expected duration of the task based on the chosen device
@@ -293,15 +296,13 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
     task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
 
     // Get the corresponding queue for the selected device
-    std::shared_ptr<SchedulerQueue> schedulerQueue = nullptr;
-    for (const auto &queue : schedulerQueues) {
-      if (queue->mpSubmitter->mDevice == targetDevice) {
-        schedulerQueue = queue;
-        break;
-      }
-    }
+    std::shared_ptr<SchedulerQueue> targetQueue = device2Queue[targetDevice];
+
     // Schedule the task on the chosen device using backfilling strategy
-    int position = backfilling(task, schedulerQueue);
+    int position = backfilling(task, targetQueue);
+
+    // Insert the new task at the found position in the queue
+    targetQueue->addTask(task, position);
   }
   return 0;
 }
