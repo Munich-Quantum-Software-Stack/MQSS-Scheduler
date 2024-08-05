@@ -43,5 +43,5 @@ target_sources(backfilling
     eval.cpp
     predictor.cpp
     scheduler_backfilling.cpp
-    ../queue.cpp
+    ../queue/queue.cpp
 ) 
