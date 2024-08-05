@@ -22,7 +22,8 @@ if(NOT ONNXRUNTIME_BUILD_RESULT EQUAL "0")
 endif()
 
 find_package(qdmi REQUIRED)
-target_include_directories(backfilling PUBLIC 
+target_include_directories(backfilling 
+    PUBLIC 
     ${QDMI_INCLUDE_DIRS}
     ${SUBMITTER_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/build/_deps/onnxruntime-src/include/onnxruntime/core/session/
@@ -36,6 +37,7 @@ target_link_libraries(backfilling
     ${ONNXRUNTIME_LIB_DIR}/libonnxruntime.so
     ${ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_shared.so
     submitter
+    queue
 )
 
 target_sources(backfilling 
@@ -43,5 +45,4 @@ target_sources(backfilling
     eval.cpp
     predictor.cpp
     scheduler_backfilling.cpp
-    ../queue/queue.cpp
 ) 
