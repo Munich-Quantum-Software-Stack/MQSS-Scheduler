@@ -50,11 +50,11 @@ createTask(int taskID, const std::vector<QDMI_Device> &devices,
   auto task = std::make_shared<QuantumTask>(taskID);
 
   std::filesystem::path currentFilePath = __FILE__; // Get the current file path
-  std::filesystem::path currentDir =
-      currentFilePath.parent_path(); // Get the directory of the current file
+  std::filesystem::path parentDir =
+      currentFilePath.parent_path().parent_path(); // Get the parent directory
   std::filesystem::path inputFilePath =
-      currentDir / ("inputs/example" + std::to_string(taskID % 3) +
-                    ".ll"); // Construct the relative path
+      parentDir / ("inputs/example" + std::to_string(taskID % 3) +
+                   ".ll"); // Construct the relative path
 
   // Create a new context and module for each task
   SMDiagnostic error;

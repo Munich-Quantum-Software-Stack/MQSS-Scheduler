@@ -6,6 +6,7 @@
 #include "eval.hpp"
 #include "predictor.hpp"
 #include "scheduler.hpp"
+#include <iostream>
 #include <string>
 
 /**

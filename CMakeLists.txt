@@ -21,5 +21,6 @@ include_directories(${LLVM_INCLUDE_DIRS} include)
 add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(src)
-add_subdirectory(tests)
+add_subdirectory(tests/round_robin)
+add_subdirectory(tests/backfilling)
 
