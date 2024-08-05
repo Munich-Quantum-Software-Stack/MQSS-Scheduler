@@ -50,15 +50,15 @@ cd scheduler
 
 2. Set the environment variables:
 ```sh
-export QDMI_CONFIG_FILE="$(pwd)/tests/.qdmi-config"
-export CONF_IBM="$(pwd)/tests/ibm_conf.json"
-export PROP_IBM="$(pwd)/tests/ibm_prob.json"
+export QDMI_CONFIG_FILE="$(pwd)/tests/config/.qdmi-config"
+export CONF_IBM="$(pwd)/tests/config/ibm_conf.json"
+export PROP_IBM="$(pwd)/tests/config/ibm_prob.json"
 ```
 
 3. Run the tests:
 ```sh
-./build/tests/schedulerBackfillingTest
-./build/tests/schedulerRoundRobinTest
+./build/tests/backfilling/schedulerBackfillingTest
+./build/tests/round_robin/schedulerRoundRobinTest
 ```
 
 
