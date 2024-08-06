@@ -4,8 +4,8 @@
  * extract information from a quantum circuit (no ML required).
  */
 #include "eval.hpp"
-#include "llvm/IR/InstrTypes.h"
 #include <iostream>
+#include <llvm/IR/InstrTypes.h>
 #include <unordered_set>
 
 using namespace llvm;

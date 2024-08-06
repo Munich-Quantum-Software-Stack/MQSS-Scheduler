@@ -12,17 +12,17 @@
  * devices and associated Submitters. It launches tasks, assignes priorities and
  * preferred devices to the tasks, and then schedules them using the Scheduler.
  */
-#include "iostream"
 #include "qdmi.h"
 #include "queue.hpp"
 #include "scheduler.hpp"
-#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
-#include "llvm/IRReader/IRReader.h"
-#include "llvm/Support/SourceMgr.h"
 #include <QuantumTask.hpp>
 #include <Submitter.hpp>
 #include <cstddef>
 #include <filesystem>
+#include <iostream>
+#include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
+#include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/SourceMgr.h>
 #include <memory>
 #include <ostream>
 #include <unistd.h>
@@ -154,7 +154,7 @@ int main() {
       int result =
           QDMI_query_device_property_i(parentTask->mScheduledQpu, prop, &name);
       std::cout << "   [Test]................Task " << parentTask->mTaskId
-                << " to Device " << name << ", with priority "
+                << " to device " << name << ", with priority "
                 << parentTask->mPriority << " and execution order  "
                 << parentTask->mExecutionOrder << std::endl;
     } else {
@@ -177,7 +177,7 @@ int main() {
             QDMI_query_device_property_i(task->mScheduledQpu, prop, &name);
 
         std::cout << "   [Test]................Task " << task->mTaskId
-                  << " to Device " << name << ", with priority "
+                  << " to device " << name << ", with priority "
                   << task->mPriority << " and execution order  "
                   << task->mExecutionOrder << std::endl;
       }
