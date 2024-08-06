@@ -1,36 +1,13 @@
-include(FetchContent)
-include(ExternalProject)
-
-FetchContent_Declare(
-    onnxruntime
-    GIT_REPOSITORY https://github.com/microsoft/onnxruntime.git
-    GIT_TAG v1.18.1
-)
-
-FetchContent_MakeAvailable(onnxruntime)
-
-# Build ONNX Runtime using its build script
-execute_process(
-    COMMAND bash build.sh --config Release --build_shared_lib --parallel --update --build
-    WORKING_DIRECTORY ${onnxruntime_SOURCE_DIR}
-    RESULT_VARIABLE ONNXRUNTIME_BUILD_RESULT
-)
-
-# Check if ONNX Runtime built successfully
-if(NOT ONNXRUNTIME_BUILD_RESULT EQUAL "0")
-    message(FATAL_ERROR "Failed to build ONNX Runtime")
-endif()
-
 find_package(qdmi REQUIRED)
+find_package(onnx REQUIRED)
+
 target_include_directories(backfilling 
     PUBLIC 
     ${QDMI_INCLUDE_DIRS}
     ${SUBMITTER_INCLUDE_DIRS}
-    ${CMAKE_SOURCE_DIR}/build/_deps/onnxruntime-src/include/onnxruntime/core/session/
+    ${ONNXRUNTIME_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/include
 )
-
-set(ONNXRUNTIME_LIB_DIR ${CMAKE_SOURCE_DIR}/build/_deps/onnxruntime-src/build/Linux/Release)
 
 target_link_libraries(backfilling 
     PUBLIC 
