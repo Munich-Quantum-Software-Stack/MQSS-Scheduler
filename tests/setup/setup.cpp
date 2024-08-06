@@ -19,13 +19,6 @@
 using namespace llvm;
 using namespace llvm::orc;
 
-#define CHECK_ERR(a, b)                                                        \
-  {                                                                            \
-    if (a != QDMI_SUCCESS) {                                                   \
-      std::cout << std::endl << "[Error]: " << a << " at " << b;               \
-    }                                                                          \
-  }
-
 /*
  * @brief Create a QuantumTask
  *
@@ -86,8 +79,9 @@ std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
   QInfo info; // We need this stuff to set up the devices
   QDMI_Session session = NULL;
   int err = QInfo_create(&info);
-  CHECK_ERR(err, "QInfo_create");
-
+  if (QInfo_is_Error(err)) {
+    std::cerr << "Warning: Error during QInfo_create" << std::endl;
+  }
   err = QDMI_session_init(info, &session);
   int count = -1;
 
