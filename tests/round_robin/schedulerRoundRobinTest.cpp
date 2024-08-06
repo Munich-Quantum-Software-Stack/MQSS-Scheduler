@@ -69,7 +69,7 @@ int main() {
     // Retrieve and print the device name
     int result = QDMI_query_device_property_i(scheduledDevice, prop, &name);
     std::cout << "   [Test]................Task " << task->mTaskId
-              << " was sent to Submitter " << name << std::endl;
+              << " was sent to submitter for device " << name << std::endl;
   }
 
   // Wait for all tasks to be executed (removed from the queue)
