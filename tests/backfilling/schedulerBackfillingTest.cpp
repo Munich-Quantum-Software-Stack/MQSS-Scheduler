@@ -15,12 +15,12 @@
 #include "../setup/setup.hpp"
 #include "backfilling.hpp"
 #include "scheduler.hpp"
-#include <QuantumTask.hpp>
-#include <Submitter.hpp>
 #include <iostream>
 #include <memory>
 #include <ostream>
 #include <qdmi.h>
+#include <quantum_task.hpp>
+#include <submitter.hpp>
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>

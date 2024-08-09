@@ -2,8 +2,8 @@
 #define SCHEDULER_H
 
 #include "queue.hpp"
-#include <QuantumTask.hpp>
 #include <memory>
+#include <quantum_task.hpp>
 #include <vector>
 
 extern "C" int

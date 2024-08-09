@@ -2,10 +2,10 @@
 #define SETUP_HPP
 
 #include "queue.hpp"
-#include <QuantumTask.hpp>
-#include <Submitter.hpp>
 #include <memory>
 #include <qdmi.h>
+#include <quantum_task.hpp>
+#include <submitter.hpp>
 #include <vector>
 
 // Macro for error checking

@@ -1,10 +1,10 @@
 #ifndef SCHEDULER_QUEUE_H
 #define SCHEDULER_QUEUE_H
 
-#include <QuantumTask.hpp>
-#include <Submitter.hpp>
 #include <deque>
 #include <memory>
+#include <quantum_task.hpp>
+#include <submitter.hpp>
 
 class SchedulerQueue : public ISubmitterObserver,
                        public std::enable_shared_from_this<SchedulerQueue> {
