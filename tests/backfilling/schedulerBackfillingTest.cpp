@@ -14,7 +14,6 @@
  */
 #include "../setup/setup.hpp"
 #include "backfilling.hpp"
-#include "scheduler.hpp"
 #include <iostream>
 #include <memory>
 #include <ostream>

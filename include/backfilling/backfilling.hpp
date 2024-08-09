@@ -1,4 +1,5 @@
 #include "queue.hpp"
+#include "scheduler.hpp"
 #include <memory>
 #include <qdmi.h>
 #include <quantum_task.hpp>

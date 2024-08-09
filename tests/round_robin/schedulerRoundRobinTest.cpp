@@ -1,6 +1,5 @@
 #include "../setup/setup.hpp"
 #include "round_robin.hpp"
-#include "scheduler.hpp"
 #include <iostream>
 #include <memory>
 #include <ostream>
