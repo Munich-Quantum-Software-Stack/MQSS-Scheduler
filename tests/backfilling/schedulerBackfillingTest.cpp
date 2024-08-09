@@ -12,8 +12,8 @@
  * devices and associated Submitters. It launches tasks, assignes priorities and
  * preferred devices to the tasks, and then schedules them with backfilling.
  */
-#include "../setup/setup.hpp"
 #include "backfilling.hpp"
+#include "setup.hpp"
 #include <iostream>
 #include <memory>
 #include <ostream>
