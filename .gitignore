@@ -1,6 +1,6 @@
 .cache
 build/
 .vscode
-models/data/features/*
-models/data/circuits/*
-models/data/labels/*
+models/experiments/example/features/*
+models/experiments/example/labels/*
+models/experiments/example/*.onnx

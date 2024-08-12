@@ -1,14 +1,22 @@
+import argparse
 import os
 
 import pickle
 import numpy as np
 import networkx as nx
+
 from qiskit import qasm2
 from qiskit import QuantumCircuit
 from qiskit.converters import circuit_to_dag
 
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import GridSearchCV
 
-def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int):
+from skl2onnx import convert_sklearn
+from skl2onnx.common.data_types import FloatTensorType
+
+
+def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     """Calculates the Supermarq features for a given quantum circuit. There are three additional features, that cover some issues with the original ones.
     Code adapted from https://github.com/Infleqtion/client-superstaq/blob/91d947f8cc1d99f90dca58df5248d9016e4a5345/supermarq-benchmarks/supermarq/converters.py.
 
@@ -171,15 +179,18 @@ def create_feature_dict(qc: str | QuantumCircuit, native_gates=[]) -> dict:
     return feature_dict
 
 
-if __name__ == "__main__":
+def run(experiment_name: str):
+    print(f"Start training for experiment: {experiment_name}")
+
     # Prepare directory paths
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    circits_dir = os.path.join(current_dir, "data", "circuits")
-    features_dir = os.path.join(current_dir, "data", "features")
-    labels_dir = os.path.join(current_dir, "data", "labels")
+    experiment_dir = os.path.join(current_dir, "experiments", experiment_name)
+    circits_dir = os.path.join(experiment_dir, "circuits")
+    features_dir = os.path.join(experiment_dir, "features")
+    labels_dir = os.path.join(experiment_dir, "labels")
 
+    # Load circuits
     circuits = []
-    # Load quantum circuits from files
     for file in os.listdir(circits_dir):
         if file.endswith(".qasm"):
             circ_path = os.path.join(circits_dir, file)
@@ -209,7 +220,73 @@ if __name__ == "__main__":
         # Load labels
         if os.path.exists(label_path):
             with open(label_path, "rb") as f:
-                features[qc.name] = pickle.load(f)
+                labels[qc.name] = pickle.load(f)
         else:
             print(f"Label file for {qc.name} not found.")
             continue
+
+    # Prepare training data
+    X = np.array([list(circ_feat_dict.values())
+                  for circ_feat_dict in features.values()], dtype=np.float16)
+    y = np.array([circ_label
+                  for circ_label in labels.values()], dtype=np.float16)
+
+    # Prepare model setup
+    model = RandomForestRegressor(
+        criterion="absolute_error",
+        random_state=123,
+    )
+
+    # Define hyperparameter grid
+    if experiment_name == "example":
+        grid = {"n_estimators": [50, 100]}
+    else:
+        grid = {
+            "n_estimators": [50, 100],
+            "max_depth": [5, None],
+            "min_samples_split": [2, 5],
+            "min_samples_leaf": [1, 2],
+            "min_weight_fraction_leaf": [0.0, 0.1],
+            "max_features": ["sqrt", "log2", None],
+            "max_leaf_nodes": [None, 10],
+            "min_impurity_decrease": [0.0, 0.1],
+            "bootstrap": [True, False],
+            "oob_score": [False, True],
+            "warm_start": [False, True],
+            "ccp_alpha": [0.0, 0.1],
+            "max_samples": [None, 0.5, 1.0],
+        }
+
+    grid_search = GridSearchCV(
+        model,
+        param_grid=grid,
+        # There are only two example circuits
+        cv=2 if experiment_name == "example" else 5,
+        n_jobs=-1,
+        verbose=1,
+        error_score='raise',
+    )
+
+    # Train model
+    grid_search.fit(X, y)
+
+    # Save best model as ONNX file
+    model_path = os.path.join(experiment_dir, "rf_reg_model.onnx")
+    initial_type = [('float_input', FloatTensorType([None, X.shape[1]]))]
+    onnx_model = convert_sklearn(
+        grid_search.best_estimator_, initial_types=initial_type)
+
+    with open(model_path, "wb") as f:
+        f.write(onnx_model.SerializeToString())
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run the experiment.")
+    parser.add_argument(
+        "--experiment_name",
+        type=str,
+        default="example",
+        help="Set experiment name (default: 'example')"
+    )
+    args = parser.parse_args()
+    run(args.experiment_name)
