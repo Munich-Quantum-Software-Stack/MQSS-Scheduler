@@ -1,3 +1,6 @@
 .cache
 build/
 .vscode
+models/data/features/*
+models/data/circuits/*
+models/data/labels/*
