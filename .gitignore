@@ -1,6 +1,3 @@
 .cache
 build/
 .vscode
-models/experiments/example/features/*
-models/experiments/example/labels/*
-models/experiments/example/*.onnx
