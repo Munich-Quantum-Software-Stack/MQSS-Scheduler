@@ -16,6 +16,8 @@ from sklearn.metrics import make_scorer
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
 
+__all__ = ['calc_supermarq_plus_features', 'create_feature_dict', 'run']
+
 
 def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     """Calculates the Supermarq features for a given quantum circuit. There are three additional features, that cover some issues with the original ones.
@@ -186,16 +188,16 @@ def run(experiment_name: str):
     # Prepare directory paths
     current_dir = os.path.dirname(os.path.abspath(__file__))
     experiment_dir = os.path.join(current_dir, "experiments", experiment_name)
-    circits_dir = os.path.join(experiment_dir, "circuits")
+    circuits_dir = os.path.join(experiment_dir, "circuits")
     features_dir = os.path.join(experiment_dir, "features")
     labels_dir = os.path.join(experiment_dir, "labels")
 
     # Load circuits
     print("Loading circuits...")
     circuits = []
-    for file in os.listdir(circits_dir):
+    for file in os.listdir(circuits_dir):
         if file.endswith(".qasm"):
-            circ_path = os.path.join(circits_dir, file)
+            circ_path = os.path.join(circuits_dir, file)
             circuits.append(qasm2.load(circ_path))
             # Set circuit name for identification
             circuits[-1].name = file.split(".")[0]

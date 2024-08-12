@@ -1,3 +1,5 @@
 .cache
 build/
 .vscode
+tests/__pycache__
+models/__pycache__
