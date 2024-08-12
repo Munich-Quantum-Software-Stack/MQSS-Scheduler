@@ -174,19 +174,20 @@ def create_feature_dict(qc: str | QuantumCircuit, native_gates=[]) -> dict:
 if __name__ == "__main__":
     # Prepare directory paths
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    features_dir = os.path.join(current_dir, "data", "features")
     circits_dir = os.path.join(current_dir, "data", "circuits")
+    features_dir = os.path.join(current_dir, "data", "features")
+    labels_dir = os.path.join(current_dir, "data", "labels")
 
     circuits = []
     # Load quantum circuits from files
     for file in os.listdir(circits_dir):
         if file.endswith(".qasm"):
-            file_path = os.path.join(circits_dir, file)
-            circuits.append(qasm2.load(file_path))
-            # Add circuit name
+            circ_path = os.path.join(circits_dir, file)
+            circuits.append(qasm2.load(circ_path))
+            # Set circuit name for identification
             circuits[-1].name = file.split(".")[0]
 
-    # Generate features
+    # Get features
     features = {}
     native_gates = ["h", "cx", "measure"]
     for qc in circuits:
@@ -200,3 +201,15 @@ if __name__ == "__main__":
             features[qc.name] = create_feature_dict(qc, native_gates)
             with open(feat_path, "wb") as f:
                 pickle.dump(features[qc.name], f)
+
+    # Load labels
+    labels = {}
+    for qc in circuits:
+        label_path = os.path.join(labels_dir, f"{qc.name}.pkl")
+        # Load labels
+        if os.path.exists(label_path):
+            with open(label_path, "rb") as f:
+                features[qc.name] = pickle.load(f)
+        else:
+            print(f"Label file for {qc.name} not found.")
+            continue
