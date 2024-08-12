@@ -11,6 +11,7 @@ from qiskit.converters import circuit_to_dag
 
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import make_scorer
 
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
@@ -190,6 +191,7 @@ def run(experiment_name: str):
     labels_dir = os.path.join(experiment_dir, "labels")
 
     # Load circuits
+    print("Loading circuits...")
     circuits = []
     for file in os.listdir(circits_dir):
         if file.endswith(".qasm"):
@@ -199,6 +201,7 @@ def run(experiment_name: str):
             circuits[-1].name = file.split(".")[0]
 
     # Get features
+    print("Extracting features...")
     features = {}
     native_gates = ["h", "cx", "measure"]
     for qc in circuits:
@@ -214,6 +217,7 @@ def run(experiment_name: str):
                 pickle.dump(features[qc.name], f)
 
     # Load labels
+    print("Loading labels...")
     labels = {}
     for qc in circuits:
         label_path = os.path.join(labels_dir, f"{qc.name}.pkl")
@@ -223,6 +227,7 @@ def run(experiment_name: str):
                 labels[qc.name] = pickle.load(f)
         else:
             print(f"Label file for {qc.name} not found.")
+            features.pop(qc.name, None)
             continue
 
     # Prepare training data
@@ -231,16 +236,21 @@ def run(experiment_name: str):
     y = np.array([circ_label
                   for circ_label in labels.values()], dtype=np.float16)
 
-    # Prepare model setup
-    model = RandomForestRegressor(
-        criterion="absolute_error",
-        random_state=123,
-    )
+    assert X.shape[0] == y.shape[0], "Number of features and labels do not match."
 
-    # Define hyperparameter grid
+    # Prepare model setup
+    model = RandomForestRegressor(random_state=123)
+
+    # Define hyperparameter grid search
     if experiment_name == "example":
-        grid = {"n_estimators": [50, 100]}
+        kwargs = {
+            "cv": 2,  # Only necessary to work with the small example dataset
+            "scoring": make_scorer(lambda y, y_pred: np.mean(y - y_pred))
+        }
+        grid = {"n_estimators": [50, 100]}  # Speed up the example training
+
     else:
+        kwargs = {"n_jobs": -1, "verbose": 1, "cv": 5}
         grid = {
             "n_estimators": [50, 100],
             "max_depth": [5, None],
@@ -255,19 +265,14 @@ def run(experiment_name: str):
             "warm_start": [False, True],
             "ccp_alpha": [0.0, 0.1],
             "max_samples": [None, 0.5, 1.0],
+            "criterion": ["absolute_error"],
         }
 
     grid_search = GridSearchCV(
-        model,
-        param_grid=grid,
-        # There are only two example circuits
-        cv=2 if experiment_name == "example" else 5,
-        n_jobs=-1,
-        verbose=1,
-        error_score='raise',
-    )
+        model, param_grid=grid, error_score='raise', **kwargs)
 
     # Train model
+    print("Training model...")
     grid_search.fit(X, y)
 
     # Save best model as ONNX file
@@ -278,6 +283,8 @@ def run(experiment_name: str):
 
     with open(model_path, "wb") as f:
         f.write(onnx_model.SerializeToString())
+
+    print(f"Model trained an saved as ONNX file: \n {model_path}")
 
 
 if __name__ == "__main__":
