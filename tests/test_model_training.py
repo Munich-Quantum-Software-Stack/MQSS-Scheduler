@@ -51,14 +51,48 @@ def test_create_feature_dict():
     # Create the feature dictionary
     feature_dict = create_feature_dict(circuit, native_gates=['h', 'cx'])
 
+    # Define the expected features
+    expected_feature_dict = {
+        'h': 2,
+        'cx': 1,
+        "Qubit(QuantumRegister(20, 'q'), 0)": 1,
+        "Qubit(QuantumRegister(20, 'q'), 1)": 1,
+        "Qubit(QuantumRegister(20, 'q'), 2)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 3)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 4)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 5)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 6)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 7)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 8)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 9)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 10)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 11)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 12)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 13)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 14)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 15)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 16)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 17)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 18)": 0,
+        "Qubit(QuantumRegister(20, 'q'), 19)": 0,
+        'depth': 3.0,
+        'num_qubits': 2.0,
+        'program_communication': 1.0,
+        'critical_depth': 1.0,
+        'entanglement_ratio': 1/3,
+        'parallelism': 0.0,
+        'liveness': 1.0,
+        'directed_program_communication': 0.5,
+        'single_qubit_gates_per_layer': 0.5,
+        'multi_qubit_gates_per_layer': 0
+    }
+
     # Check the feature dictionary
-    for key, value in feature_dict.items():
-        assert isinstance(key, str)
-        if isinstance(value, float):
-            assert value >= 0.0
-            assert value <= 1.0
-        else:
-            assert isinstance(value, int)
+    for exp_key, exp_value, key, value in zip(
+            expected_feature_dict.keys(), expected_feature_dict.values(),
+            feature_dict.keys(), feature_dict.values()):
+        assert exp_key == str(key)
+        assert exp_value == value
 
 
 def test_run():
@@ -125,4 +159,4 @@ def test_run():
     assert isinstance(result[0], type(label))
 
     # Delete the experiment directory
-    os.system(f"rm -rf {experiment_dir}")
+    # os.system(f"rm -rf {experiment_dir}")
