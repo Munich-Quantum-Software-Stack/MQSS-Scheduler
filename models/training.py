@@ -1,7 +1,38 @@
-import argparse
-import os
+"""
+training.py
 
+This module provides functions to calculate circuit feature dictionaries and
+a training routine to train a RandomForestRegressor model on the extracted features.
+
+The training does require circuit files in QASM format and corresponding label files:
+
+models/
+|-- experiments/
+|   |-- experiment_name/
+|       |-- circuits/   QASM circuits   (required)
+|       |-- features/   
+|       |-- labels/     .pkl labels     (required)
+
+To get an impression of the require
+d files and training, you can run an example experiment by executing:
+```bash
+python models/example.py
+python models/training.py --experiment_name example
+```
+
+Functions:
+- calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
+    Calculates the Supermarq features for a given quantum circuit.
+- create_feature_dict(circuit: QuantumCircuit, native_gates: list) -> dict:
+    Creates a dictionary of features for a given quantum circuit.
+- run(experiment_name: str):
+    Runs the training process for the given experiment name.
+"""
+
+import os
 import pickle
+import argparse
+
 import numpy as np
 import networkx as nx
 
@@ -182,7 +213,7 @@ def create_feature_dict(qc: str | QuantumCircuit, native_gates=[]) -> dict:
     return feature_dict
 
 
-def run(experiment_name: str):
+def run(experiment_name: str) -> str:
     print(f"Start training for experiment: {experiment_name}")
 
     # Prepare directory paths
@@ -244,12 +275,12 @@ def run(experiment_name: str):
     model = RandomForestRegressor(random_state=123)
 
     # Define hyperparameter grid search
-    if experiment_name == "test":
+    if experiment_name == "example" or experiment_name == "test":
         kwargs = {
-            "cv": 2,  # Only necessary to work with the small test dataset
+            "cv": 2,  # Only necessary to work with the small sample dataset
             "scoring": make_scorer(lambda y, y_pred: np.mean(y - y_pred))
         }
-        grid = {"n_estimators": [50, 100]}  # Speed up the test training
+        grid = {"n_estimators": [50, 100]}  # Speed up the sample training
 
     else:
         kwargs = {"n_jobs": -1, "verbose": 1, "cv": 5}
@@ -278,7 +309,7 @@ def run(experiment_name: str):
     grid_search.fit(X, y)
 
     # Save best model as ONNX file
-    model_path = os.path.join(experiment_dir, "model.onnx")
+    model_path = os.path.join(experiment_dir, f"{experiment_name}.onnx")
     initial_type = [('float_input', FloatTensorType([None, X.shape[1]]))]
     onnx_model = convert_sklearn(
         grid_search.best_estimator_, initial_types=initial_type)
@@ -286,7 +317,8 @@ def run(experiment_name: str):
     with open(model_path, "wb") as f:
         f.write(onnx_model.SerializeToString())
 
-    print(f"Model trained an saved as ONNX file: \n {model_path}")
+    print(f"Model trained and saved as ONNX file: \n {model_path}")
+    return model_path
 
 
 if __name__ == "__main__":
@@ -294,8 +326,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--experiment_name",
         type=str,
-        default="test",
-        help="Set experiment name (default: 'test')"
+        default="example",
+        help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
     run(args.experiment_name)
