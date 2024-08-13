@@ -234,9 +234,9 @@ def run(experiment_name: str):
 
     # Prepare training data
     X = np.array([list(circ_feat_dict.values())
-                  for circ_feat_dict in features.values()], dtype=np.float16)
+                  for circ_feat_dict in features.values()], dtype=np.float32)
     y = np.array([circ_label
-                  for circ_label in labels.values()], dtype=np.float16)
+                  for circ_label in labels.values()], dtype=np.float32)
 
     assert X.shape[0] == y.shape[0], "Number of features and labels do not match."
 
@@ -244,12 +244,12 @@ def run(experiment_name: str):
     model = RandomForestRegressor(random_state=123)
 
     # Define hyperparameter grid search
-    if experiment_name == "example":
+    if experiment_name == "test":
         kwargs = {
-            "cv": 2,  # Only necessary to work with the small example dataset
+            "cv": 2,  # Only necessary to work with the small test dataset
             "scoring": make_scorer(lambda y, y_pred: np.mean(y - y_pred))
         }
-        grid = {"n_estimators": [50, 100]}  # Speed up the example training
+        grid = {"n_estimators": [50, 100]}  # Speed up the test training
 
     else:
         kwargs = {"n_jobs": -1, "verbose": 1, "cv": 5}
@@ -278,7 +278,7 @@ def run(experiment_name: str):
     grid_search.fit(X, y)
 
     # Save best model as ONNX file
-    model_path = os.path.join(experiment_dir, "rf_reg_model.onnx")
+    model_path = os.path.join(experiment_dir, "model.onnx")
     initial_type = [('float_input', FloatTensorType([None, X.shape[1]]))]
     onnx_model = convert_sklearn(
         grid_search.best_estimator_, initial_types=initial_type)
@@ -294,8 +294,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--experiment_name",
         type=str,
-        default="example",
-        help="Set experiment name (default: 'example')"
+        default="test",
+        help="Set experiment name (default: 'test')"
     )
     args = parser.parse_args()
     run(args.experiment_name)

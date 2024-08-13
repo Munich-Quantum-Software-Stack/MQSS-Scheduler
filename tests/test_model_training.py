@@ -1,20 +1,28 @@
 import os
 import pytest
+import onnxruntime as ort
+import numpy as np
 import pickle
 from qiskit import QuantumCircuit, qasm2
 from models.training import calc_supermarq_plus_features, create_feature_dict, run
 
 
 def create_test_circuit(num_qubits):
-    circuit = QuantumCircuit(num_qubits)
+    # Create a test quantum circuit for a qpu with 20 qubits
+    # with gates h, cx and measurement on the first num_qubits qubits
+    circuit = QuantumCircuit(20, num_qubits)
 
+    # H gate on first num_qubits qubits
     for i in range(num_qubits):
         circuit.h(i)
 
+    # CX gates on first num_qubits - 1 qubits
     for i in range(num_qubits - 1):
         circuit.cx(i, i + 1)
 
-    circuit.measure_all()
+    # Measure first num_qubits qubits
+    for i in range(num_qubits):
+        circuit.measure(i, i)
 
     return circuit
 
@@ -94,6 +102,27 @@ def test_run():
 
     # Run the training
     run(experiment_name)
+
+    # Load the trained ONNX model
+    model_path = os.path.join(experiment_dir, "model.onnx")
+    session = ort.InferenceSession(model_path)
+
+    # Load a feature vector and label for last test circuit
+    with open(os.path.join(features_dir, f"test_circuit_{num_qubits-1}.pkl"), "rb") as f:
+        feats_data = pickle.load(f)
+    with open(os.path.join(labels_dir, f"test_circuit_{num_qubits-1}.pkl"), "rb") as f:
+        label_data = pickle.load(f)
+
+    feats = np.array(list(feats_data.values()), dtype=np.float32)
+    feats = feats.reshape(1, -1)  # because only single feature vector
+    label = np.array(label_data, dtype=np.float32)
+
+    # Run inference
+    input_name = session.get_inputs()[0].name
+    result = session.run(None, {input_name: feats})
+
+    # Check the results
+    assert isinstance(result[0], type(label))
 
     # Delete the experiment directory
     os.system(f"rm -rf {experiment_dir}")
