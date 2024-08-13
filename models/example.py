@@ -1,6 +1,9 @@
 """
 example.py
 
+This module provides functions to prepare some test and example data for the training.py script.
+
+The training does require circuit files in QASM format and corresponding label files:
 
 models/
 |-- experiments/
@@ -9,8 +12,19 @@ models/
 |       |-- features/   
 |       |-- labels/     .pkl labels     (required)
 
+To get an impression of the required files you can run the example.py script.
+```
+python models/example.py
+```
 
+To execute training for a specific experiment, you can run the following command:
+```
+python models/training.py --experiment_name example
+```
 
+Functions:
+- create_sample_circuit: Create a sample quantum circuit
+- prepare_sample_data: Prepare sample data for an experiment
 """
 
 import os
@@ -23,8 +37,10 @@ from qiskit import QuantumCircuit
 __all__ = ['create_sample_circuit', 'prepare_sample_data']
 
 
-def create_sample_circuit(num_active_qubits, max_num_qubits):
-    """Create a test quantum circuit for a qpu with 20 qubits with h, cx and measurement on the first num_qubits qubits
+def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
+    """
+    Create a test quantum circuit for a qpu with max_num_qubits qubits.
+    There will be h, cx and measurement operations on the first num_qubits qubits.
     """
     circuit = QuantumCircuit(max_num_qubits, num_active_qubits)
 
@@ -43,7 +59,11 @@ def create_sample_circuit(num_active_qubits, max_num_qubits):
     return circuit
 
 
-def prepare_sample_data(experiment_name):
+def prepare_sample_data(experiment_name: str) -> str:
+    """
+    Prepare sample data for the ML training.
+    The data will be saved in the experiments/experiment_name directory.
+    """
     # Prepare directory paths
     current_dir = os.path.dirname(os.path.realpath(__file__))
     experiment_dir = os.path.join(current_dir, "experiments", experiment_name)
@@ -66,19 +86,17 @@ def prepare_sample_data(experiment_name):
         circ_path = os.path.join(circuits_dir, f"{circ_name}.qasm")
         label_path = os.path.join(labels_dir, f"{circ_name}.pkl")
 
-        if not os.path.exists(circ_path):
-            # Create and save quantum circuit
-            circuit = create_sample_circuit(
-                max_num_qubits=20,
-                num_active_qubits=num_qubits
-            )
-            qasm2.dump(circuit, circ_path)
+        # Create and save quantum circuit
+        circuit = create_sample_circuit(
+            max_num_qubits=20,
+            num_active_qubits=num_qubits
+        )
+        qasm2.dump(circuit, circ_path)
 
-        if not os.path.exists(label_path):
-            # Create and save label
-            label = num_qubits % 2
-            with open(label_path, "wb") as f:
-                pickle.dump(label, f)
+        # Create and save label
+        label = num_qubits % 2
+        with open(label_path, "wb") as f:
+            pickle.dump(label, f)
 
     return experiment_dir
 

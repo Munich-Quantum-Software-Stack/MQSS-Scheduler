@@ -13,10 +13,13 @@ models/
 |       |-- features/   
 |       |-- labels/     .pkl labels     (required)
 
-To get an impression of the require
-d files and training, you can run an example experiment by executing:
-```bash
+To get an impression of the required files you can run the example.py script.
+```
 python models/example.py
+```
+
+To execute training for a specific experiment, you can run the following command:
+```
 python models/training.py --experiment_name example
 ```
 
@@ -51,7 +54,8 @@ __all__ = ['calc_supermarq_plus_features', 'create_feature_dict', 'run']
 
 
 def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
-    """Calculates the Supermarq features for a given quantum circuit. There are three additional features, that cover some issues with the original ones.
+    """Calculates the Supermarq features for a given quantum circuit. 
+    There are three additional features, that cover some issues with the original ones.
     Code adapted from https://github.com/Infleqtion/client-superstaq/blob/91d947f8cc1d99f90dca58df5248d9016e4a5345/supermarq-benchmarks/supermarq/converters.py.
 
     Arguments:
@@ -158,7 +162,7 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     )
 
 
-def create_feature_dict(qc: str | QuantumCircuit, native_gates=[]) -> dict:
+def create_feature_dict(qc: QuantumCircuit, native_gates=[]) -> dict:
     """Creates and returns a feature dictionary for a given quantum circuit.
 
     Arguments:
@@ -214,6 +218,16 @@ def create_feature_dict(qc: str | QuantumCircuit, native_gates=[]) -> dict:
 
 
 def run(experiment_name: str) -> str:
+    """Runs the training process for the given experiment.
+    This function loads the circuits and the corresponding labels, generates the features,
+    and trains a RandomForestRegressor model on the extracted features.
+
+    Arguments:
+        experiment_name: The name of the experiment.
+
+    Returns:
+        The path to the trained model.
+    """
     print(f"Start training for experiment: {experiment_name}")
 
     # Prepare directory paths
@@ -276,17 +290,17 @@ def run(experiment_name: str) -> str:
 
     # Define hyperparameter grid search
     if experiment_name == "example" or experiment_name == "test":
+        grid = {"n_estimators": [50, 100]}  # Speed up the sample training
         kwargs = {
             "cv": 2,  # Only necessary to work with the small sample dataset
             "scoring": make_scorer(lambda y, y_pred: np.mean(y - y_pred))
         }
-        grid = {"n_estimators": [50, 100]}  # Speed up the sample training
-
     else:
+        # Full hyperparameter grid search for real experiments
         kwargs = {"n_jobs": -1, "verbose": 1, "cv": 5}
-        grid = {
-            "n_estimators": [50, 100],
-            "max_depth": [5, None],
+        grid = {  # NOTE: Can (and should) be adjusted
+            "n_estimators": [20, 40, 80, 160],
+            "max_depth": [5, 10, 20, 40],
             "min_samples_split": [2, 5],
             "min_samples_leaf": [1, 2],
             "min_weight_fraction_leaf": [0.0, 0.1],

@@ -1,3 +1,8 @@
+"""
+test_model_training.py
+
+This script tests the functions in models/training.py.
+"""
 import os
 import pickle
 import glob
