@@ -1,6 +1,6 @@
 # QC Training Package
 
-This package provides tools for preparing data and training models on labeled quantum circuits. It consists of two main modules: `setup.py` and `training.py`, along with the corresponding test files `test_training.py`and `test_setup.py`.
+This package provides tools for preparing data and training models on labeled quantum circuits. It consists of two main modules: `setup.py` and `training.py`, along with the corresponding test files `test_training.py` and `test_setup.py`.
 
 ## Description
 
@@ -61,7 +61,7 @@ python src/training.py --experiment <experiment_name>
 
 ## Testing
 
-To run the tests, execute the following command:
+To run the tests, execute the following commands:
 
 ```sh
 pytest tests/test_setup.py
