@@ -3,25 +3,6 @@
 This module provides functions to calculate circuit feature dictionaries and
 a training routine to train a RandomForestRegressor model on the extracted features.
 
-The training does require circuit files in QASM format and corresponding label files:
-
-models/
-|-- experiments/
-|   |-- experiment_name/
-|       |-- circuits/   QASM circuits   (required)
-|       |-- features/   
-|       |-- labels/     .pkl labels     (required)
-
-To get an impression of the required files you can run the example.py script.
-```
-python models/example.py
-```
-
-To execute training for a specific experiment, you can run the following command:
-```
-python models/training.py --experiment_name example
-```
-
 Functions:
 - calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     Calculates the Supermarq features for a given quantum circuit.
@@ -232,8 +213,9 @@ def run(experiment_name: str) -> str:
     print(f"Start training for experiment: {experiment_name}")
 
     # Prepare directory paths
-    current_dir = Path(__file__).resolve().parent
-    experiment_dir = current_dir / "experiments", experiment_name
+    parent_dir = Path(__file__).resolve().parent.parent
+    experiment_dir = parent_dir / "data" / experiment_name
+    
     circuits_dir = experiment_dir / "circuits"
     features_dir = experiment_dir / "features"
     labels_dir = experiment_dir / "labels"

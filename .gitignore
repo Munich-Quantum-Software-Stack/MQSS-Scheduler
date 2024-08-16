@@ -3,3 +3,4 @@ build/
 .vscode
 models/experiments/*
 predictor/src/predictor.egg-info
+predictor/models/*

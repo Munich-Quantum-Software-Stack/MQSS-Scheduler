@@ -29,7 +29,7 @@ pip install .
 To get an impression of the required files, you can run the example.py script:
     
 ```sh
-python example.py
+python src/example.py
 ```
 
 ### Directory Structure
@@ -37,12 +37,11 @@ python example.py
 The package expects the following directory structure:
 
 ```sh
-models/
-|-- experiments/
-|   |-- experiment_name/
-|       |-- circuits/   # QASM circuits (required)
-|       |-- features/   
-|       |-- labels/     # .pkl labels (required)
+data/
+|-- experiment_name/
+|   |-- circuits/   # QASM circuits (required for training)
+|   |-- features/   
+|   |-- labels/     # .pkl labels (required for training)
 ```
 
 ### Training
@@ -50,12 +49,12 @@ models/
 To execute training for a specific experiment, run the following command:
     
 ```sh
-python training.py --experiment <experiment_name>
+python src/training.py --experiment <experiment_name>
 ```
 
 ## Testing
 To run the tests, execute the following command:
 
 ```sh
-python pytest test_training.py
+python pytest test/test_training.py
 ```

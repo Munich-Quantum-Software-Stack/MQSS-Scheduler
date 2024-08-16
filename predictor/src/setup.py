@@ -2,25 +2,6 @@
 
 This module provides functions to prepare some test and example data for the training.py script.
 
-The training does require circuit files in QASM format and corresponding label files:
-
-models/
-|-- experiments/
-|   |-- example/
-|       |-- circuits/   QASM circuits   (required)
-|       |-- features/   
-|       |-- labels/     .pkl labels     (required)
-
-To get an impression of the required files you can run the example.py script.
-```
-python models/example.py
-```
-
-To execute training for a specific experiment, you can run the following command:
-```
-python models/training.py --experiment_name example
-```
-
 Functions:
 - create_sample_circuit: Create a sample quantum circuit
 - prepare_sample_data: Prepare sample data for an experiment
@@ -33,10 +14,10 @@ from pathlib import Path
 
 from qiskit import QuantumCircuit, qasm2
 
-__all__ = ["create_sample_circuit", "prepare_sample_data"]
+__all__ = ["_create_sample_circuit", "_prepare_sample_data"]
 
 
-def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
+def _create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
     """Create a test quantum circuit for a qpu with max_num_qubits qubits.
 
     There will be h, cx and measurement operations on the first num_qubits qubits.
@@ -58,14 +39,14 @@ def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> Quantu
     return circuit
 
 
-def prepare_sample_data(experiment_name: str) -> str:
+def _prepare_sample_data(experiment_name: str) -> str:
     """Prepare sample data for the ML training.
 
     The data will be saved in the experiments/experiment_name directory.
     """
     # Prepare directory paths
-    current_dir = Path(__file__).resolve().parent
-    experiment_dir = current_dir / "experiments" / experiment_name
+    parent_dir = Path(__file__).resolve().parent.parent
+    experiment_dir = parent_dir / "data" / experiment_name
 
     circuits_dir = experiment_dir / "circuits"
     features_dir = experiment_dir / "features"
@@ -83,7 +64,7 @@ def prepare_sample_data(experiment_name: str) -> str:
         label_path = labels_dir / f"{circ_name}.pkl"
 
         # Create and save quantum circuit
-        circuit = create_sample_circuit(
+        circuit = _create_sample_circuit(
             max_num_qubits=20,
             num_active_qubits=num_qubits
         )
@@ -107,5 +88,5 @@ if __name__ == "__main__":
         help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
-    directory = prepare_sample_data(args.experiment_name)
-    print(f"Sample data prepared in: \n {dir}")
+    directory = _prepare_sample_data(args.experiment_name)
+    print(f"Sample data prepared in: \n{directory}")
