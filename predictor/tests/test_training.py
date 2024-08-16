@@ -1,17 +1,16 @@
-"""test_model_training.py.
+"""test_training.py.
 
-This script tests the functions in models/training.py.
+This script tests the functions in src/training.py.
 """
 from __future__ import annotations
 
 import os
 import pickle
-from pathlib import Path
 
 import numpy as np
 import onnxruntime as ort
-from models.example import create_sample_circuit, prepare_sample_data
-from models.training import calc_supermarq_plus_features, create_feature_dict, run
+from src.setup import create_sample_circuit, prepare_sample_data
+from src.training import calc_supermarq_plus_features, create_feature_dict, train_model
 
 
 def test_calc_supermarq_plus_features() -> None:
@@ -88,7 +87,7 @@ def test_create_feature_dict() -> None:
         assert exp_value == value
 
 
-def test_run() -> None:
+def test_train_model() -> None:
     """Test the training and inference of the model."""
     # Define the experiment name
     experiment_name = "test"
@@ -99,16 +98,16 @@ def test_run() -> None:
     labels_dir = experiment_dir/"labels"
 
     # Run the training
-    run(experiment_name)
+    train_model(experiment_name)
 
     # Load the trained ONNX model
     model_path = experiment_dir / f"{experiment_name}.onnx"
     session = ort.InferenceSession(model_path)
 
     # Load the feature vectors and labels
-    feature_files = Path.glob(features_dir / "*.pkl")
-    label_files = Path.glob(labels_dir / "*.pkl")
-
+    feature_files = list(features_dir.glob("*.pkl"))
+    label_files = list(labels_dir.glob("*.pkl"))
+    
     # Load a feature vector and label for the test circuit
     with feature_files[0].open("rb") as f:
         feats_data = pickle.load(f)

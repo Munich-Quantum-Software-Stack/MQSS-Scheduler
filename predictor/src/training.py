@@ -28,7 +28,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 
-__all__ = ["calc_supermarq_plus_features", "create_feature_dict", "run"]
+__all__ = ["calc_supermarq_plus_features", "create_feature_dict", "train_model"]
 
 
 def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
@@ -198,7 +198,7 @@ def create_feature_dict(qc: QuantumCircuit, native_gates:list[str] | None=None) 
     return feature_dict
 
 
-def run(experiment_name: str) -> str:
+def train_model(experiment_name: str) -> str:
     """Runs the training process for the given experiment.
 
     This function loads the circuits and the corresponding labels, generates the features,
@@ -215,7 +215,7 @@ def run(experiment_name: str) -> str:
     # Prepare directory paths
     parent_dir = Path(__file__).resolve().parent.parent
     experiment_dir = parent_dir / "data" / experiment_name
-    
+
     circuits_dir = experiment_dir / "circuits"
     features_dir = experiment_dir / "features"
     labels_dir = experiment_dir / "labels"
@@ -326,4 +326,4 @@ if __name__ == "__main__":
         help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
-    run(args.experiment_name)
+    train_model(args.experiment_name)

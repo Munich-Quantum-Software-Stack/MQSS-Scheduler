@@ -53,8 +53,16 @@ python src/training.py --experiment <experiment_name>
 ```
 
 ## Testing
+
+To prepare for pytest, execute the following command:
+
+```sh
+export PYTHONPATH=$(pwd)
+```
+
 To run the tests, execute the following command:
 
 ```sh
-python pytest test/test_training.py
+pytest tests/test_setup.py
+pytest tests/test_training.py
 ```

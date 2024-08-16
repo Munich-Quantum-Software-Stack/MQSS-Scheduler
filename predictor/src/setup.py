@@ -14,10 +14,10 @@ from pathlib import Path
 
 from qiskit import QuantumCircuit, qasm2
 
-__all__ = ["_create_sample_circuit", "_prepare_sample_data"]
+__all__ = ["create_sample_circuit", "prepare_sample_data"]
 
 
-def _create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
+def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
     """Create a test quantum circuit for a qpu with max_num_qubits qubits.
 
     There will be h, cx and measurement operations on the first num_qubits qubits.
@@ -39,7 +39,7 @@ def _create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> Quant
     return circuit
 
 
-def _prepare_sample_data(experiment_name: str) -> str:
+def prepare_sample_data(experiment_name: str) -> str:
     """Prepare sample data for the ML training.
 
     The data will be saved in the experiments/experiment_name directory.
@@ -64,7 +64,7 @@ def _prepare_sample_data(experiment_name: str) -> str:
         label_path = labels_dir / f"{circ_name}.pkl"
 
         # Create and save quantum circuit
-        circuit = _create_sample_circuit(
+        circuit = create_sample_circuit(
             max_num_qubits=20,
             num_active_qubits=num_qubits
         )
@@ -88,5 +88,5 @@ if __name__ == "__main__":
         help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
-    directory = _prepare_sample_data(args.experiment_name)
+    directory = prepare_sample_data(args.experiment_name)
     print(f"Sample data prepared in: \n{directory}")
