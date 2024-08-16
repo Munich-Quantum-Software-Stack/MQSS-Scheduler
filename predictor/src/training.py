@@ -8,8 +8,8 @@ Functions:
     Calculates the Supermarq features for a given quantum circuit.
 - create_feature_dict(circuit: QuantumCircuit, native_gates: list) -> dict:
     Creates a dictionary of features for a given quantum circuit.
-- run(experiment_name: str):
-    Runs the training process for the given experiment name.
+- train_model(experiment_name: str):
+    Runs the training process for the given experiment.
 """
 from __future__ import annotations
 
