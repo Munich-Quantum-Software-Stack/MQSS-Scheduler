@@ -1,4 +1,4 @@
-"""example.py.
+"""setup.py.
 
 This module provides functions to prepare some test and example data for the training.py script.
 
