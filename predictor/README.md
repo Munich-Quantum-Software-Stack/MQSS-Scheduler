@@ -74,6 +74,5 @@ Contributions are welcome! Please open an issue first to discuss what you would 
 Once you started working on your pull request, please make sure to use linting and formatting through:
 
 ```sh
-ruff check tests --fix
-ruff check src --fix
+ruff check --fix
 ```
