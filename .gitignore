@@ -1,6 +1,5 @@
 .cache
 build/
 .vscode
-tests/__pycache__
-models/__pycache__
 models/experiments/*
+predictor/src/predictor.egg-info
