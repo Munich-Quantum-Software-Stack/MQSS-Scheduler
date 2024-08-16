@@ -1,20 +1,21 @@
-"""
-test_model_training.py
+"""test_model_training.py.
 
 This script tests the functions in models/training.py.
 """
+from __future__ import annotations
+
 import os
 import pickle
-import glob
+from pathlib import Path
 
-import onnxruntime as ort
 import numpy as np
-
-from models.training import calc_supermarq_plus_features, create_feature_dict, run
+import onnxruntime as ort
 from models.example import create_sample_circuit, prepare_sample_data
+from models.training import calc_supermarq_plus_features, create_feature_dict, run
 
 
-def test_calc_supermarq_plus_features():
+def test_calc_supermarq_plus_features() -> None:
+    """Test the calculation of the supermarq+ features."""
     # Create a test quantum circuit
     num_qubits = 2
     circuit = create_sample_circuit(
@@ -31,7 +32,8 @@ def test_calc_supermarq_plus_features():
         assert feat <= 1.0
 
 
-def test_create_feature_dict():
+def test_create_feature_dict() -> None:
+    """Test the creation of the feature dictionary."""
     # Create a test quantum circuit
     num_qubits = 2
     circuit = create_sample_circuit(
@@ -40,12 +42,12 @@ def test_create_feature_dict():
     )
 
     # Create the feature dictionary
-    feature_dict = create_feature_dict(circuit, native_gates=['h', 'cx'])
+    feature_dict = create_feature_dict(circuit, native_gates=["h", "cx"])
 
     # Define the expected features
     expected_feature_dict = {
-        'h': 2,
-        'cx': 1,
+        "h": 2,
+        "cx": 1,
         "Qubit(QuantumRegister(20, 'q'), 0)": 1,
         "Qubit(QuantumRegister(20, 'q'), 1)": 1,
         "Qubit(QuantumRegister(20, 'q'), 2)": 0,
@@ -66,16 +68,16 @@ def test_create_feature_dict():
         "Qubit(QuantumRegister(20, 'q'), 17)": 0,
         "Qubit(QuantumRegister(20, 'q'), 18)": 0,
         "Qubit(QuantumRegister(20, 'q'), 19)": 0,
-        'depth': 3.0,
-        'num_qubits': 2.0,
-        'program_communication': 1.0,
-        'critical_depth': 1.0,
-        'entanglement_ratio': 1/3,
-        'parallelism': 0.0,
-        'liveness': 1.0,
-        'directed_program_communication': 0.5,
-        'single_qubit_gates_per_layer': 0.5,
-        'multi_qubit_gates_per_layer': 0
+        "depth": 3.0,
+        "num_qubits": 2.0,
+        "program_communication": 1.0,
+        "critical_depth": 1.0,
+        "entanglement_ratio": 1/3,
+        "parallelism": 0.0,
+        "liveness": 1.0,
+        "directed_program_communication": 0.5,
+        "single_qubit_gates_per_layer": 0.5,
+        "multi_qubit_gates_per_layer": 0
     }
 
     # Check the feature dictionary
@@ -86,30 +88,31 @@ def test_create_feature_dict():
         assert exp_value == value
 
 
-def test_run():
+def test_run() -> None:
+    """Test the training and inference of the model."""
     # Define the experiment name
     experiment_name = "test"
 
     # Prepare the example data
     experiment_dir = prepare_sample_data(experiment_name)
-    features_dir = os.path.join(experiment_dir, "features")
-    labels_dir = os.path.join(experiment_dir, "labels")
+    features_dir = experiment_dir /"features"
+    labels_dir = experiment_dir/"labels"
 
     # Run the training
     run(experiment_name)
 
     # Load the trained ONNX model
-    model_path = os.path.join(experiment_dir, f"{experiment_name}.onnx")
+    model_path = experiment_dir / f"{experiment_name}.onnx"
     session = ort.InferenceSession(model_path)
 
     # Load the feature vectors and labels
-    feature_files = glob.glob(os.path.join(features_dir, "*.pkl"))
-    label_files = glob.glob(os.path.join(labels_dir, "*.pkl"))
+    feature_files = Path.glob(features_dir / "*.pkl")
+    label_files = Path.glob(labels_dir / "*.pkl")
 
     # Load a feature vector and label for the test circuit
-    with open(feature_files[0], "rb") as f:
+    with feature_files[0].open("rb") as f:
         feats_data = pickle.load(f)
-    with open(label_files[0], "rb") as f:
+    with label_files[0].open("rb") as f:
         label_data = pickle.load(f)
 
     feats = np.array(list(feats_data.values()), dtype=np.float32)

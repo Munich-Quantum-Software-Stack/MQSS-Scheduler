@@ -1,5 +1,4 @@
-"""
-training.py
+"""training.py.
 
 This module provides functions to calculate circuit feature dictionaries and
 a training routine to train a RandomForestRegressor model on the extracted features.
@@ -31,30 +30,29 @@ Functions:
 - run(experiment_name: str):
     Runs the training process for the given experiment name.
 """
+from __future__ import annotations
 
+import argparse
 import os
 import pickle
-import argparse
+from pathlib import Path
 
-import numpy as np
 import networkx as nx
-
-from qiskit import qasm2
-from qiskit import QuantumCircuit
+import numpy as np
+from qiskit import QuantumCircuit, qasm2
 from qiskit.converters import circuit_to_dag
-
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import make_scorer
-
 from skl2onnx import convert_sklearn
 from skl2onnx.common.data_types import FloatTensorType
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import GridSearchCV
 
-__all__ = ['calc_supermarq_plus_features', 'create_feature_dict', 'run']
+__all__ = ["calc_supermarq_plus_features", "create_feature_dict", "run"]
 
 
 def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
-    """Calculates the Supermarq features for a given quantum circuit. 
+    """Calculates the Supermarq features for a given quantum circuit.
+
     There are three additional features, that cover some issues with the original ones.
     Code adapted from https://github.com/Infleqtion/client-superstaq/blob/91d947f8cc1d99f90dca58df5248d9016e4a5345/supermarq-benchmarks/supermarq/converters.py.
 
@@ -162,7 +160,7 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     )
 
 
-def create_feature_dict(qc: QuantumCircuit, native_gates=[]) -> dict:
+def create_feature_dict(qc: QuantumCircuit, native_gates:list[str] | None=None) -> dict:
     """Creates and returns a feature dictionary for a given quantum circuit.
 
     Arguments:
@@ -172,10 +170,12 @@ def create_feature_dict(qc: QuantumCircuit, native_gates=[]) -> dict:
     Returns:
         The feature dictionary of the given quantum circuit.
     """
+    if native_gates is None:
+        native_gates = []
     ops_list = qc.count_ops()
 
     # dict_to_featurevector
-    res_dct = {gate: 0 for gate in native_gates}
+    res_dct = dict.fromkeys(native_gates, 0)
     for key, val in dict(ops_list).items():
         if key in res_dct:
             res_dct[key] = val
@@ -186,7 +186,7 @@ def create_feature_dict(qc: QuantumCircuit, native_gates=[]) -> dict:
         feature_dict[key] = int(ops_list_dict[key])
 
     # Create a list of zeros for the one-hot vector
-    active_qubits_dict = {qubit: 0 for qubit in qc.qubits}
+    active_qubits_dict = dict.fromkeys(qc.qubits, 0)
 
     # Iterate over the operations in the quantum circuit
     for op in qc.data:
@@ -219,6 +219,7 @@ def create_feature_dict(qc: QuantumCircuit, native_gates=[]) -> dict:
 
 def run(experiment_name: str) -> str:
     """Runs the training process for the given experiment.
+
     This function loads the circuits and the corresponding labels, generates the features,
     and trains a RandomForestRegressor model on the extracted features.
 
@@ -231,18 +232,18 @@ def run(experiment_name: str) -> str:
     print(f"Start training for experiment: {experiment_name}")
 
     # Prepare directory paths
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    experiment_dir = os.path.join(current_dir, "experiments", experiment_name)
-    circuits_dir = os.path.join(experiment_dir, "circuits")
-    features_dir = os.path.join(experiment_dir, "features")
-    labels_dir = os.path.join(experiment_dir, "labels")
+    current_dir = Path(__file__).resolve().parent
+    experiment_dir = current_dir / "experiments", experiment_name
+    circuits_dir = experiment_dir / "circuits"
+    features_dir = experiment_dir / "features"
+    labels_dir = experiment_dir / "labels"
 
     # Load circuits
     print("Loading circuits...")
     circuits = []
     for file in os.listdir(circuits_dir):
         if file.endswith(".qasm"):
-            circ_path = os.path.join(circuits_dir, file)
+            circ_path = circuits_dir / file
             circuits.append(qasm2.load(circ_path))
             # Set circuit name for identification
             circuits[-1].name = file.split(".")[0]
@@ -252,25 +253,25 @@ def run(experiment_name: str) -> str:
     features = {}
     native_gates = ["h", "cx", "measure"]
     for qc in circuits:
-        feat_path = os.path.join(features_dir, f"{qc.name}.pkl")
+        feat_path = features_dir / f"{qc.name}.pkl"
         # Load feature dictionary if it exists
-        if os.path.exists(feat_path):
-            with open(feat_path, "rb") as f:
+        if feat_path.exists():
+            with feat_path.open("rb") as f:
                 features[qc.name] = pickle.load(f)
         else:
             # Create and save feature dictionary
             features[qc.name] = create_feature_dict(qc, native_gates)
-            with open(feat_path, "wb") as f:
+            with feat_path.open("wb") as f:
                 pickle.dump(features[qc.name], f)
 
     # Load labels
     print("Loading labels...")
     labels = {}
     for qc in circuits:
-        label_path = os.path.join(labels_dir, f"{qc.name}.pkl")
+        label_path = labels_dir / f"{qc.name}.pkl"
         # Load labels
-        if os.path.exists(label_path):
-            with open(label_path, "rb") as f:
+        if label_path.exists():
+            with label_path.open("rb") as f:
                 labels[qc.name] = pickle.load(f)
         else:
             print(f"Label file for {qc.name} not found.")
@@ -278,12 +279,11 @@ def run(experiment_name: str) -> str:
             continue
 
     # Prepare training data
-    X = np.array([list(circ_feat_dict.values())
+    x = np.array([list(circ_feat_dict.values())
                   for circ_feat_dict in features.values()], dtype=np.float32)
-    y = np.array([circ_label
-                  for circ_label in labels.values()], dtype=np.float32)
+    y = np.array(list(labels.values()), dtype=np.float32)
 
-    assert X.shape[0] == y.shape[0], "Number of features and labels do not match."
+    assert x.shape[0] == y.shape[0], "Number of features and labels do not match."
 
     # Prepare model setup
     model = RandomForestRegressor(random_state=123)
@@ -316,19 +316,19 @@ def run(experiment_name: str) -> str:
         }
 
     grid_search = GridSearchCV(
-        model, param_grid=grid, error_score='raise', **kwargs)
+        model, param_grid=grid, error_score="raise", **kwargs)
 
     # Train model
     print("Training model...")
-    grid_search.fit(X, y)
+    grid_search.fit(x, y)
 
     # Save best model as ONNX file
-    model_path = os.path.join(experiment_dir, f"{experiment_name}.onnx")
-    initial_type = [('float_input', FloatTensorType([None, X.shape[1]]))]
+    model_path = experiment_dir / f"{experiment_name}.onnx"
+    initial_type = [("float_input", FloatTensorType([None, x.shape[1]]))]
     onnx_model = convert_sklearn(
         grid_search.best_estimator_, initial_types=initial_type)
 
-    with open(model_path, "wb") as f:
+    with model_path.open("wb") as f:
         f.write(onnx_model.SerializeToString())
 
     print(f"Model trained and saved as ONNX file: \n {model_path}")

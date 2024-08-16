@@ -1,5 +1,4 @@
-"""
-example.py
+"""example.py.
 
 This module provides functions to prepare some test and example data for the training.py script.
 
@@ -26,20 +25,20 @@ Functions:
 - create_sample_circuit: Create a sample quantum circuit
 - prepare_sample_data: Prepare sample data for an experiment
 """
+from __future__ import annotations
 
-import os
-import pickle
 import argparse
+import pickle
+from pathlib import Path
 
-from qiskit import qasm2
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, qasm2
 
-__all__ = ['create_sample_circuit', 'prepare_sample_data']
+__all__ = ["create_sample_circuit", "prepare_sample_data"]
 
 
 def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
-    """
-    Create a test quantum circuit for a qpu with max_num_qubits qubits.
+    """Create a test quantum circuit for a qpu with max_num_qubits qubits.
+
     There will be h, cx and measurement operations on the first num_qubits qubits.
     """
     circuit = QuantumCircuit(max_num_qubits, num_active_qubits)
@@ -60,31 +59,28 @@ def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> Quantu
 
 
 def prepare_sample_data(experiment_name: str) -> str:
-    """
-    Prepare sample data for the ML training.
+    """Prepare sample data for the ML training.
+
     The data will be saved in the experiments/experiment_name directory.
     """
     # Prepare directory paths
-    current_dir = os.path.dirname(os.path.realpath(__file__))
-    experiment_dir = os.path.join(current_dir, "experiments", experiment_name)
+    current_dir = Path(__file__).resolve().parent
+    experiment_dir = current_dir / "experiments" / experiment_name
 
-    circuits_dir = os.path.join(experiment_dir, "circuits")
-    features_dir = os.path.join(experiment_dir, "features")
-    labels_dir = os.path.join(experiment_dir, "labels")
+    circuits_dir = experiment_dir / "circuits"
+    features_dir = experiment_dir / "features"
+    labels_dir = experiment_dir / "labels"
 
     # Create directories
-    if not os.path.exists(circuits_dir):
-        os.makedirs(circuits_dir)
-    if not os.path.exists(features_dir):
-        os.makedirs(features_dir)
-    if not os.path.exists(labels_dir):
-        os.makedirs(labels_dir)
+    circuits_dir.mkdir(parents=True, exist_ok=True)
+    features_dir.mkdir(parents=True, exist_ok=True)
+    labels_dir.mkdir(parents=True, exist_ok=True)
 
     # Create sample data
     for num_qubits in range(2, 5):
         circ_name = f"{experiment_name}_circuit_{num_qubits}"
-        circ_path = os.path.join(circuits_dir, f"{circ_name}.qasm")
-        label_path = os.path.join(labels_dir, f"{circ_name}.pkl")
+        circ_path = circuits_dir / f"{circ_name}.qasm"
+        label_path = labels_dir / f"{circ_name}.pkl"
 
         # Create and save quantum circuit
         circuit = create_sample_circuit(
@@ -95,7 +91,7 @@ def prepare_sample_data(experiment_name: str) -> str:
 
         # Create and save label
         label = num_qubits % 2
-        with open(label_path, "wb") as f:
+        with label_path.open("wb") as f:
             pickle.dump(label, f)
 
     return experiment_dir
@@ -111,5 +107,5 @@ if __name__ == "__main__":
         help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
-    dir = prepare_sample_data(args.experiment_name)
+    directory = prepare_sample_data(args.experiment_name)
     print(f"Sample data prepared in: \n {dir}")
