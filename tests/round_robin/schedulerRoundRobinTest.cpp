@@ -27,11 +27,11 @@ int main() {
   for (auto &queue : queues) {
     std::shared_ptr<Submitter> submitter = queue->mpSubmitter;
     QDMI_Device device = submitter->mDevice;
-    QDMI_Device_property prop;
-    int name = -1;
+    QDMI_Device_property prop = BACKEND_NAME;
+    char *name = nullptr;
 
     // Retrieve and print the device name
-    int result = QDMI_query_device_property_i(device, prop, &name);
+    int result = QDMI_query_device_property_c(device, prop, &name);
     std::cout << "   [Test]................Device " << name << std::endl;
 
     device2Submitter[device] = submitter; // For easy access later
@@ -59,14 +59,14 @@ int main() {
   // Iterate over all scheduled tasks and send them to the submitter
   for (auto task : tasks) {
     QDMI_Device scheduledDevice = task->mScheduledQpu;
-    QDMI_Device_property prop;
-    int name = -1;
+    QDMI_Device_property prop = BACKEND_NAME;
+    char *name = nullptr;
 
     // Send the task to corresponding submitter
     device2Submitter.at(scheduledDevice)->enqueue(task);
 
     // Retrieve and print the device name
-    int result = QDMI_query_device_property_i(scheduledDevice, prop, &name);
+    int result = QDMI_query_device_property_c(scheduledDevice, prop, &name);
     std::cout << "   [Test]................Task " << task->mTaskId
               << " was sent to submitter for device " << name << std::endl;
   }
