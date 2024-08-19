@@ -53,7 +53,9 @@ int main() {
   }
 
   // Simulate Generator by creating a bunch of tasks with possible child tasks
-  std::vector<int> numChildTasks = {3, 2, 2, 5, 0, 3, 2};
+  std::vector<int> numChildTasks = {2, 2, 1};
+  std::vector<std::vector<int>> durations = {{2, 5}, {1, 1}, {1}};
+  std::vector<std::vector<int>> qpuPreferences = {{1, 0}, {1, 0}, {1}};
   int numParentTasks = numChildTasks.size();
   int taskID = 0; // Unique task ID for each task
 
@@ -83,6 +85,10 @@ int main() {
       for (int j = 0; j < numChildTasks[i]; ++j) {
         auto childTask =
             createRandomTask(taskID++, availableDevices, parentTask);
+
+        // Manually set the duration and QPU preference
+        childTask->mDuration = durations[i][j];
+        childTask->mPreferredQpus = {availableDevices.at(qpuPreferences[i][j])};
 
         childTasks.push_back(childTask); // To be scheduled now
         tasks.push_back(childTask);      // Collect all tasks
