@@ -9,6 +9,7 @@
  * the queues when all tasks have been executed.
  */
 #include "setup.hpp"
+#include "qdmi.h"
 #include <filesystem>
 #include <iostream>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
@@ -23,14 +24,18 @@ using namespace llvm::orc;
  * @brief Create a QuantumTask
  *
  * @param taskID The ID of the task
- * @param availableDevices Devices to choose radom preferredQpus from
- * @param parentTask The optional parent task (default is nullptr)
+ * @param preferredDevices The preferred device(s) for the task
+ * @param parentTask The parent task of the task (optional, else nullptr)
+ * @param priority The priority of the task (optional, else random)
+ * @param shots The number of shots for the task (optional, else random)
+ * @param duration The duration of the task (optional, else random)
  *
  * @return A shared pointer to the created QuantumTask
  */
 std::shared_ptr<QuantumTask>
-createRandomTask(int taskID, const std::vector<QDMI_Device> &availableDevices,
-                 std::shared_ptr<QuantumTask> parentTask) {
+createRandomTask(int taskID, const std::vector<QDMI_Device> &preferredDevices,
+                 std::shared_ptr<QuantumTask> parentTask, int priority,
+                 double duration, int shots) {
   auto task = std::make_shared<QuantumTask>(taskID);
 
   // Input circuit file
@@ -52,14 +57,33 @@ createRandomTask(int taskID, const std::vector<QDMI_Device> &availableDevices,
   task->mThreadSafeModule = std::move(TSM);
   task->pParentTask = parentTask; // Assign parent task
 
-  // Add some preferred devices in random order
-  for (int k = 0; k < availableDevices.size(); ++k) {
-    task->mPreferredQpus.push_back(availableDevices.at(
-        (taskID + k) % availableDevices.size())); // Cycle through devices
+  // Add the preferred device(s)
+  if (!preferredDevices.empty()) {
+    task->mPreferredQpus = preferredDevices;
   }
-  task->mPriority =
-      parentTask ? parentTask->mPriority : taskID % 3; // Random priority
-  task->mNumberShots = (100 * taskID) % 1000;          // Random number of shots
+
+  // Set random values if not provided (i.e. -1)
+  if (priority == -1) {
+    // Random priority between 0 and 2
+    int rndPriority = rand() % 3;
+    task->mPriority = parentTask ? parentTask->mPriority : rndPriority;
+  } else {
+    task->mPriority = priority;
+  }
+  if (duration == -1) {
+    // Random duration between 0 and 9
+    double rndDuration = rand() % 10;
+    task->mDuration = rndDuration;
+  } else {
+    task->mDuration = duration;
+  }
+  if (shots == -1) {
+    // Random number of shots between 1k and 10k
+    int rndShots = (rand() % 10 + 1) * 1000;
+    task->mNumberShots = rndShots;
+  } else {
+    task->mNumberShots = shots;
+  }
 
   return task;
 }
@@ -82,7 +106,8 @@ std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
   if (QInfo_is_Error(err)) {
     std::cerr << "Warning: Error during QInfo_create" << std::endl;
   }
-  err = QDMI_session_init(info, &session);
+  err = QDMI_session_ini(info, &session);
+  CHECK_ERR(err, "QDMI_session_init");
   int count = -1;
 
   // Get the number of devices
