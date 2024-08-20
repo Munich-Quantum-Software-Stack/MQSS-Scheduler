@@ -11,6 +11,28 @@
  * The test simulates the quantum resource manager (QRM) by creating a set of
  * devices and associated Submitters. It launches tasks, assignes priorities and
  * preferred devices to the tasks, and then schedules them with backfilling.
+ *
+ * Test scenario:
+ * We want to schedule 3 (parent) tasks onto 2 devices.
+ *
+ * Task A has 2 child tasks:
+ *   - device 0, priority 0, duration 4 |A A A A|
+ *   - device 1, priority 0, duration 2 |A A|
+ *
+ * Task B has 2 child tasks:
+ *   - device 0, priority 1, duration 1 |B|
+ *   - device 1, priority 1, duration 1 |B|
+ *
+ * Task C has 1 child task (i.e. ONLY parent task):
+ *   - device 1, priority 0, duration 1 |C|
+ *
+ *
+ * For successfull backfilling, the previously empty queues should look like
+ * following (each letter = timestep, e.g. duration 2 = |X X|):
+ *
+ * Queue 0: |B|A A A A|
+ * Queue 1: |B|C C|A A|
+ *
  */
 #include "backfilling.hpp"
 #include "setup.hpp"
@@ -42,20 +64,22 @@ int main() {
     std::shared_ptr<Submitter> submitter = queue->mpSubmitter;
     QDMI_Device device = submitter->mDevice;
     QDMI_Device_property prop = BACKEND_NAME;
-    char *name = nullptr;
+    char *name = (char *)malloc(256);
 
     // Retrieve and print the device name
     int result = QDMI_query_device_property_c(device, prop, &name);
     std::cout << "   [Test]................Device " << name << std::endl;
+    free(name);
 
     device2Submitter[device] = submitter; // For easy access later
     availableDevices.push_back(device);
   }
 
   // Simulate Generator by creating a bunch of tasks with possible child tasks
+  std::vector<int> parentPriorities = {0, 1, 0};
   std::vector<int> numChildTasks = {2, 2, 1};
-  std::vector<std::vector<int>> durations = {{2, 5}, {1, 1}, {1}};
-  std::vector<std::vector<int>> qpuPreferences = {{1, 0}, {1, 0}, {1}};
+  std::vector<std::vector<int>> durations = {{4, 2}, {1, 1}, {1}};
+  std::vector<std::vector<int>> deviceIdx = {{0, 1}, {0, 1}, {1}};
   int numParentTasks = numChildTasks.size();
   int taskID = 0; // Unique task ID for each task
 
@@ -67,8 +91,10 @@ int main() {
 
   for (int i = 0; i < numParentTasks; ++i) {
 
-    // Create a parent task
-    auto parentTask = createRandomTask(taskID++, availableDevices);
+    // Create a parent task with preferred device, priority and duration
+    auto parentTask =
+        createRandomTask(taskID++, {availableDevices.at(deviceIdx[i][0])},
+                         nullptr, parentPriorities[i], durations[i][0], 1);
 
     if (numChildTasks[i] == 0) {
       // If parent task has no child tasks, schedule only parent task
@@ -83,12 +109,11 @@ int main() {
 
       // Create child tasks
       for (int j = 0; j < numChildTasks[i]; ++j) {
-        auto childTask =
-            createRandomTask(taskID++, availableDevices, parentTask);
 
-        // Manually set the duration and QPU preference
-        childTask->mDuration = durations[i][j];
-        childTask->mPreferredQpus = {availableDevices.at(qpuPreferences[i][j])};
+        // Manually set preferred device, priority and duration
+        auto childTask = createRandomTask(
+            taskID++, {availableDevices.at(deviceIdx[i][j])}, parentTask,
+            parentPriorities[i], durations[i][j], 1);
 
         childTasks.push_back(childTask); // To be scheduled now
         tasks.push_back(childTask);      // Collect all tasks
@@ -106,15 +131,39 @@ int main() {
   for (auto task : tasks) {
     QDMI_Device scheduledDevice = task->mScheduledQpu;
     QDMI_Device_property prop = BACKEND_NAME;
-    char *name = nullptr;
+    char *name = (char *)malloc(256);
+    char *preferredDeviceName = (char *)malloc(256);
 
     // Send the task to corresponding submitter
     device2Submitter.at(scheduledDevice)->enqueue(task);
 
     // Retrieve and print the device name
     int result = QDMI_query_device_property_c(scheduledDevice, prop, &name);
+    int debug = QDMI_query_device_property_c(task->mPreferredQpus.at(0), prop,
+                                             &preferredDeviceName);
     std::cout << "   [Test]................Task " << task->mTaskId
-              << " was sent to submitter for device " << name << std::endl;
+              << " was sent to submitter for device " << name
+              << " with execution order " << task->mExecutionOrder
+              << "preferred" << preferredDeviceName << std::endl;
+    free(name);
+  }
+
+  // Assert that all tasks have been scheduled in the correct order
+  // Look into scheduler queues and check the execution order
+  for (auto &queue : queues) {
+    // Print queue device name
+    QDMI_Device_property prop = BACKEND_NAME;
+    char *name = (char *)malloc(256);
+    int result =
+        QDMI_query_device_property_c(queue->mpSubmitter->mDevice, prop, &name);
+    std::cout << "   [Test]................Queue for device " << name
+              << std::endl;
+    free(name);
+    std::cout << "   [Test]................Execution order: ";
+    for (auto &task : queue->mTasks) {
+      std::cout << "Task " << task->mTaskId << " ,";
+    }
+    std::cout << std::endl;
   }
 
   // Wait for all tasks to be executed (removed from the queue)

@@ -12,14 +12,15 @@
 #define CHECK_ERR(a, b)                                                        \
   {                                                                            \
     if (a != QDMI_SUCCESS) {                                                   \
-      std::cout << std::endl << "[Error]: " << a << " at " << b;               \
+      std::cerr << std::endl << "[Error]: " << a << " at " << b;               \
     }                                                                          \
   }
 
 // Create task with random preferred devices and random circuit
 std::shared_ptr<QuantumTask>
-createRandomTask(int taskID, const std::vector<QDMI_Device> &devices,
-                 std::shared_ptr<QuantumTask> parentTask = nullptr);
+createRandomTask(int taskID, const std::vector<QDMI_Device> &preferredDevices,
+                 std::shared_ptr<QuantumTask> parentTask = nullptr,
+                 int priority = -1, double duration = -1, int shots = -1);
 
 // Prepare ScheduerQueues and associated Submitters
 std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues();
