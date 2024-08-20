@@ -12,3 +12,5 @@ target_include_directories(setup PRIVATE
     ${QDMI_INCLUDE_DIRS}
     ${SUBMITTER_INCLUDE_DIRS}
 )
+
+add_subdirectory(config)
