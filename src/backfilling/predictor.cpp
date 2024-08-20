@@ -154,13 +154,17 @@ predict(const ThreadSafeModule &TSM, const std::vector<std::string> models) {
     outputTensors.push_back(std::move(outputTensor));
 
     // Run the model
-    session->Run(Ort::RunOptions{nullptr}, inputNodeNames.data(),
-                 inputTensors.data(), inputTensors.size(),
-                 outputNodeNames.data(), outputTensors.data(),
-                 outputTensors.size());
-    float *floatarr = outputTensors[0].GetTensorMutableData<float>();
+    try {
+      session->Run(Ort::RunOptions{nullptr}, inputNodeNames.data(),
+                   inputTensors.data(), inputTensors.size(),
+                   outputNodeNames.data(), outputTensors.data(),
+                   outputTensors.size());
+    } catch (const std::exception &ex) {
+      std::cerr << "Error during model inference: " << ex.what() << std::endl;
+    }
 
     // Add the model string and model score to the map
+    float *floatarr = outputTensors[0].GetTensorMutableData<float>();
     results[model] = floatarr[0];
 
     // Delete the session after use
