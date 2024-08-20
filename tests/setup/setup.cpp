@@ -106,7 +106,7 @@ std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
   if (QInfo_is_Error(err)) {
     std::cerr << "Warning: Error during QInfo_create" << std::endl;
   }
-  err = QDMI_session_ini(info, &session);
+  err = QDMI_session_init(info, &session);
   CHECK_ERR(err, "QDMI_session_init");
   int count = -1;
 
