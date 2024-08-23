@@ -13,18 +13,17 @@
 #include <onnxruntime_cxx_api.h>
 #include <string>
 #include <unistd.h>
-#include <unordered_map>
-#include <vector>
 
 /*
  * @brief Predict some figure of merit based on a pretrained ONNX model for each
  * model
  * @param TSM The quantum circuit to evaluate
- * @param models The trained models to predict some figure of merit
+ * @param modelPaths The file-path vector to trained onnx models
  * @return A map from each model to the predicted figure of merit
  */
 std::unordered_map<std::string, float>
-predict(const ThreadSafeModule &TSM, const std::vector<std::string> models) {
+predict(const ThreadSafeModule &TSM,
+        const std::vector<std::string> modelPaths) {
   // Prepare circuit feature vector for model input (order is important)
   std::map<std::string, int> gateCounts = {{"__quantum__qis__U3__body", 0},
                                            {"u2", 0},
@@ -108,20 +107,13 @@ predict(const ThreadSafeModule &TSM, const std::vector<std::string> models) {
   // Create a map to store the results
   std::unordered_map<std::string, float> results;
 
-  // Get the current file path
-  std::filesystem::path currentFilePath = __FILE__;
-  std::filesystem::path currentDir = currentFilePath.parent_path();
-  // Navigate up to the 'scheduler' directory, then to the 'models' directory
-  std::filesystem::path modelsDir =
-      currentDir.parent_path().parent_path() / "models";
-
   // Loop over all models
-  for (const std::string &model : models) {
+  for (const std::string &path : modelPaths) {
     // Declare the session pointer
     Ort::Session *session = nullptr;
 
     // Import the model for desired figure of merit
-    std::filesystem::path modelPath = modelsDir / model;
+    std::filesystem::path modelPath = path;
 
     std::ifstream file(modelPath, std::ios::binary | std::ios::ate);
     std::streamsize size = file.tellg();
@@ -165,7 +157,7 @@ predict(const ThreadSafeModule &TSM, const std::vector<std::string> models) {
 
     // Add the model string and model score to the map
     float *floatarr = outputTensors[0].GetTensorMutableData<float>();
-    results[model] = floatarr[0];
+    results[path] = floatarr[0];
 
     // Delete the session after use
     delete session;

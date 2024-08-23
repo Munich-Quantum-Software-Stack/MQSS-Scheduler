@@ -8,6 +8,6 @@
 using llvm::orc::ThreadSafeModule;
 
 std::unordered_map<std::string, float>
-predict(const ThreadSafeModule &TSM, const std::vector<std::string> models);
+predict(const ThreadSafeModule &TSM, const std::vector<std::string> modelPaths);
 
 #endif
