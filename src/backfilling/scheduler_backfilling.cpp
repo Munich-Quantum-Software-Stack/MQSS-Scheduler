@@ -5,36 +5,64 @@
 #include "backfilling.hpp"
 #include "eval.hpp"
 #include "predictor.hpp"
+#include <filesystem>
 #include <iostream>
 #include <string>
 
+std::string get_device_name(QDMI_Device device) {
+  QDMI_Device_property prop = BACKEND_NAME;
+  char *name = (char *)malloc(256);
+  int result = QDMI_query_device_property_c(device, prop, &name);
+  std::string deviceName = name;
+  free(name);
+  return deviceName;
+}
+
+std::string get_model_path(QDMI_Device device) {
+  // Get the current working directory and device name
+  std::filesystem::path wrkDir = std::filesystem::current_path();
+  std::string deviceName = get_device_name(device);
+  std::string modelPath = "";
+
+  if (deviceName == "test_backend_1") {
+    modelPath = wrkDir / "tests" / "setup" / "models" / "test_backend_1.onnx";
+  } else if (deviceName == "test_backend_2") {
+    modelPath = wrkDir / "tests" / "setup" / "models" / "test_backend_2.onnx";
+  } else {
+    std::cerr
+        << "   [Scheduler]...........No trained model available for device "
+        << deviceName << std::endl;
+  }
+  return modelPath;
+}
+
 /**
- * @brief Calculate scores for the available devices based on user preference,
- * ML model, or both.
+ * @brief Calculate scores for the available devices based on
+ * user preference, ML model, or both.
  *
- * {preferredDevices} ⋂ {availableDevices} = {matchingDevices} ≠ {} ->
- * predictScore(matchingDevices)
- * {preferredDevices} ⋂ {availableDevices} = {} ->
- * predictScore(availableDevices)
+ * {preferredDevices} ⋂ {availableDevices} = {matchingDevices} ≠ {}
+ * -> predictScore(matchingDevices)
+ * {preferredDevices} ⋂ {availableDevices} = {}
+ * -> predictScore(availableDevices)
  * {availableDevices} = {} -> ERROR
  *
  * @param task The QuantumTask to be scheduled.
  * @param availableDevices The list of available devices.
  * @return A map of devices to their respective scores.
  */
-std::unordered_map<QDMI_Device, float>
+std ::unordered_map<QDMI_Device, float>
 calculate_scores(std::shared_ptr<QuantumTask> task,
                  std::vector<QDMI_Device> availableDevices) {
 
   std::unordered_map<QDMI_Device, float> deviceScores = {};
 
-  // Associate each available device with a model
+  // Associate each available device with a model and vice versa
   std::unordered_map<QDMI_Device, std::string> availableDevices2Model = {};
   std::unordered_map<std::string, QDMI_Device> model2availableDevices = {};
   for (const auto &device : availableDevices) {
-    // TODO: use correct model names once trained models are available
-    availableDevices2Model[device] = "ga_depth.onnx";
-    model2availableDevices["ga_depth.onnx"] = device;
+    std::string modelName = get_model_path(device);
+    availableDevices2Model[device] = modelName;
+    model2availableDevices[modelName] = device;
   }
 
   std::vector<string> chosenModels;
@@ -50,7 +78,8 @@ calculate_scores(std::shared_ptr<QuantumTask> task,
     }
   }
 
-  // If none of the user preferences are available, score all available devices
+  // If none of the user preferences are available, score all available
+  // devices
   if (chosenModels.size() == 0) {
     for (const auto &d2M : availableDevices2Model) {
       chosenModels.push_back(d2M.second);
@@ -77,10 +106,11 @@ calculate_scores(std::shared_ptr<QuantumTask> task,
  * @param scores A map of devices to their respective scores.
  * @return The selected device.
  **/
-QDMI_Device
-choose_device(std::shared_ptr<QuantumTask> task,
-              const std::unordered_map<QDMI_Device, float> &scores,
-              std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues) {
+QDMI_Device choose_device(
+    std::shared_ptr<QuantumTask> task,
+    const std::unordered_map<QDMI_Device, float> &scores,
+    const std::unordered_map<QDMI_Device, std::shared_ptr<SchedulerQueue>>
+        &device2Queue) {
   // Find the devices with the three highest final scores
   std::vector<QDMI_Device> topDevices;
   for (auto &score : scores) {
@@ -104,13 +134,8 @@ choose_device(std::shared_ptr<QuantumTask> task,
 
   for (auto &device : topDevices) {
     // Get the associated queue for the selected device
-    SchedulerQueue *schedulerQueue = nullptr;
-    for (const auto &queue : schedulerQueues) {
-      if (queue->mpSubmitter->mDevice == device) {
-        schedulerQueue = queue.get();
-        break;
-      }
-    }
+    std::shared_ptr<SchedulerQueue> schedulerQueue = device2Queue.at(device);
+
     // Get the total duration of the queue for the current device
     float queueDuration = schedulerQueue->mTotalDuration;
 
@@ -126,7 +151,8 @@ choose_device(std::shared_ptr<QuantumTask> task,
 }
 
 /**
- * @brief Schedule a QuantumTask on a target device using backfilling strategy.
+ * @brief Schedule a QuantumTask on a target device using backfilling
+ * strategy.
  * @param newTask The QuantumTask to be scheduled.
  * @param queue The target device's queue to schedule the QuantumTask on.
  * @return The position where the new task should be inserted in the queue.
@@ -222,13 +248,14 @@ int backfilling(std::shared_ptr<QuantumTask> newTask,
  * @brief Entry point for the scheduler.
  *
  * For each task in the list, the scheduler calculates the expected duration
- * (device independent) and sorts the tasks by priority and duration. Then, for
- * each task, the scheduler calculates scores for the available or prefered
- * devices (based on a trained ML model). The device with the shortest queue out
- * of the top 3 scored devices will be selected for scheduling. The task is then
- * scheduled on the chosen device using a backfilling strategy that tries to
- * minimize the overall time a task takes to complete (i.e. time between its
- * first child task start and last child task end of execution).
+ * (device independent) and sorts the tasks by priority and duration. Then,
+ * for each task, the scheduler calculates scores for the available or
+ * prefered devices (based on a trained ML model). The device with the
+ * shortest queue out of the top 3 scored devices will be selected for
+ * scheduling. The task is then scheduled on the chosen device using a
+ * backfilling strategy that tries to minimize the overall time a task takes
+ * to complete (i.e. time between its first child task start and last child
+ * task end of execution).
  *
  * @param schedulerQueues Vector of queues for each device.
  * @param tasks Vector of tasks to be scheduled.
@@ -248,6 +275,10 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
 
   // Calculate expected duration for each circuit to sort tasks accordingly
   for (std::shared_ptr<QuantumTask> task : tasks) {
+    // For testing, the mDuration might already be set
+    if (task->mDuration > 0) {
+      continue;
+    }
     // Since we dont know the target device yet, we use generic values
     // (resembling IQM gate times) This is only a guess to sort the tasks by
     // their size and will be updated later
@@ -279,13 +310,18 @@ scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
         calculate_scores(task, availableDevices);
 
     // Choose the device with the shortest queue out of top 3 scored devices
-    QDMI_Device targetDevice = choose_device(task, scores, schedulerQueues);
+    QDMI_Device targetDevice = choose_device(task, scores, device2Queue);
     task->mScheduledQpu = targetDevice;
 
-    // Update the expected duration of the task based on the chosen device
-    std::unordered_map<std::string, float> prediction =
-        predict(task->mThreadSafeModule, {"ga_depth.onnx"});
-    task->mDuration = prediction["ga_depth.onnx"] * task->mNumberShots;
+    // For testing, the mDuration might already be set (mDuration > 0)
+    if (task->mDuration == 0) {
+      // Update the expected duration of the task based on the chosen device
+      // TODO: differentiate duration and other figures of merit model paths
+      std::vector<std::string> modelPath = {get_model_path(targetDevice)};
+      std::unordered_map<std::string, float> prediction =
+          predict(task->mThreadSafeModule, modelPath);
+      task->mDuration = prediction.at(0) * task->mNumberShots;
+    }
 
     // Get the corresponding queue for the selected device
     std::shared_ptr<SchedulerQueue> targetQueue = device2Queue[targetDevice];
