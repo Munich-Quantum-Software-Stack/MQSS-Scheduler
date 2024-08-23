@@ -1,4 +1,2 @@
-/home/ubuntu/mqss/backends/build/libbackend_ibm.so
-param1=01234
-param2=0.0
-param3=one
+/home/ubuntu/mqss/scheduler/build/tests/setup/config/libtest_backend_1.so
+/home/ubuntu/mqss/scheduler/build/tests/setup/config/libtest_backend_2.so
