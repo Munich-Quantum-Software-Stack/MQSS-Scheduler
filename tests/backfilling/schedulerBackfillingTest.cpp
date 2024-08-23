@@ -21,7 +21,7 @@
  *
  * Task B has 2 child tasks:
  *   - device 0, priority 1, duration 1 |B|
- *   - device 1, priority 1, duration 1 |B|
+ *   - device 1, priority 1, duration 2 |B B|
  *
  * Task C has 1 child task (i.e. ONLY parent task):
  *   - device 1, priority 0, duration 1 |C|
@@ -31,7 +31,7 @@
  * following (each letter = timestep, e.g. duration 2 = |X X|):
  *
  * Queue 0: |B|A A A A|
- * Queue 1: |B|C C|A A|
+ * Queue 1: |B B|C C|A A|
  *
  */
 #include "backfilling.hpp"
@@ -45,6 +45,15 @@
 #include <unistd.h>
 #include <unordered_map>
 #include <vector>
+
+std::string get_device_name(QDMI_Device device) {
+  QDMI_Device_property prop = BACKEND_NAME;
+  char *name = (char *)malloc(256);
+  int result = QDMI_query_device_property_c(device, prop, &name);
+  std::string deviceName = name;
+  free(name);
+  return deviceName;
+}
 
 int main() {
   std::cout << "   [Test]................Starting Backfilling Scheduler test."
@@ -129,42 +138,44 @@ int main() {
 
   // Iterate over all scheduled tasks and send them to the submitter
   for (auto task : tasks) {
-    QDMI_Device scheduledDevice = task->mScheduledQpu;
-    QDMI_Device_property prop = BACKEND_NAME;
-    char *name = (char *)malloc(256);
-    char *preferredDeviceName = (char *)malloc(256);
 
     // Send the task to corresponding submitter
+    QDMI_Device scheduledDevice = task->mScheduledQpu;
     device2Submitter.at(scheduledDevice)->enqueue(task);
 
     // Retrieve and print the device name
-    int result = QDMI_query_device_property_c(scheduledDevice, prop, &name);
-    int debug = QDMI_query_device_property_c(task->mPreferredQpus.at(0), prop,
-                                             &preferredDeviceName);
     std::cout << "   [Test]................Task " << task->mTaskId
-              << " was sent to submitter for device " << name
-              << " with execution order " << task->mExecutionOrder
-              << "preferred" << preferredDeviceName << std::endl;
-    free(name);
+              << " was sent to submitter for device "
+              << get_device_name(scheduledDevice) << " with execution order "
+              << task->mExecutionOrder << " and preferred QPU "
+              << get_device_name(task->mPreferredQpus[0]) << std::endl;
   }
 
-  // Assert that all tasks have been scheduled in the correct order
-  // Look into scheduler queues and check the execution order
-  for (auto &queue : queues) {
-    // Print queue device name
-    QDMI_Device_property prop = BACKEND_NAME;
-    char *name = (char *)malloc(256);
-    int result =
-        QDMI_query_device_property_c(queue->mpSubmitter->mDevice, prop, &name);
-    std::cout << "   [Test]................Queue for device " << name
-              << std::endl;
-    free(name);
-    std::cout << "   [Test]................Execution order: ";
-    for (auto &task : queue->mTasks) {
-      std::cout << "Task " << task->mTaskId << " ,";
-    }
-    std::cout << std::endl;
-  }
+  // Assert correct execution order
+  // Queue 0: |B|A A A A|
+  // Queue 1: |B B|C C|A A|
+  auto AAAA = tasks[0];
+  auto AA = tasks[1];
+  auto B = tasks[2];
+  auto BB = tasks[3];
+  auto CC = tasks[4];
+
+  // Assert correct devices
+  assert(AAAA->mScheduledQpu == AAAA->mPreferredQpus[0]);
+  assert(AA->mScheduledQpu == AA->mPreferredQpus[0]);
+  assert(B->mScheduledQpu == B->mPreferredQpus[0]);
+  assert(BB->mScheduledQpu == BB->mPreferredQpus[0]);
+  assert(CC->mScheduledQpu == CC->mPreferredQpus[0]);
+
+  // Assert correct execution order for Queue 0
+  assert(AAAA->mScheduledQpu == B->mScheduledQpu);
+  assert(B->mExecutionOrder < AAAA->mExecutionOrder);
+
+  // Assert correct execution order for Queue 1
+  assert(BB->mScheduledQpu == CC->mScheduledQpu &&
+         CC->mScheduledQpu == AA->mScheduledQpu);
+  assert(BB->mExecutionOrder < CC->mExecutionOrder &&
+         CC->mExecutionOrder < AA->mExecutionOrder);
 
   // Wait for all tasks to be executed (removed from the queue)
   return allFinished(queues);

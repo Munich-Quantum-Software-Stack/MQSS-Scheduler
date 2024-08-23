@@ -43,7 +43,7 @@ createRandomTask(int taskID, const std::vector<QDMI_Device> &preferredDevices,
   std::filesystem::path dirPath =
       currentFilePath.parent_path(); // Get the directory
   std::filesystem::path inputFilePath =
-      dirPath / ("inputs/example" + std::to_string(taskID % 3) +
+      dirPath / ("inputs/sample_circuit_" + std::to_string(taskID % 3) +
                  ".ll"); // Construct the relative path
 
   // Create a new context and module for each task
