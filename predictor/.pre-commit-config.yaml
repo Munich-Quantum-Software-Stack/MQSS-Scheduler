@@ -53,7 +53,7 @@ repos:
     hooks:
       - id: ruff
         files: .
-        args: ["--fix", "--show-fixes"]
+        args: ["--fix"]
       - id: ruff-format
         files: .
 
@@ -71,9 +71,6 @@ repos:
     hooks:
       - id: mypy
         files: .
-        args:
-          - --ignore-missing-imports
-          - --explicit-package-bases
 
   # Check for spelling
   - repo: https://github.com/crate-ci/typos

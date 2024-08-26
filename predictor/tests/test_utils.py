@@ -8,9 +8,10 @@ from __future__ import annotations
 import os
 import pickle
 
+from qiskit import QuantumCircuit, qasm2
+
 # ruff: noqa: PLC2701
 from predictor.src.utils import create_sample_circuit, prepare_sample_data
-from qiskit import QuantumCircuit, qasm2
 
 
 def test_create_sample_circuit() -> None:
@@ -28,11 +29,11 @@ def test_create_sample_circuit() -> None:
 
     # Check the operations in the circuit
     for i in range(num_active_qubits):
-        assert circuit.data[i][0].name == "h"
+        assert circuit.data[i].name == "h"
     for i in range(num_active_qubits - 1):
-        assert circuit.data[num_active_qubits + i][0].name == "cx"
+        assert circuit.data[num_active_qubits + i].name == "cx"
     for i in range(num_active_qubits):
-        assert circuit.data[2 * num_active_qubits - 1 + i][0].name == "measure"
+        assert circuit.data[2 * num_active_qubits - 1 + i].name == "measure"
 
 
 def test_prepare_sample_data() -> None:
