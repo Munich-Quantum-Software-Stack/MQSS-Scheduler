@@ -10,8 +10,9 @@ import pickle
 
 import numpy as np
 import onnxruntime as ort
+
+from predictor.src.training import calc_supermarq_plus_features, create_feature_dict, train_model
 from predictor.src.utils import create_sample_circuit, prepare_sample_data
-from src.training import calc_supermarq_plus_features, create_feature_dict, train_model
 
 
 def test_calc_supermarq_plus_features() -> None:
@@ -71,7 +72,7 @@ def test_create_feature_dict() -> None:
         "liveness": 1.0,
         "directed_program_communication": 0.5,
         "single_qubit_gates_per_layer": 0.5,
-        "multi_qubit_gates_per_layer": 0,
+        "multi_qubit_gates_per_layer": 0.5,
     }
 
     # Check the feature dictionary
