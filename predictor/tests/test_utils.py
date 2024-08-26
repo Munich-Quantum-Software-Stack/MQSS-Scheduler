@@ -1,6 +1,6 @@
-"""test_setup.py.
+"""test_utils.py.
 
-This script tests the functions in src/setup.py.
+This script tests the functions in src/utils.py.
 """
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import pickle
 from qiskit import QuantumCircuit, qasm2
 
 # ruff: noqa: PLC2701
-from src.setup import create_sample_circuit, prepare_sample_data
+from predictor.src.utils import create_sample_circuit, prepare_sample_data
 
 
 def test_create_sample_circuit() -> None:

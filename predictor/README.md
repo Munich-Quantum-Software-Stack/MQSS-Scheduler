@@ -1,10 +1,10 @@
 # QC Training Package
 
-This package provides tools for preparing data and training models on labeled quantum circuits. It consists of two main modules: `setup.py` and `training.py`, along with the corresponding test files `test_training.py` and `test_setup.py`.
+This package provides tools for preparing data and training models on labeled quantum circuits. It consists of two main modules: `utils.py` and `training.py`, along with the corresponding test files `test_training.py` and `test_utils.py`.
 
 ## Description
 
-- **setup.py**: This module provides functions to prepare test and example data for the `training.py` script.
+- **utils.py**: This module provides functions to prepare test and example data for the `training.py` script.
 - **training.py**: This module provides functions to calculate circuit feature dictionaries and a training routine to train a `RandomForestRegressor` model on the extracted features.
 
 ## Installation
@@ -44,10 +44,10 @@ predictor/
 |   |   |-- features/   
 |   |   |-- labels/     # .pkl labels (required for training)
 |-- src/
-|   |-- setup.py
+|   |-- utils.py
 |   |-- training.py
 |-- tests/
-|   |-- test_setup.py
+|   |-- test_utils.py
 |   |-- test_training.py
 ```
 
@@ -64,7 +64,7 @@ python src/training.py --experiment <experiment_name>
 To run the tests, execute the following commands:
 
 ```sh
-pytest tests/test_setup.py
+pytest tests/test_utils.py
 pytest tests/test_training.py
 ```
 

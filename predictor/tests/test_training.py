@@ -9,7 +9,7 @@ import pickle
 
 import numpy as np
 import onnxruntime as ort
-from src.setup import create_sample_circuit, prepare_sample_data
+from predictor.src.utils import create_sample_circuit, prepare_sample_data
 from src.training import calc_supermarq_plus_features, create_feature_dict, train_model
 
 
