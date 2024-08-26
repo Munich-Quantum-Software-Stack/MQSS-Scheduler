@@ -21,11 +21,11 @@ using namespace llvm;
 using namespace llvm::orc;
 
 
-QuantumTask createTask(std::string benchmarkAdress, QDMI_Device device){
+QuantumTask createTask(std::string benchmarkAddress, QDMI_Device device){
 
     SMDiagnostic error;
     ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
-    std::unique_ptr<Module> module = parseIRFile(benchmarkAdress, error, *(TSCtx.getContext()));
+    std::unique_ptr<Module> module = parseIRFile(benchmarkAddress, error, *(TSCtx.getContext()));
     ThreadSafeModule TSM = ThreadSafeModule(std::move(module),std::move(TSCtx));
 
     QuantumTask mQuantumTask;
@@ -39,7 +39,7 @@ QuantumTask createTask(std::string benchmarkAdress, QDMI_Device device){
 }
 
 int main(){
-    
+
     QInfo info;
     QDMI_Session session = NULL;
     int err = QInfo_create(&info);
@@ -58,15 +58,15 @@ int main(){
 
 
     std::vector<QuantumTask> tasks;
-    
+
     tasks.push_back(createTask("/home/ubuntu/scheduler/inputs/bell_state.ll", devices.at(0)));
     tasks.push_back(createTask("/home/ubuntu/scheduler/inputs/example.ll", devices.at(0)));
 
 
     Device2SubmitterType device2Submitter;
     for (const QDMI_Device& device : devices) {
-        auto submitter = std::make_shared<Submitter>(device); 
-        device2Submitter.emplace(device, submitter); 
+        auto submitter = std::make_shared<Submitter>(device);
+        device2Submitter.emplace(device, submitter);
     }
 
     scheduler(device2Submitter, &tasks);
@@ -75,6 +75,5 @@ int main(){
         QDMI_Device dev = task.mScheduledQpu;
         device2Submitter[dev]->acceptATask(&task);
     }
-    
+
 }
-    

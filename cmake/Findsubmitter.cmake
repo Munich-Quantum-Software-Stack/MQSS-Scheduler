@@ -11,4 +11,3 @@ FetchContent_MakeAvailable(submitter)
 FetchContent_GetProperties(submitter)
 
 set(SUBMITTER_INCLUDE_DIRS "${submitter_SOURCE_DIR}/include")
-

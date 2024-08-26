@@ -21,7 +21,7 @@ extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<Quan
 
     if (device2Submitter.size() == 0)
     {
-        
+
         std::cout << "   [Scheduler]...........Error: no devices found" << std::endl;
         return 1;
     }
@@ -29,7 +29,7 @@ extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<Quan
     std::cout << "   [Scheduler]..........." << device2Submitter.size()
               << " available device(s)" << std::endl;
 
-    
+
 
     for (auto &childQuantumTask : *tasks)
     {
@@ -46,5 +46,5 @@ extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<Quan
         childQuantumTask.mScheduledQpu = device;
     }
 
-    return 0; 
+    return 0;
 }

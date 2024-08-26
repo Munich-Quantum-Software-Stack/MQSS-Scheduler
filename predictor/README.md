@@ -27,7 +27,7 @@ pip install .
 ### Preparing Data
 
 To get an impression of the required files, you can run the example.py script:
-    
+
 ```sh
 python src/example.py
 ```
@@ -41,7 +41,7 @@ predictor/
 |-- data/
 |   |-- experiment_name/
 |   |   |-- circuits/   # QASM circuits (required for training)
-|   |   |-- features/   
+|   |   |-- features/
 |   |   |-- labels/     # .pkl labels (required for training)
 |-- src/
 |   |-- utils.py
@@ -54,7 +54,7 @@ predictor/
 ### Training
 
 To execute training for a specific experiment, run the following command:
-    
+
 ```sh
 python src/training.py --experiment <experiment_name>
 ```

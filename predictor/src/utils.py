@@ -6,6 +6,7 @@ Functions:
 - create_sample_circuit: Create a sample quantum circuit
 - prepare_sample_data: Prepare sample data for an experiment
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,7 +40,7 @@ def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> Quantu
     return circuit
 
 
-def prepare_sample_data(experiment_name: str) -> str:
+def prepare_sample_data(experiment_name: str) -> Path:
     """Prepare sample data for the ML training.
 
     The data will be saved in the experiments/experiment_name directory.
@@ -64,10 +65,7 @@ def prepare_sample_data(experiment_name: str) -> str:
         label_path = labels_dir / f"{circ_name}.pkl"
 
         # Create and save quantum circuit
-        circuit = create_sample_circuit(
-            max_num_qubits=20,
-            num_active_qubits=num_qubits
-        )
+        circuit = create_sample_circuit(max_num_qubits=20, num_active_qubits=num_qubits)
         qasm2.dump(circuit, circ_path)
 
         # Create and save label
@@ -79,13 +77,9 @@ def prepare_sample_data(experiment_name: str) -> str:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Set up an example experiment.")
+    parser = argparse.ArgumentParser(description="Set up an example experiment.")
     parser.add_argument(
-        "--experiment_name",
-        type=str,
-        default="example",
-        help="Set experiment name (default: 'example')"
+        "--experiment_name", type=str, default="example", help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
     directory = prepare_sample_data(args.experiment_name)

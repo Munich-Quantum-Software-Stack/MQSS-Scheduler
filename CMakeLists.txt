@@ -20,4 +20,3 @@ add_definitions(${LLVM_DEFINITIONS})
 
 add_subdirectory(src)
 add_subdirectory(tests)
-

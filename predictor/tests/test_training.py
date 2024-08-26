@@ -2,6 +2,7 @@
 
 This script tests the functions in src/training.py.
 """
+
 from __future__ import annotations
 
 import os
@@ -17,10 +18,7 @@ def test_calc_supermarq_plus_features() -> None:
     """Test the calculation of the supermarq+ features."""
     # Create a test quantum circuit
     num_qubits = 2
-    circuit = create_sample_circuit(
-        max_num_qubits=20,
-        num_active_qubits=num_qubits
-    )
+    circuit = create_sample_circuit(max_num_qubits=20, num_active_qubits=num_qubits)
 
     # Calculate the features
     features = calc_supermarq_plus_features(circuit, num_qubits)
@@ -35,10 +33,7 @@ def test_create_feature_dict() -> None:
     """Test the creation of the feature dictionary."""
     # Create a test quantum circuit
     num_qubits = 2
-    circuit = create_sample_circuit(
-        max_num_qubits=20,
-        num_active_qubits=num_qubits
-    )
+    circuit = create_sample_circuit(max_num_qubits=20, num_active_qubits=num_qubits)
 
     # Create the feature dictionary
     feature_dict = create_feature_dict(circuit, native_gates=["h", "cx"])
@@ -71,18 +66,18 @@ def test_create_feature_dict() -> None:
         "num_qubits": 2.0,
         "program_communication": 1.0,
         "critical_depth": 1.0,
-        "entanglement_ratio": 1/3,
+        "entanglement_ratio": 1 / 3,
         "parallelism": 0.0,
         "liveness": 1.0,
         "directed_program_communication": 0.5,
         "single_qubit_gates_per_layer": 0.5,
-        "multi_qubit_gates_per_layer": 0
+        "multi_qubit_gates_per_layer": 0,
     }
 
     # Check the feature dictionary
     for exp_key, exp_value, key, value in zip(
-            expected_feature_dict.keys(), expected_feature_dict.values(),
-            feature_dict.keys(), feature_dict.values()):
+        expected_feature_dict.keys(), expected_feature_dict.values(), feature_dict.keys(), feature_dict.values()
+    ):
         assert exp_key == str(key)
         assert exp_value == value
 
@@ -94,8 +89,8 @@ def test_train_model() -> None:
 
     # Prepare the example data
     experiment_dir = prepare_sample_data(experiment_name)
-    features_dir = experiment_dir /"features"
-    labels_dir = experiment_dir/"labels"
+    features_dir = experiment_dir / "features"
+    labels_dir = experiment_dir / "labels"
 
     # Run the training
     train_model(experiment_name)
@@ -107,7 +102,7 @@ def test_train_model() -> None:
     # Load the feature vectors and labels
     feature_files = list(features_dir.glob("*.pkl"))
     label_files = list(labels_dir.glob("*.pkl"))
-    
+
     # Load a feature vector and label for the test circuit
     with feature_files[0].open("rb") as f:
         feats_data = pickle.load(f)

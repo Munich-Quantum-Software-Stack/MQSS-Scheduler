@@ -17,10 +17,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "ruff>=0.6.0",
-    "pytest>=7.4.4",
-]
+test = ["pytest>=7.4.4"]
 
 [tool.ruff]
 line-length = 120

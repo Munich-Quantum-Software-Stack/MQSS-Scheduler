@@ -20,7 +20,7 @@ using namespace llvm;
 using namespace llvm::orc;
 
 int main(){
-    
+
     QInfo info;
     QDMI_Session session = NULL;
     int err = QInfo_create(&info);
@@ -67,8 +67,8 @@ int main(){
 
     Device2SubmitterType device2Submitter;
     for (const QDMI_Device& device : devices) {
-        auto submitter = std::make_shared<Submitter>(device); 
-        device2Submitter.emplace(device, submitter); 
+        auto submitter = std::make_shared<Submitter>(device);
+        device2Submitter.emplace(device, submitter);
     }
 
     scheduler(device2Submitter, tasks);
@@ -76,7 +76,6 @@ int main(){
 
     delete device2Submitter.at(0).get();
     delete device2Submitter.at(0).get();
-    
-     
+
+
 }
-    

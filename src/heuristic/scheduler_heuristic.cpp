@@ -55,9 +55,9 @@ std::map<QDMI_Device, float> calculate_scores(QuantumTask *task)
  * @param scores The scores of the devices.
  * @return The name of the selected device.
  **/
- 
+
  QDMI_Device choose_device(QuantumTask* task,
-                          const std::map<QDMI_Device, float> &scores, 
+                          const std::map<QDMI_Device, float> &scores,
         Device2SubmitterType device2Submitter)
 {
     // Find the devices with the three highest final scores
@@ -83,12 +83,12 @@ std::map<QDMI_Device, float> calculate_scores(QuantumTask *task)
 
     std::cout << std::endl << "   [Scheduler]...........Choosing target QDMI_Device from"
               << " the following devices: ";
-/* 
+/*
     for (auto &device : devices)
     {
         std::cout << device->library.libname << std::endl;
     }
-*/             
+*/
 
     // Get current queue from metadata
     //QirPassRunner &QPR = QirPassRunner::getInstance();
@@ -121,8 +121,8 @@ std::map<QDMI_Device, float> calculate_scores(QuantumTask *task)
     }
     return nullptr;
 }
- 
- 
+
+
 /**
  * @brief Schedule a QuantumTask on a target device using skipping strategy.
  * @param new_task The QuantumTask to be scheduled.
@@ -136,7 +136,7 @@ bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Device2
      //QirMetadata &qirMetadata = QPR.getMetadata();
 
      std::shared_ptr<Submitter> submitter = device2Submitter[target_device];
-     
+
      //qirMetadata.get_queue(target_device);
      float new_task_duration = new_task->mDuration;
      int new_task_priority = new_task->mPriority;
@@ -198,7 +198,7 @@ bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Device2
                  //float new_parent_id = (new_task.parent_id == -1)
                  //                            ? new_task.task_id
                  //                            : new_task.parent_id;
-                
+
                  //float new_parent_end = qirMetadata.get_end(new_parent_id);
                  float new_parent_end = new_parent_task->mEnd;
                  if (new_parent_end < last_parent_end)
@@ -227,7 +227,7 @@ bool skipping_schedule(QuantumTask *new_task, QDMI_Device target_device, Device2
          new_task->mEnd = new_task_duration;
      }
      return true;
- } 
+ }
 
 /**
  * @brief Entry point for the scheduler.

@@ -11,6 +11,7 @@ Functions:
 - train_model(experiment_name: str):
     Runs the training process for the given experiment.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,7 +32,9 @@ from sklearn.model_selection import GridSearchCV
 __all__ = ["calc_supermarq_plus_features", "create_feature_dict", "train_model"]
 
 
-def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
+def calc_supermarq_plus_features(
+    qc: QuantumCircuit, num_qubits: int
+) -> tuple[float, float, float, float, float, float, float, float]:
     """Calculates the Supermarq features for a given quantum circuit.
 
     There are three additional features, that cover some issues with the original ones.
@@ -54,8 +57,7 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
             q1, q2 = op.qargs
             graph.add_edge(qc.find_bit(q1).index, qc.find_bit(q2).index)
         degree_sum = sum(graph.degree(n) for n in graph.nodes)
-        program_communication = degree_sum / \
-            (num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
+        program_communication = degree_sum / (num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
 
         # Liveness feature = sum of all entries in the liveness matrix / (num_qubits * depth).
         activity_matrix = np.zeros((qc.num_qubits, dag.depth()))
@@ -63,11 +65,7 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
             for op in layer["partition"]:
                 for qubit in op:
                     activity_matrix[qc.find_bit(qubit).index, i] = 1
-        liveness = (
-            np.sum(activity_matrix) / (num_qubits * dag.depth())
-            if dag.depth() > 0 and num_qubits > 0
-            else 0
-        )
+        liveness = np.sum(activity_matrix) / (num_qubits * dag.depth()) if dag.depth() > 0 and num_qubits > 0 else 0
 
         #  Parallelism feature = max((((# of gates / depth) -1) /(# of qubits -1)), 0).
         parallelism = (
@@ -76,13 +74,11 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
             else 0
         )
         # Entanglement-ratio = ratio between # of 2-qubit gates and total number of gates in the circuit.
-        entanglement_ratio = len(dag.two_qubit_ops(
-        )) / len(dag.gate_nodes()) if len(dag.gate_nodes()) > 0 else 0
+        entanglement_ratio = len(dag.two_qubit_ops()) / len(dag.gate_nodes()) if len(dag.gate_nodes()) > 0 else 0
 
         # Critical depth = # of 2-qubit gates along the critical path / total # of 2-qubit gates.
         longest_paths = dag.count_ops_longest_path()
-        n_ed = sum(longest_paths[name] for name in {
-                   op.name for op in dag.two_qubit_ops()} if name in longest_paths)
+        n_ed = sum(longest_paths[name] for name in {op.name for op in dag.two_qubit_ops()} if name in longest_paths)
         n_e = len(dag.two_qubit_ops())
         critical_depth = n_ed / n_e if n_e != 0 else 0
 
@@ -92,30 +88,19 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
             q1, q2 = op.qargs
             di_graph.add_edge(qc.find_bit(q1).index, qc.find_bit(q2).index)
         degree_sum = sum(di_graph.degree(n) for n in di_graph.nodes)
-        directed_program_communication = degree_sum / \
-            (2 * num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
+        directed_program_communication = degree_sum / (2 * num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
 
         # average number of 1q gates per layer = num of 1-qubit gates in the circuit / depth
         dag.remove_all_ops_named("measure")
         single_qubit_gates_per_layer = (
-            (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) /
-            dag.depth() if dag.depth() > 0 else 0
+            (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) / dag.depth() if dag.depth() > 0 else 0
         )
         # normalize
-        single_qubit_gates_per_layer = (
-            single_qubit_gates_per_layer / num_qubits
-            if num_qubits > 1
-            else 0
-        )
+        single_qubit_gates_per_layer = single_qubit_gates_per_layer / num_qubits if num_qubits > 1 else 0
         # average number of 2q gates per layer = num of 2-qubit gates in the circuit / depth
-        multi_qubit_gates_per_layer = len(
-            dag.two_qubit_ops()) / dag.depth() if dag.depth() > 0 else 0
+        multi_qubit_gates_per_layer = len(dag.two_qubit_ops()) / dag.depth() if dag.depth() > 0 else 0
         # normalize
-        multi_qubit_gates_per_layer = (
-            multi_qubit_gates_per_layer / (num_qubits // 2)
-            if num_qubits > 2
-            else 0
-        )
+        multi_qubit_gates_per_layer = multi_qubit_gates_per_layer / (num_qubits // 2) if num_qubits > 2 else 0
     except Exception as e:
         print(f"Error calculating Supermarq features: {e}")
 
@@ -130,18 +115,18 @@ def calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     assert 0 <= multi_qubit_gates_per_layer <= 1
 
     return (
-        program_communication,
-        critical_depth,
-        entanglement_ratio,
-        parallelism,
-        liveness,
-        directed_program_communication,
-        single_qubit_gates_per_layer,
-        multi_qubit_gates_per_layer,
+        float(program_communication),
+        float(critical_depth),
+        float(entanglement_ratio),
+        float(parallelism),
+        float(liveness),
+        float(directed_program_communication),
+        float(single_qubit_gates_per_layer),
+        float(multi_qubit_gates_per_layer),
     )
 
 
-def create_feature_dict(qc: QuantumCircuit, native_gates:list[str] | None=None) -> dict:
+def create_feature_dict(qc: QuantumCircuit, native_gates: list[str] | None = None) -> dict[str, float]:
     """Creates and returns a feature dictionary for a given quantum circuit.
 
     Arguments:
@@ -162,7 +147,7 @@ def create_feature_dict(qc: QuantumCircuit, native_gates:list[str] | None=None) 
             res_dct[key] = val
     ops_list_dict = res_dct
 
-    feature_dict = {}
+    feature_dict: dict[str, float] = {}
     for key in ops_list_dict:
         feature_dict[key] = int(ops_list_dict[key])
 
@@ -198,7 +183,7 @@ def create_feature_dict(qc: QuantumCircuit, native_gates:list[str] | None=None) 
     return feature_dict
 
 
-def train_model(experiment_name: str) -> str:
+def train_model(experiment_name: str) -> Path:
     """Runs the training process for the given experiment.
 
     This function loads the circuits and the corresponding labels, generates the features,
@@ -261,8 +246,7 @@ def train_model(experiment_name: str) -> str:
             continue
 
     # Prepare training data
-    x = np.array([list(circ_feat_dict.values())
-                  for circ_feat_dict in features.values()], dtype=np.float32)
+    x = np.array([list(circ_feat_dict.values()) for circ_feat_dict in features.values()], dtype=np.float32)
     y = np.array(list(labels.values()), dtype=np.float32)
 
     assert x.shape[0] == y.shape[0], "Number of features and labels do not match."
@@ -275,7 +259,7 @@ def train_model(experiment_name: str) -> str:
         grid = {"n_estimators": [50, 100]}  # Speed up the sample training
         kwargs = {
             "cv": 2,  # Only necessary to work with the small sample dataset
-            "scoring": make_scorer(lambda y, y_pred: np.mean(y - y_pred))
+            "scoring": make_scorer(lambda y, y_pred: np.mean(y - y_pred)),
         }
     else:
         # Full hyperparameter grid search for real experiments
@@ -285,20 +269,19 @@ def train_model(experiment_name: str) -> str:
             "max_depth": [5, 10, 20, 40],
             "min_samples_split": [2, 5],
             "min_samples_leaf": [1, 2],
-            "min_weight_fraction_leaf": [0.0, 0.1],
-            "max_features": ["sqrt", "log2", None],
-            "max_leaf_nodes": [None, 10],
-            "min_impurity_decrease": [0.0, 0.1],
+            "min_weight_fraction_leaf": [0.0, 0.1],  # type: ignore[list-item]
+            "max_features": ["sqrt", "log2", None],  # type: ignore[list-item]
+            "max_leaf_nodes": [None, 10],  # type: ignore[list-item]
+            "min_impurity_decrease": [0.0, 0.1],  # type: ignore[list-item]
             "bootstrap": [True, False],
             "oob_score": [False, True],
             "warm_start": [False, True],
-            "ccp_alpha": [0.0, 0.1],
-            "max_samples": [None, 0.5, 1.0],
-            "criterion": ["absolute_error"],
+            "ccp_alpha": [0.0, 0.1],  # type: ignore[list-item]
+            "max_samples": [None, 0.5, 1.0],  # type: ignore[list-item]
+            "criterion": ["absolute_error"],  # type: ignore[list-item]
         }
 
-    grid_search = GridSearchCV(
-        model, param_grid=grid, error_score="raise", **kwargs)
+    grid_search = GridSearchCV(model, param_grid=grid, error_score="raise", **kwargs)
 
     # Train model
     print("Training model...")
@@ -307,8 +290,7 @@ def train_model(experiment_name: str) -> str:
     # Save best model as ONNX file
     model_path = experiment_dir / f"{experiment_name}.onnx"
     initial_type = [("float_input", FloatTensorType([None, x.shape[1]]))]
-    onnx_model = convert_sklearn(
-        grid_search.best_estimator_, initial_types=initial_type)
+    onnx_model = convert_sklearn(grid_search.best_estimator_, initial_types=initial_type)
 
     with model_path.open("wb") as f:
         f.write(onnx_model.SerializeToString())
@@ -320,10 +302,7 @@ def train_model(experiment_name: str) -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the experiment.")
     parser.add_argument(
-        "--experiment_name",
-        type=str,
-        default="example",
-        help="Set experiment name (default: 'example')"
+        "--experiment_name", type=str, default="example", help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
     train_model(args.experiment_name)
