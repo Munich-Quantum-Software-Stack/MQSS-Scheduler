@@ -96,11 +96,11 @@ def calc_supermarq_plus_features(
             (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) / dag.depth() if dag.depth() > 0 else 0
         )
         # normalize
-        single_qubit_gates_per_layer = single_qubit_gates_per_layer / num_qubits if num_qubits > 1 else 0
+        single_qubit_gates_per_layer = single_qubit_gates_per_layer / num_qubits if num_qubits > 0 else 0
         # average number of 2q gates per layer = num of 2-qubit gates in the circuit / depth
         multi_qubit_gates_per_layer = len(dag.two_qubit_ops()) / dag.depth() if dag.depth() > 0 else 0
         # normalize
-        multi_qubit_gates_per_layer = multi_qubit_gates_per_layer / (num_qubits // 2) if num_qubits > 2 else 0
+        multi_qubit_gates_per_layer = multi_qubit_gates_per_layer / (num_qubits // 2) if num_qubits > 1 else 0
     except Exception as e:
         print(f"Error calculating Supermarq features: {e}")
 
@@ -264,7 +264,7 @@ def train_model(experiment_name: str) -> Path:
     else:
         # Full hyperparameter grid search for real experiments
         kwargs = {"n_jobs": -1, "verbose": 1, "cv": 5}
-        grid = {  # NOTE: Can (and should) be adjusted
+        grid = {  # NOTE: Can (and should) be adjusted for comprehensive search
             "n_estimators": [20, 40, 80, 160],
             "max_depth": [5, 10, 20, 40],
             "min_samples_split": [2, 5],
