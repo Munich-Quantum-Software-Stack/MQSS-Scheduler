@@ -199,8 +199,8 @@ def train_model(experiment_name: str) -> Path:
     print(f"Start training for experiment: {experiment_name}")
 
     # Prepare directory paths
-    parent_dir = Path(__file__).resolve().parent.parent
-    experiment_dir = parent_dir / "data" / experiment_name
+    root_dir = Path(__file__).resolve().parents[2]
+    experiment_dir = root_dir / "data" / experiment_name
 
     circuits_dir = experiment_dir / "circuits"
     features_dir = experiment_dir / "features"

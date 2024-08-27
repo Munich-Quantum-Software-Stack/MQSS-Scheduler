@@ -8,9 +8,10 @@ from __future__ import annotations
 import os
 import pickle
 
+from qiskit import QuantumCircuit, qasm2
+
 # ruff: noqa: PLC2701
 from predictor.utils import create_sample_circuit, prepare_sample_data
-from qiskit import QuantumCircuit, qasm2
 
 
 def test_create_sample_circuit() -> None:

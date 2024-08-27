@@ -29,8 +29,8 @@ classifiers = [
 requires-python = ">=3.10"
 
 [project.scripts]
-prepare-data = "predictor.src.utils:run_data_preparation"
-train-model = "predictor.src.training:run_training"
+prepare-data = "predictor.utils:run_data_preparation"
+train-model = "predictor.training:run_training"
 
 [project.optional-dependencies]
 test = ["pytest>=7"]
