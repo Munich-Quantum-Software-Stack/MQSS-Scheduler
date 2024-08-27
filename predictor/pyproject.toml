@@ -33,7 +33,7 @@ prepare-data = "predictor.src.utils:run_data_preparation"
 train-model = "predictor.src.training:run_training"
 
 [project.optional-dependencies]
-test = ["pytest>=7.4.4"]
+test = ["pytest>=7"]
 
 [tool.ruff]
 line-length = 120
