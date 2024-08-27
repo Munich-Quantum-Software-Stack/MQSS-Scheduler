@@ -76,10 +76,11 @@ def prepare_sample_data(experiment_name: str) -> Path:
     return experiment_dir
 
 
-if __name__ == "__main__":
+def run_data_preparation() -> None:
+    """Python entry point to prepare sample data for the training."""
     parser = argparse.ArgumentParser(description="Set up an example experiment.")
     parser.add_argument(
-        "--experiment_name", type=str, default="example", help="Set experiment name (default: 'example')"
+        "--experiment-name", type=str, default="example", help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
     directory = prepare_sample_data(args.experiment_name)

@@ -300,10 +300,11 @@ def train_model(experiment_name: str) -> Path:
     return model_path
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run the experiment.")
+def run_training() -> None:
+    """Python entry point to train a model on the experiment data."""
+    parser = argparse.ArgumentParser(description="Train a model on the experiment data.")
     parser.add_argument(
-        "--experiment_name", type=str, default="example", help="Set experiment name (default: 'example')"
+        "--experiment-name", type=str, default="example", help="Set experiment name (default: 'example')"
     )
     args = parser.parse_args()
     train_model(args.experiment_name)

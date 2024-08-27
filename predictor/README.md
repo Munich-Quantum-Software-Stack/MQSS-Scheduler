@@ -26,10 +26,10 @@ pip install .
 
 ### Preparing Data
 
-To get an impression of the required files, you can run the example.py script:
+To get an impression of the required files, run the following command:
 
 ```sh
-python src/example.py
+prepare-data --experiment-name example
 ```
 
 ### Directory Structure
@@ -56,7 +56,13 @@ predictor/
 To execute training for a specific experiment, run the following command:
 
 ```sh
-python src/training.py --experiment <experiment_name>
+train-model --experiment-name <experiment_name>
+```
+
+After running the setup example you can use:
+
+```sh
+train-model --experiment-name example
 ```
 
 ## Testing
