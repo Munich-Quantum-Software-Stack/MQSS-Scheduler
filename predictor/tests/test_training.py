@@ -10,9 +10,8 @@ import pickle
 
 import numpy as np
 import onnxruntime as ort
-
-from predictor.src.training import calc_supermarq_plus_features, create_feature_dict, train_model
-from predictor.src.utils import create_sample_circuit, prepare_sample_data
+from predictor.training import calc_supermarq_plus_features, create_feature_dict, train_model
+from predictor.utils import create_sample_circuit, prepare_sample_data
 
 
 def test_calc_supermarq_plus_features() -> None:
