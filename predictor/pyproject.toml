@@ -22,8 +22,11 @@ classifiers = [
     "Operating System :: MacOS",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
+
+requires-python = ">=3.10"
 
 [project.scripts]
 prepare-data = "predictor.src.utils:run_data_preparation"
