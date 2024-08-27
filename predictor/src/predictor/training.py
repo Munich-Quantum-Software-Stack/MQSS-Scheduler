@@ -10,6 +10,8 @@ Functions:
     Creates a dictionary of features for a given quantum circuit.
 - train_model(experiment_name: str):
     Runs the training process for the given experiment.
+- run_training():
+    Python entry point to train a model on the experiment data.
 """
 
 from __future__ import annotations

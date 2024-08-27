@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from predictor import training, utils
+from predictor import data_preparation, training
 
-__all__ = ["training", "utils"]
+__all__ = ["data_preparation", "training"]

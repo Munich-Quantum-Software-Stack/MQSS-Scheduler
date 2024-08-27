@@ -29,7 +29,7 @@ classifiers = [
 requires-python = ">=3.10"
 
 [project.scripts]
-prepare-data = "predictor.utils:run_data_preparation"
+prepare-data = "predictor.data_preparation:run_data_preparation"
 train-model = "predictor.training:run_training"
 
 [project.optional-dependencies]

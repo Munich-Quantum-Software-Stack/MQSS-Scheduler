@@ -1,10 +1,11 @@
-"""utils.py.
+"""data_preparation.py.
 
 This module provides functions to prepare some test and example data for the training.py script.
 
 Functions:
 - create_sample_circuit: Create a sample quantum circuit
 - prepare_sample_data: Prepare sample data for an experiment
+- run_data_preparation: Python entry point to prepare sample data for the training
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
-"""test_utils.py.
+"""test_data_preparation.py.
 
-This script tests the functions in src/utils.py.
+This script tests the functions in src/data_preparation.py.
 """
 
 from __future__ import annotations
@@ -11,7 +11,7 @@ import shutil
 from qiskit import QuantumCircuit, qasm2
 
 # ruff: noqa: PLC2701
-from predictor.utils import create_sample_circuit, prepare_sample_data
+from predictor.data_preparation import create_sample_circuit, prepare_sample_data
 
 
 def test_create_sample_circuit() -> None:
