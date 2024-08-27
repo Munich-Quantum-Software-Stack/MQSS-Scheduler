@@ -70,8 +70,7 @@ train-model --experiment-name example
 To run the tests, execute the following commands:
 
 ```sh
-pytest tests/test_utils.py
-pytest tests/test_training.py
+pytest
 ```
 
 ## Contributing
@@ -80,5 +79,5 @@ Contributions are welcome! Please open an issue first to discuss what you would 
 Once you started working on your pull request, please make sure to use linting and formatting through:
 
 ```sh
-ruff check --fix
+pre-commit run -a
 ```
