@@ -5,8 +5,8 @@ This script tests the functions in src/utils.py.
 
 from __future__ import annotations
 
-import os
 import pickle
+import shutil
 
 from qiskit import QuantumCircuit, qasm2
 
@@ -73,4 +73,4 @@ def test_prepare_sample_data() -> None:
         assert label == num_qubits % 2
 
     # Clean up the created directories
-    os.system(f"rm -rf {experiment_dir}")
+    shutil.rmtree(experiment_dir)

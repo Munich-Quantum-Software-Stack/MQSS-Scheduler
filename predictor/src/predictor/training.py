@@ -15,7 +15,6 @@ Functions:
 from __future__ import annotations
 
 import argparse
-import os
 import pickle
 from pathlib import Path
 
@@ -209,12 +208,10 @@ def train_model(experiment_name: str) -> Path:
     # Load circuits
     print("Loading circuits...")
     circuits = []
-    for file in os.listdir(circuits_dir):
-        if file.endswith(".qasm"):
-            circ_path = circuits_dir / file
-            circuits.append(qasm2.load(circ_path))
-            # Set circuit name for identification
-            circuits[-1].name = file.split(".")[0]
+    for circ_path in circuits_dir.glob("*.qasm"):
+        circuits.append(qasm2.load(circ_path))
+        # Set circuit name for identification
+        circuits[-1].name = circ_path.stem
 
     # Get features
     print("Extracting features...")

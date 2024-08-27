@@ -5,8 +5,8 @@ This script tests the functions in src/training.py.
 
 from __future__ import annotations
 
-import os
 import pickle
+import shutil
 
 import numpy as np
 import onnxruntime as ort
@@ -126,4 +126,4 @@ def test_train_model() -> None:
     assert isinstance(result[0], type(label))
 
     # Delete the experiment directory
-    os.system(f"rm -rf {experiment_dir}")
+    shutil.rmtree(experiment_dir)
