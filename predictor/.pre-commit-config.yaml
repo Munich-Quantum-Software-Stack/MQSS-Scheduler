@@ -18,51 +18,36 @@ repos:
     rev: v4.6.0
     hooks:
       - id: check-added-large-files
-        files: .
       - id: check-case-conflict
-        files: .
       - id: check-docstring-first
-        files: .
       - id: check-merge-conflict
-        files: .
       - id: check-toml
-        files: .
       - id: check-yaml
-        files: .
       - id: debug-statements
-        files: .
       - id: end-of-file-fixer
-        files: .
       - id: mixed-line-ending
-        files: .
       - id: trailing-whitespace
-        files: .
 
   # Handling unwanted unicode characters
   - repo: https://github.com/sirosen/texthooks
     rev: 0.6.7
     hooks:
       - id: fix-ligatures
-        files: .
       - id: fix-smartquotes
-        files: .
 
   # Python linting and formatting using ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.6.1
     hooks:
       - id: ruff
-        files: .
         args: ["--fix"]
       - id: ruff-format
-        files: .
 
   # Format configuration files with prettier
   - repo: https://github.com/rbubley/mirrors-prettier
     rev: v3.3.3
     hooks:
       - id: prettier
-        files: .
         types_or: [yaml, markdown, html, css, scss, javascript, json]
 
   # Check static types with mypy
@@ -70,14 +55,12 @@ repos:
     rev: v1.11.1
     hooks:
       - id: mypy
-        files: .
 
   # Check for spelling
   - repo: https://github.com/crate-ci/typos
     rev: v1.23.6
     hooks:
       - id: typos
-        files: .
 
   # Check the pyproject.toml file
   - repo: https://github.com/henryiii/validate-pyproject-schema-store
