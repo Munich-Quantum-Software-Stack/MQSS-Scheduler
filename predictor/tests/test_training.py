@@ -77,7 +77,11 @@ def test_create_feature_dict() -> None:
 
     # Check the feature dictionary
     for exp_key, exp_value, key, value in zip(
-        expected_feature_dict.keys(), expected_feature_dict.values(), feature_dict.keys(), feature_dict.values()
+        expected_feature_dict.keys(),
+        expected_feature_dict.values(),
+        feature_dict.keys(),
+        feature_dict.values(),
+        strict=False,
     ):
         assert exp_key == str(key)
         assert exp_value == value

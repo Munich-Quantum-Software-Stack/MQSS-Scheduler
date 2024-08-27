@@ -27,13 +27,17 @@ def test_create_sample_circuit() -> None:
     assert circuit.num_qubits == max_num_qubits
     assert circuit.num_clbits == num_active_qubits
 
-    # Check the operations in the circuit
-    for i in range(num_active_qubits):
-        assert circuit.data[i].name == "h"
-    for i in range(num_active_qubits - 1):
-        assert circuit.data[num_active_qubits + i].name == "cx"
-    for i in range(num_active_qubits):
-        assert circuit.data[2 * num_active_qubits - 1 + i].name == "measure"
+    # Check the circuit structure
+    assert circuit.data[0].operation.name == "h"
+    assert circuit.data[1].operation.name == "h"
+    assert circuit.data[2].operation.name == "h"
+
+    assert circuit.data[3].operation.name == "cx"
+    assert circuit.data[4].operation.name == "cx"
+
+    assert circuit.data[5].operation.name == "measure"
+    assert circuit.data[6].operation.name == "measure"
+    assert circuit.data[7].operation.name == "measure"
 
 
 def test_prepare_sample_data() -> None:
