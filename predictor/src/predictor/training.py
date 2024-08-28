@@ -73,9 +73,9 @@ def calc_supermarq_plus_features(
         max_activity = num_qubits * depth
         liveness = np.sum(activity_matrix) / max_activity if max_activity > 0 else 0
 
-        #  Parallelism feature = max((((num of gates / depth) - 1) / (num of qubits - 1)), 0).
+        #  Parallelism feature = ((num of gates / depth) - 1) / (num of qubits - 1)).
         num_gates = len(dag.gate_nodes())
-        parallelism = max(((num_gates / depth) - 1) / (num_qubits - 1), 0) if num_qubits > 1 and depth > 0 else 0
+        parallelism = ((num_gates / depth) - 1) / (num_qubits - 1) if num_qubits > 1 and depth > 0 else 0
 
         # Entanglement-ratio = ratio between # of 2-qubit gates and total number of gates in the circuit.
         entanglement_ratio = len(dag.two_qubit_ops()) / num_gates if num_gates > 0 else 0
