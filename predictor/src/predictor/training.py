@@ -51,34 +51,40 @@ def calc_supermarq_plus_features(
     try:
         dag = circuit_to_dag(qc)
         dag.remove_all_ops_named("barrier")
-        depth = dag.depth()  # including measurements
+        dag.remove_all_ops_named("measure")
+        depth = dag.depth()  # Excluding measurements
 
-        # Program communication = circuit's average qubit degree / degree of a complete graph.
+        # Program communication = circuit's average qubit degree / degree of a complete interaction graph.
         graph = nx.Graph()
         for op in dag.two_qubit_ops():
             q1, q2 = op.qargs
             graph.add_edge(qc.find_bit(q1).index, qc.find_bit(q2).index)
         degree_sum = sum(graph.degree(n) for n in graph.nodes)
-        program_communication = degree_sum / (num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
+        max_degree = num_qubits * (num_qubits - 1)  # Degree of a complete graph
+        program_communication = degree_sum / max_degree if max_degree > 0 else 0
 
         # Liveness feature = sum of all entries in the liveness matrix / (num_qubits * depth).
-        activity_matrix = np.zeros((qc.num_qubits, depth))
+        activity_matrix = np.zeros((num_qubits, depth))
+        # NOTE: layers() does change the DAG object
         for i, layer in enumerate(dag.layers()):
             for op in layer["partition"]:
                 for qubit in op:
                     activity_matrix[qc.find_bit(qubit).index, i] = 1
-        liveness = np.sum(activity_matrix) / (num_qubits * depth) if depth > 0 and num_qubits > 0 else 0
+        max_activity = num_qubits * depth
+        liveness = np.sum(activity_matrix) / max_activity if max_activity > 0 else 0
 
-        #  Parallelism feature = max((((# of gates / depth) -1) /(# of qubits -1)), 0).
-        parallelism = (
-            max(((len(dag.gate_nodes()) / depth) - 1) / (num_qubits - 1), 0) if num_qubits > 1 and depth > 0 else 0
-        )
+        #  Parallelism feature = max((((num of gates / depth) - 1) / (num of qubits - 1)), 0).
+        num_gates = len(dag.gate_nodes())
+        parallelism = max(((num_gates / depth) - 1) / (num_qubits - 1), 0) if num_qubits > 1 and depth > 0 else 0
+
         # Entanglement-ratio = ratio between # of 2-qubit gates and total number of gates in the circuit.
-        entanglement_ratio = len(dag.two_qubit_ops()) / len(dag.gate_nodes()) if len(dag.gate_nodes()) > 0 else 0
+        entanglement_ratio = len(dag.two_qubit_ops()) / num_gates if num_gates > 0 else 0
 
         # Critical depth = # of 2-qubit gates along the critical path / total # of 2-qubit gates.
-        longest_paths = dag.count_ops_longest_path()
-        n_ed = sum(longest_paths[name] for name in {op.name for op in dag.two_qubit_ops()} if name in longest_paths)
+        ops_on_crit_path = dag.count_ops_longest_path()
+        n_ed = sum(
+            ops_on_crit_path[name] for name in {op.name for op in dag.two_qubit_ops()} if name in ops_on_crit_path
+        )
         n_e = len(dag.two_qubit_ops())
         critical_depth = n_ed / n_e if n_e != 0 else 0
 
@@ -90,18 +96,16 @@ def calc_supermarq_plus_features(
         degree_sum = sum(di_graph.degree(n) for n in di_graph.nodes)
         directed_program_communication = degree_sum / (2 * num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
 
-        # average number of 1q gates per layer = num of 1-qubit gates in the circuit / (depth wo measurements)
-        # HACK: dag.remove_all_ops_named("measure") is broken
-        depth_wo_meas = depth - 1
-        single_qubit_gates_per_layer = (
-            (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) / depth_wo_meas if depth_wo_meas > 0 else 0
-        )
-        # normalize
+        # Average number of 1q gates per layer = num of 1-qubit gates in the circuit / depth
+        single_qubit_gates_per_layer = (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) / depth if depth > 0 else 0
+        # Normalize
         single_qubit_gates_per_layer = single_qubit_gates_per_layer / num_qubits if num_qubits > 0 else 0
-        # average number of 2q gates per layer = num of 2-qubit gates in the circuit / depth
-        multi_qubit_gates_per_layer = len(dag.two_qubit_ops()) / depth_wo_meas if depth_wo_meas > 0 else 0
-        # normalize
+
+        # Average number of 2q gates per layer = num of 2-qubit gates in the circuit / depth
+        multi_qubit_gates_per_layer = len(dag.two_qubit_ops()) / depth if depth > 0 else 0
+        # Normalize
         multi_qubit_gates_per_layer = multi_qubit_gates_per_layer / (num_qubits // 2) if num_qubits > 1 else 0
+
     except Exception as e:
         print(f"Error calculating Supermarq features: {e}")
 

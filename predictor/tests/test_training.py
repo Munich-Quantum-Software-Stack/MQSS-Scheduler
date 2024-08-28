@@ -68,11 +68,11 @@ def test_create_feature_dict() -> None:
         "program_communication": 1.0,
         "critical_depth": 1.0,
         "entanglement_ratio": 1 / 3,
-        "parallelism": 0.0,
+        "parallelism": 1 / 2,
         "liveness": 1.0,
-        "directed_program_communication": 0.5,
-        "single_qubit_gates_per_layer": 0.5,
-        "multi_qubit_gates_per_layer": 0.5,
+        "directed_program_communication": 1 / 2,
+        "single_qubit_gates_per_layer": 1 / 2,
+        "multi_qubit_gates_per_layer": 1 / 2,
     }
 
     # Check the feature dictionary
