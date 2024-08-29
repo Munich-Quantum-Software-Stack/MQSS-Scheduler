@@ -20,19 +20,19 @@ __all__ = ["create_sample_circuit", "prepare_sample_data"]
 
 
 def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
-    """Create a test quantum circuit for a qpu with max_num_qubits qubits.
+    """Create a test quantum circuit for an IQM device with max_num_qubits qubits.
 
-    There will be h, cx and measurement operations on the first num_qubits qubits.
+    Returns circuit with "r", "cz" and "measurement" operations on the first num_qubits qubits.
     """
     circuit = QuantumCircuit(max_num_qubits, num_active_qubits)
 
-    # H gate on first num_qubits qubits
+    # R gate on first num_qubits qubits
     for i in range(num_active_qubits):
-        circuit.h(i)
+        circuit.r(1.0, 1.0, i)
 
-    # CX gates on first num_qubits - 1 qubits
+    # CZ gates on first num_qubits - 1 qubits
     for i in range(num_active_qubits - 1):
-        circuit.cx(i, i + 1)
+        circuit.cz(i, i + 1)
 
     # Measure first num_qubits qubits
     for i in range(num_active_qubits):

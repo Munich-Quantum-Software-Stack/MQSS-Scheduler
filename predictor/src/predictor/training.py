@@ -6,7 +6,7 @@ a training routine to train a RandomForestRegressor model on the extracted featu
 Functions:
 - calc_supermarq_plus_features(qc: QuantumCircuit, num_qubits: int) -> tuple:
     Calculates the Supermarq features for a given quantum circuit.
-- create_feature_dict(circuit: QuantumCircuit, native_gates: list) -> dict:
+- create_feature_dict(circuit: QuantumCircuit) -> dict:
     Creates a dictionary of features for a given quantum circuit.
 - train_model(experiment_name: str):
     Runs the training process for the given experiment.
@@ -96,15 +96,17 @@ def calc_supermarq_plus_features(
         degree_sum = sum(di_graph.degree(n) for n in di_graph.nodes)
         directed_program_communication = degree_sum / (2 * num_qubits * (num_qubits - 1)) if num_qubits > 1 else 0
 
-        # Average number of 1q gates per layer = num of 1-qubit gates in the circuit / depth
-        single_qubit_gates_per_layer = (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) / depth if depth > 0 else 0
-        # Normalize
-        single_qubit_gates_per_layer = single_qubit_gates_per_layer / num_qubits if num_qubits > 0 else 0
+        # Average number of 1q gates = num of 1-qubit gates in the circuit / (num qubits * depth)
+        single_qubit_gates = (
+            (len(dag.gate_nodes()) - len(dag.two_qubit_ops())) / (num_qubits * depth)
+            if depth > 0 and num_qubits > 0
+            else 0
+        )
 
-        # Average number of 2q gates per layer = num of 2-qubit gates in the circuit / depth
-        multi_qubit_gates_per_layer = len(dag.two_qubit_ops()) / depth if depth > 0 else 0
-        # Normalize
-        multi_qubit_gates_per_layer = multi_qubit_gates_per_layer / (num_qubits // 2) if num_qubits > 1 else 0
+        # Average number of 2q gates = num of 2-qubit gates in the circuit / (num qubits * depth)
+        multi_qubit_gates = (
+            len(dag.two_qubit_ops()) / ((num_qubits // 2) * depth) if depth > 0 and num_qubits > 0 else 0
+        )
 
     except Exception as e:
         print(f"Error calculating Supermarq features: {e}")
@@ -116,8 +118,8 @@ def calc_supermarq_plus_features(
     assert 0 <= liveness <= 1
 
     assert 0 <= directed_program_communication <= 1
-    assert 0 <= single_qubit_gates_per_layer <= 1
-    assert 0 <= multi_qubit_gates_per_layer <= 1
+    assert 0 <= single_qubit_gates <= 1
+    assert 0 <= multi_qubit_gates <= 1
 
     return (
         float(program_communication),
@@ -126,23 +128,23 @@ def calc_supermarq_plus_features(
         float(parallelism),
         float(liveness),
         float(directed_program_communication),
-        float(single_qubit_gates_per_layer),
-        float(multi_qubit_gates_per_layer),
+        float(single_qubit_gates),
+        float(multi_qubit_gates),
     )
 
 
-def create_feature_dict(qc: QuantumCircuit, native_gates: list[str] | None = None) -> dict[str, float]:
+def create_feature_dict(qc: QuantumCircuit) -> dict[str, float]:
     """Creates and returns a feature dictionary for a given quantum circuit.
 
     Arguments:
         qc: The quantum circuit to be compiled.
-        native_gates: The native gates of the quantum computer.
 
     Returns:
         The feature dictionary of the given quantum circuit.
     """
-    if native_gates is None:
-        native_gates = []
+    # NOTE: This function currently works with the IQM native gate set ["r", "cz"].
+    # It should be adjusted to all possible gates the model is supposed to work with.
+    native_gates = ["r", "cz"]
     ops_list = qc.count_ops()
 
     # dict_to_featurevector
@@ -183,8 +185,8 @@ def create_feature_dict(qc: QuantumCircuit, native_gates: list[str] | None = Non
     feature_dict["liveness"] = supermarq_features[4]
 
     feature_dict["directed_program_communication"] = supermarq_features[5]
-    feature_dict["single_qubit_gates_per_layer"] = supermarq_features[6]
-    feature_dict["multi_qubit_gates_per_layer"] = supermarq_features[7]
+    feature_dict["single_qubit_gates"] = supermarq_features[6]
+    feature_dict["multi_qubit_gates"] = supermarq_features[7]
 
     return feature_dict
 
@@ -222,7 +224,6 @@ def train_model(experiment_name: str) -> Path:
     # Get features
     print("Extracting features...")
     features = {}
-    native_gates = ["h", "cx", "measure"]
     for qc in circuits:
         feat_path = features_dir / f"{qc.name}.pkl"
         # Load feature dictionary if it exists
@@ -231,7 +232,7 @@ def train_model(experiment_name: str) -> Path:
                 features[qc.name] = pickle.load(f)
         else:
             # Create and save feature dictionary
-            features[qc.name] = create_feature_dict(qc, native_gates)
+            features[qc.name] = create_feature_dict(qc)
             with feat_path.open("wb") as f:
                 pickle.dump(features[qc.name], f)
 

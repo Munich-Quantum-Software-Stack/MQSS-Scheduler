@@ -28,12 +28,12 @@ def test_create_sample_circuit() -> None:
     assert circuit.num_clbits == num_active_qubits
 
     # Check the circuit structure
-    assert circuit.data[0].operation.name == "h"
-    assert circuit.data[1].operation.name == "h"
-    assert circuit.data[2].operation.name == "h"
+    assert circuit.data[0].operation.name == "r"
+    assert circuit.data[1].operation.name == "r"
+    assert circuit.data[2].operation.name == "r"
 
-    assert circuit.data[3].operation.name == "cx"
-    assert circuit.data[4].operation.name == "cx"
+    assert circuit.data[3].operation.name == "cz"
+    assert circuit.data[4].operation.name == "cz"
 
     assert circuit.data[5].operation.name == "measure"
     assert circuit.data[6].operation.name == "measure"

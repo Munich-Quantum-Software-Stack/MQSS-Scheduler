@@ -37,12 +37,12 @@ def test_create_feature_dict() -> None:
     circuit = create_sample_circuit(max_num_qubits=20, num_active_qubits=num_qubits)
 
     # Create the feature dictionary
-    feature_dict = create_feature_dict(circuit, native_gates=["h", "cx"])
+    feature_dict = create_feature_dict(circuit)
 
     # Define the expected features
     expected_feature_dict = {
-        "h": 2,
-        "cx": 1,
+        "r": 2,
+        "cz": 1,
         "Qubit(QuantumRegister(20, 'q'), 0)": 1,
         "Qubit(QuantumRegister(20, 'q'), 1)": 1,
         "Qubit(QuantumRegister(20, 'q'), 2)": 0,
@@ -71,8 +71,8 @@ def test_create_feature_dict() -> None:
         "parallelism": 1 / 2,
         "liveness": 1.0,
         "directed_program_communication": 1 / 2,
-        "single_qubit_gates_per_layer": 1 / 2,
-        "multi_qubit_gates_per_layer": 1 / 2,
+        "single_qubit_gates": 1 / 2,
+        "multi_qubit_gates": 1 / 2,
     }
 
     # Check the feature dictionary
