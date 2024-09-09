@@ -46,7 +46,7 @@
 #include <unordered_map>
 #include <vector>
 
-std::string get_device_name(QDMI_Device device) {
+std::string get_dev_name(QDMI_Device device) {
   QDMI_Device_property prop = BACKEND_NAME;
   char *name = (char *)malloc(256);
   int result = QDMI_query_device_property_c(device, prop, &name);
@@ -146,9 +146,9 @@ int main() {
     // Retrieve and print the device name
     std::cout << "   [Test]................Task " << task->mTaskId
               << " was sent to submitter for device "
-              << get_device_name(scheduledDevice) << " with execution order "
+              << get_dev_name(scheduledDevice) << " with execution order "
               << task->mExecutionOrder << " and preferred QPU "
-              << get_device_name(task->mPreferredQpus[0]) << std::endl;
+              << get_dev_name(task->mPreferredQpus[0]) << std::endl;
   }
 
   // Assert correct execution order
