@@ -10,6 +10,47 @@
 
 using namespace llvm;
 
+// DFS helper function to find the longest/critical path in a circuit graph
+// Returns its depth and the number of 2-qubit gates along the path
+std::pair<int, int>
+dfs(const std::string &node,
+    const std::unordered_map<std::string, std::vector<std::string>>
+        &adjacencyList,
+    std::unordered_map<std::string, std::pair<int, int>> &visited) {
+
+  if (node.empty()) {
+    // Input node (not a gate)
+    return {0, 0};
+  }
+  if (visited.find(node) != visited.end()) {
+    return visited[node];
+  }
+
+  int maxDepth = -1; // Initialize to -1 to exclude the input node (not a gate)
+  int numTwoQubitGates = 0;
+
+  auto it = adjacencyList.find(node);
+  if (it != adjacencyList.end()) {
+    for (const auto &neighbor : it->second) {
+      auto result = dfs(neighbor, adjacencyList, visited);
+      if (result.first > maxDepth) {
+        maxDepth = result.first;
+        numTwoQubitGates = result.second;
+      }
+    }
+  } else {
+    throw std::out_of_range("Node not found in adjacency list");
+  }
+
+  // Check if the current node is a 2-qubit gate
+  if (it->second.size() == 2) {
+    numTwoQubitGates++;
+  }
+
+  visited[node] = {maxDepth + 1, numTwoQubitGates};
+  return visited[node];
+}
+
 /*
  * @brief Extract features from a quantum circuit
  * @param TSM The quantum circuit to evaluate
@@ -23,6 +64,8 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
   int num_gates = 0, num_two_qubit_gates = 0;
   std::unordered_map<std::string, int> qubit_counts, two_qubit_gate_counts,
       qubit_depth;
+  std::unordered_map<std::string, std::vector<std::string>> qubit_gate_counts,
+      adjacency_list;
   std::unordered_map<std::string, std::unordered_set<std::string>>
       qubit_connections, dir_qubit_connections;
 
@@ -48,13 +91,18 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
               if (is_quantum) {
                 std::string ctrl_qubit = "";
 
-                // Count each gate
-                if (gate_counts.count(op_name) >= 0) {
-                  gate_counts[op_name]++;
-                  num_gates++;
-                } else {
+                // Create unique id for each node in cirucit graph
+                std::string op_id = op_name + "_" + std::to_string(num_gates);
+
+                auto it = gate_counts.find(op_name);
+                if (it == gate_counts.end()) {
                   std::cerr << "Unknown gate: " << op_name << std::endl;
+                } else {
+                  // Increase total gate count
+                  it->second++;
+                  num_gates++;
                 }
+
                 // Look for qubits affected by the gate
                 for (Use &operand : call_instr->operands()) {
                   if (auto *val = dyn_cast<Value>(&operand)) {
@@ -67,43 +115,43 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                       // Count operations on each qubit
                       qubit_counts.emplace(qubit, 0).first->second++;
 
-                      // Count 2-qubit gates
-                      if (ctrl_qubit != "") {
-                        std::string trgt_qubit = qubit;
-                        // Count connections between qubits
-                        // Undirected graph
-                        qubit_connections[trgt_qubit].insert(ctrl_qubit);
-                        qubit_connections[ctrl_qubit].insert(trgt_qubit);
-                        // Directed graph
-                        dir_qubit_connections[ctrl_qubit].insert(trgt_qubit);
+                      // Get last operation on qubit
+                      auto last_op = qubit_gate_counts[qubit].empty()
+                                         ? qubit
+                                         : qubit_gate_counts[qubit].back();
 
-                        // Initialize qubit depth if not found
-                        qubit_depth.emplace(trgt_qubit, 0);
+                      // Add current operation to qubit's operations
+                      qubit_gate_counts
+                          .emplace(qubit, std::vector<std::string>())
+                          .first->second.push_back(op_id);
 
-                        // Ctrl and Trgt qubit must have same depth
-                        int ctrl_qubit_depth = qubit_depth[ctrl_qubit];
-                        int trgt_qubit_depth = qubit_depth[trgt_qubit];
+                      // Add input node that does not have any predecessors
+                      if (last_op == qubit) {
+                        adjacency_list.emplace(qubit,
+                                               std::vector<std::string>{});
+                      }
+                      // Add node to adjacency list
+                      auto res = adjacency_list.emplace(
+                          op_id, std::vector<std::string>{last_op});
+                      if (!res.second) {
+                        // If the key already exists, add last_op
+                        res.first->second.push_back(last_op);
+                      }
 
-                        if (ctrl_qubit_depth > trgt_qubit_depth) {
-                          // Ctrl qubit was already incremented before
-                          qubit_depth[trgt_qubit] = ctrl_qubit_depth;
-                        } else if (trgt_qubit_depth >= ctrl_qubit_depth) {
-                          // Account for current gate
-                          qubit_depth[trgt_qubit]++;
-                          // Both qubits have the same depth now
-                          qubit_depth[ctrl_qubit] = qubit_depth[trgt_qubit];
-                        }
-
-                        two_qubit_gate_counts.emplace(ctrl_qubit, 0)
-                            .first->second++;
-                        two_qubit_gate_counts.emplace(trgt_qubit, 0)
-                            .first->second++;
-                        num_two_qubit_gates++;
-                      } else {
-                        // Account for current gate
-                        qubit_depth.emplace(qubit, 0).first->second++;
+                      if (ctrl_qubit == "") {
                         // In case its 2-qubit gate
                         ctrl_qubit = qubit;
+                      } else {
+                        // Count 2-qubit gates
+                        std::string trgt_qubit = qubit;
+                        // Count connections between qubits in:
+                        // UNdirected graph
+                        qubit_connections[trgt_qubit].insert(ctrl_qubit);
+                        qubit_connections[ctrl_qubit].insert(trgt_qubit);
+                        // DIrected graph
+                        dir_qubit_connections[ctrl_qubit].insert(trgt_qubit);
+
+                        num_two_qubit_gates++;
                       }
                     }
                   }
@@ -116,13 +164,16 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
     }
   });
 
-  // Calculate the circuit depth
+  // Calculate the depth based on the longest path in the circuit graph
+  std::unordered_map<std::string, std::pair<int, int>> visited;
   int depth = 0;
-  std::string max_depth_qubit;
-  for (const auto &pair : qubit_depth) {
-    if (pair.second > depth) {
-      depth = pair.second;
-      max_depth_qubit = pair.first;
+  int numTwoQubitGatesOnCriticalPath = 0;
+
+  for (const auto &pair : adjacency_list) {
+    auto result = dfs(pair.first, adjacency_list, visited);
+    if (result.first > depth) {
+      depth = result.first;
+      numTwoQubitGatesOnCriticalPath = result.second;
     }
   }
 
@@ -150,10 +201,10 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                      : 0;
 
   // Calculate critical depth
-  double critical_depth = num_two_qubit_gates > 0
-                              ? (double)two_qubit_gate_counts[max_depth_qubit] /
-                                    (double)num_two_qubit_gates
-                              : 0.0;
+  double critical_depth =
+      num_two_qubit_gates > 0
+          ? (double)numTwoQubitGatesOnCriticalPath / (double)num_two_qubit_gates
+          : 0.0;
 
   // Calculate entanglement ratio
   double entanglement_ratio =
