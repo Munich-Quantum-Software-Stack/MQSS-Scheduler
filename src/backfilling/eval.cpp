@@ -65,11 +65,7 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                       stream.flush();
 
                       // Count operations on each qubit
-                      if (qubit_counts.find(qubit) == qubit_counts.end()) {
-                        qubit_counts[qubit] = 0;
-                      } else {
-                        qubit_counts[qubit]++;
-                      }
+                      qubit_counts.emplace(qubit, 0).first->second++;
 
                       // Count 2-qubit gates
                       if (ctrl_qubit != "") {
@@ -81,14 +77,13 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                         // Directed graph
                         dir_qubit_connections[ctrl_qubit].insert(trgt_qubit);
 
+                        // Initialize qubit depth if not found
+                        qubit_depth.emplace(trgt_qubit, 0);
+
                         // Ctrl and Trgt qubit must have same depth
                         int ctrl_qubit_depth = qubit_depth[ctrl_qubit];
-                        int trgt_qubit_depth = 0;
-                        if (qubit_depth.find(trgt_qubit) != qubit_depth.end()) {
-                          trgt_qubit_depth = qubit_depth[trgt_qubit];
-                        } else {
-                          qubit_depth[trgt_qubit] = 0;
-                        }
+                        int trgt_qubit_depth = qubit_depth[trgt_qubit];
+
                         if (ctrl_qubit_depth > trgt_qubit_depth) {
                           // Ctrl qubit was already incremented before
                           qubit_depth[trgt_qubit] = ctrl_qubit_depth;
@@ -99,16 +94,14 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                           qubit_depth[ctrl_qubit] = qubit_depth[trgt_qubit];
                         }
 
-                        two_qubit_gate_counts[ctrl_qubit]++;
-                        two_qubit_gate_counts[trgt_qubit]++;
+                        two_qubit_gate_counts.emplace(ctrl_qubit, 0)
+                            .first->second++;
+                        two_qubit_gate_counts.emplace(trgt_qubit, 0)
+                            .first->second++;
                         num_two_qubit_gates++;
                       } else {
                         // Account for current gate
-                        if (qubit_depth.find(qubit) == qubit_depth.end()) {
-                          qubit_depth[qubit] = 1;
-                        } else {
-                          qubit_depth[qubit]++;
-                        }
+                        qubit_depth.emplace(qubit, 0).first->second++;
                         // In case its 2-qubit gate
                         ctrl_qubit = qubit;
                       }
