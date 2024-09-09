@@ -21,7 +21,8 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                         std::map<std::string, int> &gate_counts) {
   std::string QIS_START = "__quantum__qis_";
   int num_gates = 0, num_two_qubit_gates = 0;
-  std::unordered_map<std::string, int> qubit_counts, two_qubit_gate_counts;
+  std::unordered_map<std::string, int> qubit_counts, two_qubit_gate_counts,
+      qubit_depth;
   std::unordered_map<std::string, std::unordered_set<std::string>>
       qubit_connections, dir_qubit_connections;
 
@@ -45,8 +46,7 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                    op_name.substr(0, QIS_START.size()) == QIS_START);
 
               if (is_quantum) {
-                std::string prev_qubit = "";
-                std::string first_qubit = "";
+                std::string ctrl_qubit = "";
 
                 // Count each gate
                 if (gate_counts.count(op_name) >= 0) {
@@ -63,29 +63,55 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                       llvm::raw_string_ostream stream(qubit);
                       operand.get()->printAsOperand(stream, true);
                       stream.flush();
-                      // Count operations on each qubit
-                      qubit_counts[qubit]++;
 
-                      // Count connections between qubits
-                      if (prev_qubit != "") {
-                        // Undirected graph
-                        qubit_connections[qubit].insert(prev_qubit);
-                        qubit_connections[prev_qubit].insert(qubit);
-                        // Directed graph
-                        dir_qubit_connections[prev_qubit].insert(qubit);
+                      // Count operations on each qubit
+                      if (qubit_counts.find(qubit) == qubit_counts.end()) {
+                        qubit_counts[qubit] = 0;
+                      } else {
+                        qubit_counts[qubit]++;
                       }
-                      prev_qubit = qubit;
 
                       // Count 2-qubit gates
-                      if (first_qubit == "collected") {
-                        continue;
-                      } else if (first_qubit != "") {
-                        two_qubit_gate_counts[first_qubit]++;
-                        two_qubit_gate_counts[qubit]++;
+                      if (ctrl_qubit != "") {
+                        std::string trgt_qubit = qubit;
+                        // Count connections between qubits
+                        // Undirected graph
+                        qubit_connections[trgt_qubit].insert(ctrl_qubit);
+                        qubit_connections[ctrl_qubit].insert(trgt_qubit);
+                        // Directed graph
+                        dir_qubit_connections[ctrl_qubit].insert(trgt_qubit);
+
+                        // Ctrl and Trgt qubit must have same depth
+                        int ctrl_qubit_depth = qubit_depth[ctrl_qubit];
+                        int trgt_qubit_depth = 0;
+                        if (qubit_depth.find(trgt_qubit) != qubit_depth.end()) {
+                          trgt_qubit_depth = qubit_depth[trgt_qubit];
+                        } else {
+                          qubit_depth[trgt_qubit] = 0;
+                        }
+                        if (ctrl_qubit_depth > trgt_qubit_depth) {
+                          // Ctrl qubit was already incremented before
+                          qubit_depth[trgt_qubit] = ctrl_qubit_depth;
+                        } else if (trgt_qubit_depth >= ctrl_qubit_depth) {
+                          // Account for current gate
+                          qubit_depth[trgt_qubit]++;
+                          // Both qubits have the same depth now
+                          qubit_depth[ctrl_qubit] = qubit_depth[trgt_qubit];
+                        }
+
+                        two_qubit_gate_counts[ctrl_qubit]++;
+                        two_qubit_gate_counts[trgt_qubit]++;
                         num_two_qubit_gates++;
-                        first_qubit = "collected";
+                      } else {
+                        // Account for current gate
+                        if (qubit_depth.find(qubit) == qubit_depth.end()) {
+                          qubit_depth[qubit] = 1;
+                        } else {
+                          qubit_depth[qubit]++;
+                        }
+                        // In case its 2-qubit gate
+                        ctrl_qubit = qubit;
                       }
-                      first_qubit = qubit;
                     }
                   }
                 }
@@ -97,15 +123,19 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
     }
   });
 
-  // Calculate the circuit depth (and associated qubit)
-  // Count non-idle qubits (see activity matrix)
-  int depth = 0, activity_count = 0;
+  // Calculate the circuit depth
+  int depth = 0;
   std::string max_depth_qubit;
-  for (const auto &pair : qubit_counts) {
+  for (const auto &pair : qubit_depth) {
     if (pair.second > depth) {
       depth = pair.second;
       max_depth_qubit = pair.first;
     }
+  }
+
+  // Count non-idle qubits (see activity matrix)
+  int activity_count = 0;
+  for (const auto &pair : qubit_counts) {
     activity_count += pair.second;
   }
 
@@ -137,14 +167,15 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
       num_gates > 0 ? (double)num_two_qubit_gates / (double)num_gates : 0.0;
 
   // Calculate average number of gates per layer
-  double one_qubit_gates_per_layer = // non_two_qubit_gates_per_layer
+  double single_qubit_gate_ratio =
       (num_qubits > 0 && depth > 0)
           ? (double)(num_gates - num_two_qubit_gates) /
                 (double)(depth * num_qubits)
           : 0.0;
-  double two_qubit_gates_per_layer =
+  double two_qubit_gate_ratio =
       (num_qubits > 0 && depth > 0)
-          ? (double)num_two_qubit_gates / (double)(depth * (num_qubits / 2))
+          ? (double)num_two_qubit_gates /
+                (double)(depth * (int)(num_qubits / 2))
           : 0.0;
 
   // Calculate parallelism
@@ -158,14 +189,14 @@ evaluate_supermarq_plus(const ThreadSafeModule &TSM,
                         ? (double)activity_count / (double)(depth * num_qubits)
                         : 0.0;
 
-  return std::vector<double>{
-      static_cast<double>(num_qubits), static_cast<double>(depth),
-      // original supermarq features
-      program_communication, critical_depth, entanglement_ratio, parallelism,
-      liveness,
-      // plus additional features
-      directed_program_communication, one_qubit_gates_per_layer,
-      two_qubit_gates_per_layer};
+  return std::vector<double>{static_cast<double>(num_qubits),
+                             static_cast<double>(depth),
+                             // original supermarq features
+                             program_communication, critical_depth,
+                             entanglement_ratio, parallelism, liveness,
+                             // plus additional features
+                             directed_program_communication,
+                             single_qubit_gate_ratio, two_qubit_gate_ratio};
 }
 
 /*
