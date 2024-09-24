@@ -1,50 +1,38 @@
 /**
  * @file scheduler_round_robin.cpp
- * @brief Implementation of a dummy scheduler.
+ * @brief Implementation of a simple round robin scheduler.
  */
 
-#include <iostream>
-#include <round_robin.hpp>
-#include "Submitter.hpp"
-
+#include "queue.hpp"
+#include "round_robin.hpp"
 
 /**
  * @brief The main entry point of the program.
  *
- * The Scheduler.
+ * A round robin scheduler that assigns tasks by looping through the available
+ * devices.
  *
- * @return const char *
+ * @return 0 once all tasks have been scheduled.
  */
-extern "C" int scheduler(Device2SubmitterType device2Submitter, std::vector<QuantumTask> *tasks)
-{
-    // Query the available devices
+extern "C" int
+scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
+          std::vector<std::shared_ptr<QuantumTask>> tasks) {
+  int idx = 0; // Round-robin device index
 
-    if (device2Submitter.size() == 0)
-    {
-        
-        std::cout << "   [Scheduler]...........Error: no devices found" << std::endl;
-        return 1;
-    }
+  for (auto &childQuantumTask : tasks) {
 
-    std::cout << "   [Scheduler]..........." << device2Submitter.size()
-              << " available device(s)" << std::endl;
+    // Assign the idx device to the task
+    childQuantumTask->mScheduledQpu =
+        schedulerQueues[idx]->mpSubmitter->mDevice;
 
-    
+    // Add task to the end of the queue
+    int queueSize = schedulerQueues[idx]->mTasks.size();
+    childQuantumTask->mExecutionOrder =
+        schedulerQueues[idx]->addTask(childQuantumTask, queueSize);
 
-    for (auto &childQuantumTask : *tasks)
-    {
-        QDMI_Device device = device2Submitter.begin()->first;
+    // Increment the index for next task
+    idx = (idx + 1) % schedulerQueues.size();
+  }
 
-        const char *libname = "the first lib";
-        //strrchr(device->library.libname, '/');
-
-        std::cout << "   [Scheduler]...........Setting "
-                  << libname << " as target device "
-                  << "for job with ID " << childQuantumTask.mTaskId
-                  << std::endl;
-
-        childQuantumTask.mScheduledQpu = device;
-    }
-
-    return 0; 
+  return 0;
 }
