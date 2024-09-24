@@ -19,7 +19,7 @@ int QDMI_backend_init(QInfo info)
     return QDMI_SUCCESS;
 }
 
-int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, int *numbits)
+int QDMI_control_readout_size(QDMI_Device dev, QDMI_Status *status, QDMI_Job job, int *numbits)
 {
     printf("    [Backend]..............Control readout size\n");
     return QDMI_SUCCESS;
@@ -55,7 +55,7 @@ int QDMI_control_pause(QDMI_Device dev, QDMI_Job *job, QInfo info)
     return QDMI_SUCCESS;
 }
 
-int QDMI_control_readout_hist_top(QDMI_Device dev, QDMI_Status *status,
+int QDMI_control_readout_hist_top(QDMI_Device dev, QDMI_Status *status, QDMI_Job job,
                                   int numhist, QInfo info, long *hist)
 {
     printf("    [Backend]..............Control readout hist top\n");
@@ -170,7 +170,7 @@ int QDMI_control_submit(QDMI_Device dev, QDMI_Fragment *frag, int numshots, QInf
     return QDMI_SUCCESS;
 }
 
-int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_id, int *num)
+int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, QDMI_Job job, int *num)
 {
     printf("    [Backend]..............Control readout raw num\n");
 
@@ -178,7 +178,7 @@ int QDMI_control_readout_raw_num(QDMI_Device dev, QDMI_Status *status, int task_
     return QDMI_SUCCESS;
 }
 
-int QDMI_control_readout_hist_size(QDMI_Device dev, QDMI_Status *status, int *size) {
+int QDMI_control_readout_hist_size(QDMI_Device dev, QDMI_Status *status, QDMI_Job job, int *size) {
     printf("    [Backend]..............Control readout hist size\n");
     return QDMI_SUCCESS;
 }
