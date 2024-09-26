@@ -8,11 +8,13 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS "-g")
 
+add_library(queue SHARED)
 add_library(round_robin SHARED)
-#add_library(heuristic SHARED)
+add_library(backfilling SHARED)
 
+target_include_directories(queue PUBLIC include/queue)
 target_include_directories(round_robin PUBLIC include/round_robin)
-#target_include_directories(heuristic PUBLIC include/heuristic)
+target_include_directories(backfilling PUBLIC include/backfilling)
 
 find_package(LLVM REQUIRED CONFIG)
 include_directories(${LLVM_INCLUDE_DIRS} include)

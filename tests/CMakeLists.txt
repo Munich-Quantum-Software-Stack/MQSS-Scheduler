@@ -1,7 +1,7 @@
-#add_executable(schedulerHeuristicTest schedulerHeuristicTest.cpp)
-#target_link_libraries(schedulerHeuristicTest heuristic LLVM)
-#add_test(NAME schedulerHeuristicTest COMMAND schedulerHeuristicTest)
+find_package(submitter REQUIRED)
 
-add_executable(schedulerRoundRobinTest schedulerRoundRobinTest.cpp)
-target_link_libraries(schedulerRoundRobinTest round_robin LLVM)
-add_test(NAME schedulerRoundRobinTest COMMAND schedulerRoundRobinTest)
+include_directories(${CMAKE_SOURCE_DIR}/include/setup)
+
+add_subdirectory(setup)
+add_subdirectory(round_robin)
+add_subdirectory(backfilling)
