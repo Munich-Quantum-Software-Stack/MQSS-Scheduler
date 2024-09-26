@@ -1,0 +1,110 @@
+[build-system]
+requires = [
+    "setuptools>=66.1",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "predictor"
+version = "0.1.0"
+dependencies = [
+    "numpy>=1.26.4",
+    "networkx>=3.3",
+    "qiskit>=1.1.1",
+    "scikit-learn>=1.5.1",
+    "skl2onnx>=1.17.0",
+    "onnxruntime>=1.19",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+requires-python = ">=3.10"
+
+[project.scripts]
+prepare-data = "predictor.data_preparation:_run_data_preparation"
+train-model = "predictor.training:_run_training"
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.ruff]
+line-length = 120
+preview = true
+unsafe-fixes = true
+show-fixes = true
+
+[tool.ruff.lint]
+extend-select = [
+    "A",           # flake8-builtins
+    "ANN",         # flake8-annotations
+    "ARG",         # flake8-unused-arguments
+    "ASYNC",       # flake8-async
+    "B",  "B904",  # flake8-bugbear
+    "C4",          # flake8-comprehensions
+    "D",           # pydocstyle
+    "EM",          # flake8-errmsg
+    "EXE",         # flake8-executable
+    "FA",          # flake8-future-annotations
+    "FLY",         # flynt
+    "FURB",        # refurb
+    "I",           # isort
+    "ICN",         # flake8-import-conventions
+    "ISC",         # flake8-implicit-str-concat
+    "LOG",         # flake8-logging-format
+    "N",           # flake8-naming
+    "NPY",         # numpy
+    "PERF",        # perflint
+    "PGH",         # pygrep-hooks
+    "PIE",         # flake8-pie
+    "PL",          # pylint
+    "PT",          # flake8-pytest-style
+    "PTH",         # flake8-use-pathlib
+    "PYI",         # flake8-pyi
+    "Q",           # flake8-quotes
+    "RET",         # flake8-return
+    "RSE",         # flake8-raise
+    "RUF",         # Ruff-specific
+    "SLF",         # flake8-self
+    "SLOT",        # flake8-slots
+    "SIM",         # flake8-simplify
+    "TCH",         # flake8-type-checking
+    "TID",         # flake8-tidy-imports
+    "TRY",         # tryceratops
+    "UP",          # pyupgrade
+    "YTT",         # flake8-2020
+]
+ignore = [
+    "ANN101",  # Missing type annotation for self in method
+    "ANN102",  # Missing type annotation for cls in classmethod
+    "ISC001",  # Conflicts with formatter
+    "E501",    # Line too long (Black is enough)
+    "PLR",     # Design related pylint codes
+    "S101",    # Use of assert detected
+]
+isort.required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+minversion = "7"
+addopts = "--strict-markers"
+testpaths = ["tests"]
+
+[tool.mypy]
+files = ["src", "tests"]
+python_version = "3.10"
+strict = true
+enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
+ignore_missing_imports = true
+warn_unreachable = true
+pretty = true
