@@ -10,7 +10,7 @@ Functions:
     Creates a dictionary of features for a given quantum circuit.
 - train_model(experiment_name: str):
     Runs the training process for the given experiment.
-- run_training():
+- _run_training():
     Python entry point to train a model on the experiment data.
 """
 
@@ -29,8 +29,6 @@ from skl2onnx.common.data_types import FloatTensorType
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
-
-__all__ = ["calc_supermarq_plus_features", "create_feature_dict", "train_model"]
 
 
 def calc_supermarq_plus_features(
@@ -304,7 +302,7 @@ def train_model(experiment_name: str) -> Path:
     return model_path
 
 
-def run_training() -> None:
+def _run_training() -> None:
     """Python entry point to train a model on the experiment data."""
     parser = argparse.ArgumentParser(description="Train a model on the experiment data.")
     parser.add_argument(

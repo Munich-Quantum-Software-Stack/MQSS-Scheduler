@@ -5,7 +5,7 @@ This module provides functions to prepare some test and example data for the tra
 Functions:
 - create_sample_circuit: Create a sample quantum circuit
 - prepare_sample_data: Prepare sample data for an experiment
-- run_data_preparation: Python entry point to prepare sample data for the training
+- _run_data_preparation: Python entry point to prepare sample data for the training
 """
 
 from __future__ import annotations
@@ -15,8 +15,6 @@ import pickle
 from pathlib import Path
 
 from qiskit import QuantumCircuit, qasm2
-
-__all__ = ["create_sample_circuit", "prepare_sample_data"]
 
 
 def create_sample_circuit(num_active_qubits: int, max_num_qubits: int) -> QuantumCircuit:
@@ -77,7 +75,7 @@ def prepare_sample_data(experiment_name: str) -> Path:
     return experiment_dir
 
 
-def run_data_preparation() -> None:
+def _run_data_preparation() -> None:
     """Python entry point to prepare sample data for the training."""
     parser = argparse.ArgumentParser(description="Set up an example experiment.")
     parser.add_argument(
