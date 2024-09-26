@@ -96,7 +96,7 @@ isort.required-imports = ["from __future__ import annotations"]
 convention = "google"
 
 [tool.pytest.ini_options]
-minversion = "7.4.4"
+minversion = "7"
 addopts = "--strict-markers"
 testpaths = ["tests"]
 
