@@ -16,7 +16,7 @@ git clone https://github.com/Munich-Quantum-Software-Stack/scheduler.git
 cd predictor
 ```
 
-Then, install the package using pip:
+Then, install the package using pip (preferably in a virtual environment):
 
 ```sh
 pip install .
