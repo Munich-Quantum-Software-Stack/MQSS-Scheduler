@@ -1,0 +1,31 @@
+Captured output from Pass:
+Quantum Operation: quake.h
+  Target Qubits: 0
+  Control Qubits: 
+Quantum Operation: quake.x
+  Target Qubits: 1
+  Control Qubits: 0
+Quantum Operation: quake.x
+  Target Qubits: 2
+  Control Qubits: 1
+Quantum Operation: quake.x
+  Target Qubits: 3
+  Control Qubits: 2
+Quantum Operation: quake.x
+  Target Qubits: 4
+  Control Qubits: 3
+Quantum Operation: quake.x
+  Target Qubits: 5
+  Control Qubits: 4
+Quantum Operation: quake.x
+  Target Qubits: 6
+  Control Qubits: 5
+Quantum Operation: quake.x
+  Target Qubits: 7
+  Control Qubits: 6
+Quantum Operation: quake.x
+  Target Qubits: 8
+  Control Qubits: 7
+Quantum Operation: quake.x
+  Target Qubits: 9
+  Control Qubits: 8
