@@ -8,11 +8,12 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
+#include <cmath>
 
 std::string get_device_name(QDMI_Device device) {
-  QDMI_Device_property prop = BACKEND_NAME;
+  QDMI_Device_Property prop = QDMI_DEVICE_PROPERTY_NAME; // QDMI_DEVICE_PROPERTY_NAME
   char *name = (char *)malloc(256);
-  int result = QDMI_query_device_property_c(device, prop, &name);
+  // int result = QDMI_query_device_property_c(device, prop, &name);
   std::string deviceName = name;
   free(name);
   return deviceName;
@@ -261,7 +262,7 @@ int backfilling(std::shared_ptr<QuantumTask> newTask,
  * @param tasks Vector of tasks to be scheduled.
  * @return 0 once all tasks have been scheduled.
  */
-extern "C" int
+int
 scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
           std::vector<std::shared_ptr<QuantumTask>> tasks) {
   // For easy access collect all available devices

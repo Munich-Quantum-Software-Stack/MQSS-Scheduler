@@ -8,7 +8,6 @@ target_include_directories(round_robin
 
 target_link_libraries(round_robin 
     PUBLIC 
-    qdmi 
     qinfo 
     LLVM 
     submitter 

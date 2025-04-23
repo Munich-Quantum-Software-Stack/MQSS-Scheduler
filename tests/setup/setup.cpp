@@ -9,7 +9,8 @@
  * the queues when all tasks have been executed.
  */
 #include "setup.hpp"
-#include "qdmi.h"
+#include "qinfo/qinfo.h"
+#include "qdmi/client.h"
 #include <filesystem>
 #include <iostream>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
@@ -97,23 +98,22 @@ createRandomTask(int taskID, const std::vector<QDMI_Device> &preferredDevices,
  * @return A vector of shared pointers to the SchedulerQueues
  */
 std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
-  std::cout << "   [Test]................Preparing SchedulerQueues."
-            << std::endl;
+  std::cout << "--------------------------------------------\n";
+  std::cout << "[setup] preparing SchedulerQueues\n";
 
-  QInfo info; // We need this stuff to set up the devices
+  QInfo info;
   QDMI_Session session = NULL;
   int err = QInfo_create(&info);
   if (QInfo_is_Error(err)) {
-    std::cerr << "Warning: Error during QInfo_create" << std::endl;
+    std::cerr << "[setup] Warning: error by QInfo_create()\n";
   }
-  err = QDMI_session_init(info, &session);
-  CHECK_ERR(err, "QDMI_session_init");
+  // err = QDMI_session_init(info, &session);
+  // CHECK_ERR(err, "[setup] QDMI_session_init\n");
   int count = -1;
 
   // Get the number of devices
-  QDMI_core_device_count(&session, &count);
-  std::cout << "   [Test]................Number of available devices: " << count
-            << std::endl;
+  // QDMI_core_device_count(&session, &count);
+  // std::cout << "[setup] Num. available devices: " << count << std::endl;
 
   std::unordered_map<QDMI_Device, std::shared_ptr<Submitter>> device2Submitter;
   std::vector<std::shared_ptr<SchedulerQueue>> queues;
@@ -122,8 +122,8 @@ std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
   // Add one SchedulerQueue and Submitter for each device
   for (int index = 0; index < count; index++) {
     QDMI_Device device;
-    err = QDMI_core_open_device(&session, index, &info, &device);
-    CHECK_ERR(err, "QDMI_core_open_device");
+    // err = QDMI_core_open_device(&session, index, &info, &device);
+    // CHECK_ERR(err, "[setup] QDMI_core_open_device\n");
     devices.push_back(device);
 
     // Init and store Submitter in map for later use
@@ -135,6 +135,7 @@ std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
     schedulerQueue->initialize();
     queues.push_back(schedulerQueue);
   }
+  std::cout << "--------------------------------------------\n";
 
   return queues;
 }
@@ -147,7 +148,7 @@ std::vector<std::shared_ptr<SchedulerQueue>> prepareQueues() {
  * @return 1 when all tasks have been executed
  */
 int allFinished(std::vector<std::shared_ptr<SchedulerQueue>> queues) {
-  std::cout << "   [Test]................Waiting for all tasks to be executed."
+  std::cout << "[setup] Waiting for all tasks to be executed."
             << std::endl;
   while (true) {
     bool allFinished = true;
@@ -162,7 +163,7 @@ int allFinished(std::vector<std::shared_ptr<SchedulerQueue>> queues) {
     }
     usleep(1000);
   }
-  std::cout << "   [Test]................All tasks have been executed."
+  std::cout << "[setup] All tasks have been executed."
             << std::endl;
   return 1;
 }

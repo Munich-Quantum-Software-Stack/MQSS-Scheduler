@@ -1,7 +1,7 @@
 #include "queue.hpp"
 #include "scheduler.hpp"
 #include <memory>
-#include <qdmi.h>
+#include <qdmi/client.h>
 #include <quantum_task.hpp>
 #include <unordered_map>
 #include <vector>

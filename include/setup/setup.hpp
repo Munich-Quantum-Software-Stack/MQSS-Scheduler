@@ -3,7 +3,7 @@
 
 #include "queue.hpp"
 #include <memory>
-#include <qdmi.h>
+#include <qdmi/client.h>
 #include <quantum_task.hpp>
 #include <submitter.hpp>
 #include <vector>

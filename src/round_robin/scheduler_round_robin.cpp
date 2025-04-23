@@ -14,21 +14,18 @@
  *
  * @return 0 once all tasks have been scheduled.
  */
-extern "C" int
-scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
+int scheduler(std::vector<std::shared_ptr<SchedulerQueue>> schedulerQueues,
           std::vector<std::shared_ptr<QuantumTask>> tasks) {
-  int idx = 0; // Round-robin device index
 
+  int idx = 0;
   for (auto &childQuantumTask : tasks) {
 
     // Assign the idx device to the task
-    childQuantumTask->mScheduledQpu =
-        schedulerQueues[idx]->mpSubmitter->mDevice;
+    childQuantumTask->mScheduledQpu = schedulerQueues[idx]->mpSubmitter->mDevice;
 
     // Add task to the end of the queue
     int queueSize = schedulerQueues[idx]->mTasks.size();
-    childQuantumTask->mExecutionOrder =
-        schedulerQueues[idx]->addTask(childQuantumTask, queueSize);
+    childQuantumTask->mExecutionOrder = schedulerQueues[idx]->addTask(childQuantumTask, queueSize);
 
     // Increment the index for next task
     idx = (idx + 1) % schedulerQueues.size();
