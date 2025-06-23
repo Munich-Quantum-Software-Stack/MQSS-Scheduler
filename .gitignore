@@ -6,6 +6,10 @@
 .mypy_cache
 .ruff_cache
 *.egg-info
+*.drawio
 
+install/
 build/
+tests/build/
 __pycache__
+

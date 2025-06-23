@@ -1,6 +1,6 @@
 # MQSS-Selector
 
-## MQSS Device & Pass Selector for Quantum Circuits
+## MQSS Device & Pass Selector for Quantum Circuit Optimization & Compilation
 
 Quantum computing circuits often require specific backend configurations and optimization passes tailored to the circuit's structure and requirements. This project provides:
 
@@ -18,7 +18,6 @@ Quantum computing circuits often require specific backend configurations and opt
 You can install the project dependencies using `pip`:
 
 ```bash
-git clone https://gitlab-int.srv.lrz.de/lrz-qct-qis/mqss-scheduler_playground.git
 pip install -r requirements.txt
 
 ```

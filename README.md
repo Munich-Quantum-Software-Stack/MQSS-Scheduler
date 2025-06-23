@@ -1,70 +1,88 @@
-# scheduler
+# MQSS Quantum Task Scheduler
+[comment]: <Branch: minh/ssintegrat - Integration of quantum task scheduler and device selector>
 
-## Description
-The scheduler library offers a `scheduler` function to select a suitable device for one or multiple `QuantumTask`s (i.e. setting the `mScheduledQpu` attribute).
-It also provides the `SchedulerQueue`s class which are observers of the `SubmitterQueue`s (see Submitter library).
-Any scheduling algorithm only works on the `SchedulerQueue`s, which in turn determine the `mExecutionOrder` attribute of its contained `QuantumTask`s.
+## Overview
+The **MQSS Quantum Task Scheduler** is a unified module for scheduling quantum tasks prior to dispatch on quantum hardware. It provides a flexible, modular design supporting multiple queue types, device selection strategies, and scheduling algorithms.
 
+---
 
-## Available Schedulers
-- Random Forest Regressor (device selection) + Backfilling (scheduling strategy)
+## Requirement
+The MQSS scheduler has some dependencies. Please make sure Cmake can find these packages/libraries installed, i.e., LLVM, submitter, QDMI.
+
+[comment]: <First, sudo apt update>
+
+[comment]: <Currently, llvm is installed from the Ubuntu distribution, apt-get install clang-format clang-tidy clang-tools clang clangd libc++-dev libc++1 libc++abi-dev libc++abi1 libclang-dev libclang1 liblldb-dev libllvm-ocaml-dev libomp-dev libomp5 lld lldb llvm-dev llvm-runtime llvm>
+
+[comment]: <The llvm version is llvm-18>
+
+---
+
+## 🧱 Core Components
+
+- **Queue**  
+  Provides the `SchedulerQueue` class, which observes `SubmitterQueue`s (defined in the [Submitter](https://github.com/Munich-Quantum-Software-Stack/submitter) library).
+
+- **Selector**  
+  Chooses a suitable quantum device based on circuit characteristics or processing passes.
+
+- **Scheduler**  
+  Implements various algorithms for managing task execution on queues.
+
+- **Linked Components**
+  + Submitter
+  + QDMI
+
+---
+
+## Available Device Selectors
+
+* Supervised Predictor:
+  - Random Forest-based Predictor
+  - MLP-based Predictor
+  - SVM-based Predictor
+  - TBA ...
+* Unsupervised Predictor:
+  - Genome-based Predictor
+  - RL-based Predictor
+  - TBA ...
+
+## Available Scheduling Algorithms
+
+- Backfilling
 - Round Robin
+- and to be more ...
 
+---
 
-## Getting Started
+## 📦 Requirements
 
-### Requirements
-- ONNX Runtime (only) for Random Forest Regressor (model inference)
+- Currently use [ONNX Runtime](https://onnxruntime.ai/) as a proxy for training and loading ML/DL models in the selector, to be updated.
 
-### Installation
+---
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/Munich-Quantum-Software-Stack/scheduler.git
-   cd scheduler
-   ```
-
-2. Create a build directory and navigate into it:
-   ```sh
-   mkdir build
-   cd build
-   ```
-
-3. Run CMake to configure the project:
-   ```sh
-   cmake ..
-   ```
-
-4. Build the project:
-   ```sh
-   make
-   ```
-
-### Running Tests
-After the project was built successfully.
-
-1. Navigate into the scheduler directory.
-```sh
-cd scheduler
+## Project Structure
+```bash
+scheduler/
+├── CMakeLists.txt
+├── cmake/
+├── selector/
+├── include/
+│   ├── scheduler/
+│       ├── scheduler.hpp
+│       ├── queue/
+│       ├── utils/
+├── src/
+│   ├── scheduler.cpp
+│   ├── queue/
+│   ├── utils/
+├── examples/
+├── test/
+│   ├── test_scheduler.cpp
+└── .clang-format
+└── .gitignore
+└── README.md
 ```
 
-2. Set the environment variables:
-```sh
-export QDMI_CONFIG_FILE="$(pwd)/tests/setup/config/.qdmi-config"
-```
+---
 
-3. Run the tests:
-```sh
-./build/tests/backfilling/schedulerBackfillingTest
-./build/tests/round_robin/schedulerRoundRobinTest
-```
-
-
-## Contributing
-
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes.
-4. Commit your changes (`git commit -am 'Add new feature'`).
-5. Push to the branch (`git push origin feature-branch`).
-6. Create a new Pull Request.
+## 🔧 Installation
