@@ -33,7 +33,7 @@ else()
   message(FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-# Expose Google Test
+# Expose Google Test and spdlog
 include(GoogleTest)
 
 # Compile the tests
@@ -53,6 +53,6 @@ set_tests_properties(
     Scheduler_QDMI_Test
     PROPERTIES
     ENVIRONMENT
-    "LD_LIBRARY_PATH=/home/admin/shared/QDMI/build/examples/driver:/home/admin/shared/QInfo/install/lib:/home/admin/shared/submitter/install/lib;QDMI_CONF=/home/admin/shared/CxxQDMI/build/tests/qdmi.conf"
+    "LD_LIBRARY_PATH=/home/admin/shared/QDMI/build/examples/driver:/home/admin/shared/QInfo/install/lib:/home/admin/shared/submitter/install/lib:/home/admin/shared/scheduler/build:/home/admin/shared/CxxQDMI/install/lib;QDMI_CONF=/home/admin/shared/CxxQDMI/build/tests/qdmi.conf"
 )
 

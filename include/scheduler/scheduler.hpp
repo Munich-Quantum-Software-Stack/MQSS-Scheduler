@@ -22,9 +22,12 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <random>
 #include <memory>
 #include <vector>
+#include <spdlog/spdlog.h>
 #include <quantum_task.hpp>
 
 #include "queue/queue.hpp"
+#include "utils/predictor.hpp"
+
 
 /**
  * @brief The Scheduler class, prividing attributes and methods regarding

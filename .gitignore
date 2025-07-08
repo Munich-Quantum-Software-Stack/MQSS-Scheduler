@@ -13,3 +13,5 @@ build/
 tests/build/
 __pycache__
 
+# macos stuff
+*.DS_Store

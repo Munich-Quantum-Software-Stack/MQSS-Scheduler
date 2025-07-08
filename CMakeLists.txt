@@ -28,7 +28,7 @@ enable_language(CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "-g")
+set(CMAKE_CXX_FLAGS "-g -DDEBUG")
 set(BUILD_SHARED_LIBS ON)
 
 # Include external dependencies and find packages
@@ -45,7 +45,9 @@ file(GLOB SCHEDULER_SRC
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/queue/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/utils/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/queue/*.hpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/utils/*.hpp"
 )
 add_library(scheduler SHARED ${SCHEDULER_SRC})
 set_target_properties(scheduler PROPERTIES LINKER_LANGUAGE CXX)
@@ -53,7 +55,7 @@ target_include_directories(scheduler PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
     ${QDMI_INCLUDE_DIR} ${CXXQDMI_INCLUDE_DIR} ${SUBMITTER_INCLUDE_DIR})
-target_link_libraries(scheduler PUBLIC LLVM Threads::Threads Qinfo ${CXXQDMI_LIBRARIES} ${SUBMITTER_LIBRARIES})
+target_link_libraries(scheduler PUBLIC LLVM Threads::Threads spdlog::spdlog Qinfo ${CXXQDMI_LIBRARIES} ${SUBMITTER_LIBRARIES})
 
 # Add the test
 enable_testing()
@@ -64,4 +66,9 @@ install(TARGETS scheduler
     LIBRARY DESTINATION lib
     INCLUDES DESTINATION include
 )
+
+# Install the header files of spdlog
+get_target_property(SPDLOG_SOURCE_DIR spdlog::spdlog SOURCE_DIR)
+install(DIRECTORY ${SPDLOG_SOURCE_DIR}/include/spdlog DESTINATION include)
+install(TARGETS spdlog LIBRARY DESTINATION lib)
 

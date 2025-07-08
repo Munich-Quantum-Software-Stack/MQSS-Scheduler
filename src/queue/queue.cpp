@@ -17,6 +17,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ------------------------------------------------------------------------------*/
 
 #include <scheduler/queue/queue.hpp>
+#include <spdlog/spdlog.h>
 
 /**
  * @brief The SchedulerQueue constructor and destructor, responsible for creating the
@@ -33,12 +34,11 @@ SchedulerQueue::SchedulerQueue() {
 	num_total_jobs = 0; // Initialize the total number of jobs
 	num_mqp_jobs   = 0; // Initialize the number of MQP jobs
 	num_hpcqc_jobs = 0; // Initialize the number of HPCQC jobs
-	std::cout << "[LOG-SCHEDULERQUEUE] Constructor: "
-			  << "sched_queue_ID=" << sched_queue_ID
-			  << ", num_total_jobs=" << num_total_jobs
-			  << ", num_mqp_jobs=" << num_mqp_jobs
-			  << ", num_hpcqc_jobs=" << num_hpcqc_jobs
-			  << std::endl;
+
+	spdlog::info("SCHEDULER_QUEUE: Constructor"
+				 " - sched_queue_ID={}, num_total_jobs={}, "
+				 "num_mqp_jobs={}, num_hpcqc_jobs={}",
+				 sched_queue_ID, num_total_jobs, num_mqp_jobs, num_hpcqc_jobs);
 }
 SchedulerQueue::~SchedulerQueue() { }
 
@@ -55,8 +55,7 @@ int SchedulerQueue::addJob(std::shared_ptr<QuantumTask> qjob) {
 
 	// Check the job valid or invalid
 	if (qjob == nullptr) {
-		std::cout << "[LOG-SCHEDULERQUEUE] Error: qjob is nullptr"
-            	  << std::endl;
+		spdlog::info("SCHEDULER_QUEUE: Error - qjob is nullptr");
 		exit(1);
 	} else {
 		jobs.push_back(qjob);
@@ -135,14 +134,13 @@ int SchedulerQueue::addJob(std::shared_ptr<QuantumTask> qjob) {
  * @return The job object
  */
 int SchedulerQueue::getJob(int job_id, std::shared_ptr<QuantumTask> &ret_job){
-	std::cout << "[LOG-SCHEDULERQUEUE] Dequeuing and getting Job"
-              << std::endl;
+
+	spdlog::info("SCHEDULER_QUEUE: Dequeuing and getting Job");
 	// find job and get the job in the scheduler queue
 	for (auto it = jobs.begin(); it != jobs.end(); ++it) {
 		if ((*it)->TaskId == job_id) {
 			ret_job = *it; // Assign the found job to ret_job
-			std::cout << "[LOG-SCHEDULERQUEUE] Job found: ID = "
-						<< ret_job->TaskId << std::endl;
+			spdlog::info("SCHEDULER_QUEUE: Job found, ID = {}", ret_job->TaskId);
 			// Remove the job from the queue
 			jobs.erase(it);
 			// Update the total number of jobs
@@ -166,23 +164,19 @@ int SchedulerQueue::getJob(int job_id, std::shared_ptr<QuantumTask> &ret_job){
  */
 int SchedulerQueue::removeJob(std::shared_ptr<QuantumTask> qjob) {
 
-	std::cout << "[LOG-SCHEDULERQUEUE] Removing Job from The Queue"
-              << std::endl;
+	spdlog::info("SCHEDULER_QUEUE: Removing Job from The Queue");
 
 	// Find the job in the queue
 	auto it = std::find(jobs.begin(), jobs.end(), qjob);
 	
 	// if the job is found and not found
 	if (it != jobs.end()) {
-		std::cerr << "[LOG-SCHEDULERQUEUE] Job found: ID = "
-				  << (*it)->TaskId
-				  << std::endl;
+		spdlog::info("SCHEDULER_QUEUE: Job found, ID = {}", (*it)->TaskId);
 		jobs.erase(it);
 		// update the total number of jobs
 		num_total_jobs = jobs.size();
 	} else {
-		std::cerr << "[LOG-SCHEDULERQUEUE] Job not found: "
-				  << std::endl;
+		spdlog::info("SCHEDULER_QUEUE: Job not found, ID = {}", qjob->TaskId);
 		return -1;
 	}
 

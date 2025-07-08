@@ -43,8 +43,7 @@ class Scheduler_QDMI_Test
 protected:
     void SetUp() override {
         auto params = GetParam();
-        session = std::make_unique<qdmi::Session>(std::get<0>(params),
-                                              std::get<1>(params));
+        session = std::make_unique<qdmi::Session>(std::get<0>(params), std::get<1>(params));
     }
 
     void TearDown() override {}
