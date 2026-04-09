@@ -49,10 +49,37 @@ add_test(NAME Scheduler_QDMI_Test COMMAND gtest_scheduler)
 # message(STATUS "[CMAKE-CHECK] qdmi_BINARY_DIR: ${qdmi_BINARY_DIR}")
 # message(STATUS "[CMAKE-CHECK] CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 
+set(WORKDIR "/home/admin/shared")
+set(QDMI_INC "${WORKDIR}/QDMI/install/include")
+set(QDMI_EXAMPLE_DRIVER "${WORKDIR}/QDMI/build/examples/driver")
+set(QDMI_EXAMPLE_DEVICE "${WORKDIR}/QDMI/build/examples/device/cxx")
+set(QDMI_FCXX_DEV "${WORKDIR}/CxxQDMI/build/src")
+set(QINFO_INC "${WORKDIR}/QInfo/install/include")
+set(QINFO_LIB "${WORKDIR}/QInfo/install/lib")
+set(SUBMITTER_INC "${WORKDIR}/submitter/install/include")
+set(SUBMITTER_LIB "${WORKDIR}/submitter/install/lib")
+set(LLVM_INC "${WORKDIR}/dependencies/installed/include")
+set(LLVM_LIB "${WORKDIR}/dependencies/installed/lib")
+set(LLVM_ROOT "${WORKDIR}/dependencies/installed")
+set(CXX_QDMI_ROOT "${WORKDIR}/CxxQDMI/install")
+set(CXX_QDMI_BUILD_DIR "${WORKDIR}/CxxQDMI/build")
+
+set(TEST_LD_LIBRARY_PATH
+    "${LLVM_ROOT}/lib"
+    "${QDMI_EXAMPLE_DRIVER}"
+    "${QDMI_EXAMPLE_DEVICE}"
+    "${QINFO_LIB}"
+    "${SUBMITTER_LIB}"
+    "${CMAKE_BINARY_DIR}"
+    "/usr/local/lib"
+)
+
+list(JOIN TEST_LD_LIBRARY_PATH ":" TEST_LD_LIBRARY_PATH_STR)
+
 set_tests_properties(
     Scheduler_QDMI_Test
     PROPERTIES
     ENVIRONMENT
-    "LD_LIBRARY_PATH=/home/admin/shared/QDMI/build/examples/driver:/home/admin/shared/QInfo/install/lib:/home/admin/shared/submitter/install/lib:/home/admin/shared/scheduler/build:/home/admin/shared/CxxQDMI/install/lib;QDMI_CONF=/home/admin/shared/CxxQDMI/build/tests/qdmi.conf"
+    "LD_LIBRARY_PATH=${TEST_LD_LIBRARY_PATH_STR};QDMI_CONF=${CXX_QDMI_BUILD_DIR}/tests/qdmi.conf"
 )
 

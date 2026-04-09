@@ -20,45 +20,43 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #define SCHEDULER_QUEUE_H
 
 #include <deque>
-#include <random>
-#include <memory>
 #include <iostream>
+#include <memory>
 #include <quantum_task.hpp>
+#include <random>
 #include <submitter.hpp>
 
 /**
  * @brief The SchedulerQueue class, providing attributes and methods for the queue
  * at the Scheduler side. This queue holds tasks received from MQP (via Cloud) and HPCQC.
- * 
+ *
  * To be simple, the SchedulerQueue object has its own methods that might override the functions
  * of the Submitter class.
  */
 class SchedulerQueue {
 
 public:
-
-	// ---------------------------------------------------
+    // ---------------------------------------------------
     // Attributes
     // ---------------------------------------------------
-	int sched_queue_ID;
-	int num_total_jobs;
-	int num_mqp_jobs;
-	int num_hpcqc_jobs;
-	std::deque<std::shared_ptr<QuantumTask>> jobs = {};
+    int sched_queue_ID;
+    int num_total_jobs;
+    int num_mqp_jobs;
+    int num_hpcqc_jobs;
+    std::deque<std::shared_ptr<QuantumTask>> jobs = {};
 
-	// ---------------------------------------------------
+    // ---------------------------------------------------
     // Constructors and Destructors
     // ---------------------------------------------------
-	SchedulerQueue();
-	~SchedulerQueue();
+    SchedulerQueue();
+    ~SchedulerQueue();
 
-	// ---------------------------------------------------
+    // ---------------------------------------------------
     // Methods
     // ---------------------------------------------------
-	int addJob(std::shared_ptr<QuantumTask> qjob);
-	int getJob(int job_id, std::shared_ptr<QuantumTask> &ret_qjob);
-	int removeJob(std::shared_ptr<QuantumTask> qjob);
-
+    int addJob(std::shared_ptr<QuantumTask> qjob);
+    int getJob(int job_id, std::shared_ptr<QuantumTask> &ret_qjob);
+    int removeJob(std::shared_ptr<QuantumTask> qjob);
 };
 
 #endif // SCHEDULER_QUEUE_HPP

@@ -27,20 +27,20 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  * and be waited for further scheduling.
  */
 SchedulerQueue::SchedulerQueue() {
-	std::random_device rd;      	// obtain randomization from hardware
-    std::mt19937 gen(rd());     	// seed the generator
+    std::random_device rd;                             // obtain randomization from hardware
+    std::mt19937 gen(rd());                            // seed the generator
     std::uniform_int_distribution<> distr(1000, 9999); // define the range
-	sched_queue_ID = distr(gen);	// Initialize the queue ID
-	num_total_jobs = 0; // Initialize the total number of jobs
-	num_mqp_jobs   = 0; // Initialize the number of MQP jobs
-	num_hpcqc_jobs = 0; // Initialize the number of HPCQC jobs
+    sched_queue_ID = distr(gen);                       // Initialize the queue ID
+    num_total_jobs = 0;                                // Initialize the total number of jobs
+    num_mqp_jobs = 0;                                  // Initialize the number of MQP jobs
+    num_hpcqc_jobs = 0;                                // Initialize the number of HPCQC jobs
 
-	spdlog::info("SCHEDULER_QUEUE: Constructor"
-				 " - sched_queue_ID={}, num_total_jobs={}, "
-				 "num_mqp_jobs={}, num_hpcqc_jobs={}",
-				 sched_queue_ID, num_total_jobs, num_mqp_jobs, num_hpcqc_jobs);
+    spdlog::info("SCHEDULER_QUEUE: Constructor"
+                 " - sched_queue_ID={}, num_total_jobs={}, "
+                 "num_mqp_jobs={}, num_hpcqc_jobs={}",
+                 sched_queue_ID, num_total_jobs, num_mqp_jobs, num_hpcqc_jobs);
 }
-SchedulerQueue::~SchedulerQueue() { }
+SchedulerQueue::~SchedulerQueue() {}
 
 /**
  * @brief Function adding jobs to the Scheduler queue
@@ -53,74 +53,74 @@ SchedulerQueue::~SchedulerQueue() { }
  */
 int SchedulerQueue::addJob(std::shared_ptr<QuantumTask> qjob) {
 
-	// Check the job valid or invalid
-	if (qjob == nullptr) {
-		spdlog::info("SCHEDULER_QUEUE: Error - qjob is nullptr");
-		exit(1);
-	} else {
-		jobs.push_back(qjob);
-	}
+    // Check the job valid or invalid
+    if (qjob == nullptr) {
+        spdlog::info("SCHEDULER_QUEUE: Error - qjob is nullptr");
+        exit(1);
+    } else {
+        jobs.push_back(qjob);
+    }
 
-	// Update the queue size
-	int queue_size = jobs.size();
-	num_total_jobs = queue_size;
+    // Update the queue size
+    int queue_size = jobs.size();
+    num_total_jobs = queue_size;
 
-	/*
-	if (position < 0 || position > this->mTasks.size()) {
-	throw std::out_of_range("[LOG-SCHEDULERQUEUE] Position is out of range");
-	}
+    /*
+    if (position < 0 || position > this->mTasks.size()) {
+    throw std::out_of_range("[LOG-SCHEDULERQUEUE] Position is out of range");
+    }
 
-	double newExecutionOrder = 0.0;
-	double executionOrderIncrement = 1.0e12;
+    double newExecutionOrder = 0.0;
+    double executionOrderIncrement = 1.0e12;
 
-	// If queue is empty
-	if (this->mTasks.size() == 0) {
-	newExecutionOrder = executionOrderIncrement;
-	}
+    // If queue is empty
+    if (this->mTasks.size() == 0) {
+    newExecutionOrder = executionOrderIncrement;
+    }
 
-	// If the task is inserted at the end of the (non-empty) queue
-	else if (position == this->mTasks.size()) {
-	std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
-	newExecutionOrder = prevTask->mExecutionOrder + executionOrderIncrement;
-	}
+    // If the task is inserted at the end of the (non-empty) queue
+    else if (position == this->mTasks.size()) {
+    std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
+    newExecutionOrder = prevTask->mExecutionOrder + executionOrderIncrement;
+    }
 
-	// If the task is inserted at the beginning of the (non-empty) queue
-	else if (position == 0) {
-	std::shared_ptr<QuantumTask> nextTask = this->mTasks[0];
+    // If the task is inserted at the beginning of the (non-empty) queue
+    else if (position == 0) {
+    std::shared_ptr<QuantumTask> nextTask = this->mTasks[0];
 
-	// If we run out of numbers, throw a warning
-	if (nextTask->mExecutionOrder == 0) {
-		std::cerr << "[LOG-SCHEDULERQUEUE] Ran out of execution order numbers"
-				<< std::endl;
-	}
-	newExecutionOrder = nextTask->mExecutionOrder / 2;
-	}
+    // If we run out of numbers, throw a warning
+    if (nextTask->mExecutionOrder == 0) {
+            std::cerr << "[LOG-SCHEDULERQUEUE] Ran out of execution order numbers"
+                            << std::endl;
+    }
+    newExecutionOrder = nextTask->mExecutionOrder / 2;
+    }
 
-	// If the task is inserted in the middle of the (non-empty) queue
-	else {
-	std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
-	std::shared_ptr<QuantumTask> nextTask = this->mTasks[position];
-	newExecutionOrder =
-		(prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
+    // If the task is inserted in the middle of the (non-empty) queue
+    else {
+    std::shared_ptr<QuantumTask> prevTask = this->mTasks[position - 1];
+    std::shared_ptr<QuantumTask> nextTask = this->mTasks[position];
+    newExecutionOrder =
+            (prevTask->mExecutionOrder + nextTask->mExecutionOrder) / 2;
 
-	// If we run out of numbers, throw a warning
-	if (newExecutionOrder == prevTask->mExecutionOrder) {
-		std::cerr << "[LOG-SCHEDULERQUEUE] Ran out of execution order numbers"
-				<< std::endl;
-	}
-  }
+    // If we run out of numbers, throw a warning
+    if (newExecutionOrder == prevTask->mExecutionOrder) {
+            std::cerr << "[LOG-SCHEDULERQUEUE] Ran out of execution order numbers"
+                            << std::endl;
+    }
+}
 
-  // Set the execution order of the new task
-  quantumTask->mExecutionOrder = newExecutionOrder;
+// Set the execution order of the new task
+quantumTask->mExecutionOrder = newExecutionOrder;
 
-  // Insert the task at the specified position in the queue
-  this->mTasks.insert(this->mTasks.begin() + position, quantumTask);
+// Insert the task at the specified position in the queue
+this->mTasks.insert(this->mTasks.begin() + position, quantumTask);
 
-  // Update the total duration of the queue
-  this->mTotalDuration += quantumTask->mDuration;
-  */
+// Update the total duration of the queue
+this->mTotalDuration += quantumTask->mDuration;
+*/
 
-  return 0;
+    return 0;
 }
 
 /**
@@ -133,30 +133,29 @@ int SchedulerQueue::addJob(std::shared_ptr<QuantumTask> qjob) {
  * @param qjob_id The job to be handled
  * @return The job object
  */
-int SchedulerQueue::getJob(int job_id, std::shared_ptr<QuantumTask> &ret_job){
+int SchedulerQueue::getJob(int job_id, std::shared_ptr<QuantumTask> &ret_job) {
 
-	spdlog::info("SCHEDULER_QUEUE: Dequeuing and getting Job");
-	// find job and get the job in the scheduler queue
-	for (auto it = jobs.begin(); it != jobs.end(); ++it) {
-		if ((*it)->TaskId == job_id) {
-			ret_job = *it; // Assign the found job to ret_job
-			spdlog::info("SCHEDULER_QUEUE: Job found, ID = {}", ret_job->TaskId);
-			// Remove the job from the queue
-			jobs.erase(it);
-			// Update the total number of jobs
-			num_total_jobs = jobs.size();
-			return 0;
-		}
-	}
-	ret_job = nullptr;
-	return -1;
+    spdlog::info("SCHEDULER_QUEUE: Dequeuing and getting Job");
+    // find job and get the job in the scheduler queue
+    for (auto it = jobs.begin(); it != jobs.end(); ++it) {
+        if ((*it)->TaskId == job_id) {
+            ret_job = *it; // Assign the found job to ret_job
+            spdlog::info("SCHEDULER_QUEUE: Job found, ID = {}", ret_job->TaskId);
+            // Remove the job from the queue
+            jobs.erase(it);
+            // Update the total number of jobs
+            num_total_jobs = jobs.size();
+            return 0;
+        }
+    }
+    ret_job = nullptr;
+    return -1;
 }
-
 
 /**
  * @brief Function removing jobs from the Scheduler queue
  *
- * This method will handle removing jobs in the queue. In the case, that job is requested to be 
+ * This method will handle removing jobs in the queue. In the case, that job is requested to be
  * remove and no need to be executed.
  *
  * @param qjob The job to be removed
@@ -164,43 +163,43 @@ int SchedulerQueue::getJob(int job_id, std::shared_ptr<QuantumTask> &ret_job){
  */
 int SchedulerQueue::removeJob(std::shared_ptr<QuantumTask> qjob) {
 
-	spdlog::info("SCHEDULER_QUEUE: Removing Job from The Queue");
+    spdlog::info("SCHEDULER_QUEUE: Removing Job from The Queue");
 
-	// Find the job in the queue
-	auto it = std::find(jobs.begin(), jobs.end(), qjob);
-	
-	// if the job is found and not found
-	if (it != jobs.end()) {
-		spdlog::info("SCHEDULER_QUEUE: Job found, ID = {}", (*it)->TaskId);
-		jobs.erase(it);
-		// update the total number of jobs
-		num_total_jobs = jobs.size();
-	} else {
-		spdlog::info("SCHEDULER_QUEUE: Job not found, ID = {}", qjob->TaskId);
-		return -1;
-	}
+    // Find the job in the queue
+    auto it = std::find(jobs.begin(), jobs.end(), qjob);
 
-	/*
-	// Find the task in the queue
-	auto it = std::find(this->mTasks.begin(), this->mTasks.end(), quantumTask);
+    // if the job is found and not found
+    if (it != jobs.end()) {
+        spdlog::info("SCHEDULER_QUEUE: Job found, ID = {}", (*it)->TaskId);
+        jobs.erase(it);
+        // update the total number of jobs
+        num_total_jobs = jobs.size();
+    } else {
+        spdlog::info("SCHEDULER_QUEUE: Job not found, ID = {}", qjob->TaskId);
+        return -1;
+    }
 
-	// If the task is not in the queue
-	if (it == this->mTasks.end()) {
-	std::cerr << " [SchedulerQueue]......Task " << quantumTask->mTaskId
-				<< " not found in SchedulerQueue within tasks: ";
-	for (auto task : this->mTasks) {
-		std::cerr << task->mTaskId << " ";
-	}
-	std::cerr << std::endl;
-	return -1;
-	}
+    /*
+    // Find the task in the queue
+    auto it = std::find(this->mTasks.begin(), this->mTasks.end(), quantumTask);
 
-	// Remove the task from the queue
-	this->mTasks.erase(it);
+    // If the task is not in the queue
+    if (it == this->mTasks.end()) {
+    std::cerr << " [SchedulerQueue]......Task " << quantumTask->mTaskId
+                            << " not found in SchedulerQueue within tasks: ";
+    for (auto task : this->mTasks) {
+            std::cerr << task->mTaskId << " ";
+    }
+    std::cerr << std::endl;
+    return -1;
+    }
 
-	// Update the total duration of the queue
-	this->mTotalDuration -= quantumTask->mDuration;
-	*/
+    // Remove the task from the queue
+    this->mTasks.erase(it);
 
-	return 0;
+    // Update the total duration of the queue
+    this->mTotalDuration -= quantumTask->mDuration;
+    */
+
+    return 0;
 }

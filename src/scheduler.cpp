@@ -33,10 +33,10 @@ Scheduler::Scheduler() {
     estimated_total_duration = 0.0;
 
     // Generate a random ID for the scheduler
-    std::random_device rd;      // obtain randomization from hardware
-    std::mt19937 gen(rd());     // seed the generator
+    std::random_device rd;                           // obtain randomization from hardware
+    std::mt19937 gen(rd());                          // seed the generator
     std::uniform_int_distribution<> distr(100, 999); // define the range
-    schedulerID = distr(gen);   // generate a random ID between 100 and 999
+    schedulerID = distr(gen);                        // generate a random ID between 100 and 999
     sched_queue = std::make_shared<SchedulerQueue>();
 
     spdlog::info("-------------------------------");
@@ -58,17 +58,17 @@ Scheduler::~Scheduler() {
  * upcoming jobs from MQP/HPCQC. If the submitted job is determined with a device selection,
  * the Scheduler Selector will skip, otherwise, it will handle device selection.
  */
-void Scheduler::initScheduler(){
-    
+void Scheduler::initScheduler() {
+
     scheduler_thread = std::thread([this]() {
-		while (!sched_stop) {
-			{
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        while (!sched_stop) {
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 spdlog::info("SCHEDULER-Thread: {} jobs in the queue", sched_queue->num_total_jobs);
                 if (submitters.empty()) {
                     spdlog::info("SCHEDULER-Thread: No Submitters available.");
                 } else {
-                    for (auto& submitter : submitters) {
+                    for (auto &submitter : submitters) {
                         if (submitter->getQueueSize() > 0) {
                             spdlog::info("SCHEDULER-Thread: Submitter BUSY.");
                         } else {
@@ -76,19 +76,19 @@ void Scheduler::initScheduler(){
                         }
                     } // Iterate through all submitters
                 }
-			}
-		}
-	});
+            }
+        }
+    });
 }
 
-void Scheduler::finiScheduler(){
+void Scheduler::finiScheduler() {
     sched_stop = true;
-	if (scheduler_thread.joinable()) {
-		scheduler_thread.join();
-	}
-    sched_queue->jobs.clear();  // Clear the scheduler queue
-    sched_queue.reset();        // Reset the shared pointer to the queue
-    submitters.clear();         // Clear the list of submitters
+    if (scheduler_thread.joinable()) {
+        scheduler_thread.join();
+    }
+    sched_queue->jobs.clear(); // Clear the scheduler queue
+    sched_queue.reset();       // Reset the shared pointer to the queue
+    submitters.clear();        // Clear the list of submitters
     spdlog::info("-------------------------------");
     spdlog::info("SCHEDULER-Thread: finalized successfully.");
     spdlog::info("-------------------------------");
@@ -103,14 +103,14 @@ void Scheduler::finiScheduler(){
  * @param qjob The job to be handled
  * @param submitter The submitter to handle the job
  */
-void Scheduler::handleJobs2Submitters(int qjob_id, Submitter* submitter_ptr) {
+void Scheduler::handleJobs2Submitters(int qjob_id, Submitter *submitter_ptr) {
 
     spdlog::info("SCHEDULER: handling job to Submitter.");
 
     // check if the job is valid and exists in the schduler queue
     if (submitter_ptr == nullptr) {
         spdlog::info("SCHEDULER: Error - qjob/submitter does not exist.");
-		exit(1);
+        exit(1);
     } else {
         // check the size of the scheduler queue
         int num_current_jobs = sched_queue->jobs.size();
@@ -118,7 +118,7 @@ void Scheduler::handleJobs2Submitters(int qjob_id, Submitter* submitter_ptr) {
             spdlog::info("SCHEDULER: No jobs in the queue.");
             return;
         } else {
-            // temporarily pop the job from the queue, this means 
+            // temporarily pop the job from the queue, this means
             // the job is always popped from the front
             std::shared_ptr<QuantumTask> selected_job;
             sched_queue->getJob(qjob_id, selected_job);
@@ -133,9 +133,7 @@ void Scheduler::handleJobs2Submitters(int qjob_id, Submitter* submitter_ptr) {
  *
  * This method will schedule the jobs in the queue using the FCFS method.
  */
-void Scheduler::scheduleFCFS() {
-    spdlog::info("SCHEDULER: Scheduling Quantum Jobs using FCFS");
-}
+void Scheduler::scheduleFCFS() { spdlog::info("SCHEDULER: Scheduling Quantum Jobs using FCFS"); }
 
 /**
  * @brief Function for scheduling jobs using Round Robin (RR) method
@@ -160,8 +158,6 @@ void Scheduler::scheduleBF() {
  *
  * This method will schedule the jobs in the queue using the Mix-N-Multi method.
  */
-void Scheduler::scheduleMNM() {
-    spdlog::info("SCHEDULER: Scheduling Quantum Jobs using MNM");
-}
+void Scheduler::scheduleMNM() { spdlog::info("SCHEDULER: Scheduling Quantum Jobs using MNM"); }
 
 #endif // SCHEDULER_CPP

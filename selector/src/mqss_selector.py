@@ -1,6 +1,6 @@
 
 import argparse
-from pass_predictor import *
+from mqss.scheduler.selector.src.mqss_dev_pass_predictor import *
 from target_predictor import *
 from qiskit import QuantumCircuit
 

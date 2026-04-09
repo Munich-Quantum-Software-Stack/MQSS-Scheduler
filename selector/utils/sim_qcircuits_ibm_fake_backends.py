@@ -143,8 +143,6 @@ if __name__ == "__main__":
 
                 # execute the circuit
                 execute_circuit(input_circuit, set_backends, 1000, input_path)
-
-        # df_wide = benchmark_on_fakes_wide(con_circuits, fake_backends=set_fakes, shots=1000000, path=str(output_path))
         
     except Exception as e:
         print(f'Error: {e}')

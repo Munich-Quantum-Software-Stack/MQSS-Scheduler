@@ -19,8 +19,14 @@
 # ------------------------------------------------------------------------------
 # FindCxxQDMI.cmake
 # ------------------------------------------------------------------------------
-set(QDMI_ROOT "/home/admin/shared/QDMI/install")
-set(CXXQDMI_ROOT "/home/admin/shared/CxxQDMI/install")
+if(NOT QDMI_ROOT)
+    set(QDMI_ROOT "/home/admin/shared/QDMI/install" CACHE PATH "Path to QDMI root install")
+endif()
+
+if(NOT CXXQDMI_ROOT)
+    set(CXXQDMI_ROOT "/home/admin/shared/CxxQDMI/install" CACHE PATH "Path to CxxQDMI root install")
+endif()
+
 set(CMAKE_PREFIX_PATH "${QDMI_ROOT};${CXXQDMI_ROOT};${CMAKE_PREFIX_PATH}")
 
 # ------------------------------------------------------------------------------

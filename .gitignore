@@ -1,4 +1,6 @@
+# ------------------------------------------------------------------------------
 # Unnecessary files and folders to ignore
+# ------------------------------------------------------------------------------
 .DS_Store
 .cache
 .vscode
@@ -7,11 +9,35 @@
 .ruff_cache
 *.egg-info
 *.drawio
-
-install/
-build/
-tests/build/
 __pycache__
 
-# macos stuff
-*.DS_Store
+# ------------------------------------------------------------------------------
+# CMake build and install outputs
+# ------------------------------------------------------------------------------
+build/
+install/
+**/build/
+**/install/
+
+# CMake generated files that don't belong in source control
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+compile_commands.json
+
+# ------------------------------------------------------------------------------
+# Compiled artifacts
+# ------------------------------------------------------------------------------
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+
+# ------------------------------------------------------------------------------
+# Dependencies: cloned sources and installed binaries are local only
+# ------------------------------------------------------------------------------
+dependencies/src/
+dependencies/installed/

@@ -1,8 +1,9 @@
 WORKDIR=/home/admin/shared
 
 CXX=g++
+MPICXX=/usr/lib64/openmpi/bin/mpicxx
 CXXFLAGS=-O3 -std=c++17 -g
-LDFLAGS=-L/usr/lib/llvm-18/lib -lLLVM-18 \
+LDFLAGS=-L$(WORKDIR)/dependencies/installed/lib  -lLLVM-16 \
 		-lqinfo -L$(WORKDIR)/QInfo/install/lib \
 		-lqdmi_cpp -L$(WORKDIR)/CxxQDMI/install/lib -L$(WORKDIR)/QDMI/build/examples/device/cxx \
 		-lsubmitter -L$(WORKDIR)/submitter/install/lib \
@@ -14,16 +15,16 @@ INCFLAGS=-I/usr/lib/llvm-18/include \
 		-I$(WORKDIR)/submitter/install/include \
 		-I$(WORKDIR)/scheduler/include
 
-INPUT=qcjob_submission.cpp
-OUTPUT=qcjob_submission
+INPUT=multiprocs_mqss_scheduler.cpp 
+OUTPUT=multiprocs_mqss_scheduler
 
-all: qcjob_submit
+all: mqss_scheduler
 
-qcjob_submit:
-	$(CXX) $(INPUT) -o $(OUTPUT) $(CXXFLAGS) $(LDFLAGS) $(INCFLAGS)
+mqss_scheduler:
+	$(MPICXX) $(INPUT) -o $(OUTPUT) $(CXXFLAGS) $(LDFLAGS) $(INCFLAGS)
 
 run:
-	./$(OUTPUT)
+	mpirun -np 3 ./$(OUTPUT)
 
 clean:
 	rm -rf $(OUTPUT)
