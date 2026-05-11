@@ -31,8 +31,7 @@ set(BUILD_SHARED_LIBS ON)
 # Find QDMI (headers only needed — provides qdmi/client.h, qdmi/types.h)
 # ------------------------------------------------------------------------------
 if(NOT QDMI_ROOT)
-  set(QDMI_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../installed" CACHE PATH
-      "Path to QDMI install prefix")
+  get_filename_component(QDMI_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../installed" REALPATH CACHE)
 endif()
 
 find_path(QDMI_INCLUDE_DIR
@@ -74,3 +73,10 @@ add_library(qdmi::cpp ALIAS qdmi_cpp_shared)
 install(DIRECTORY include/ DESTINATION include)
 install(TARGETS qdmi_cpp_shared LIBRARY DESTINATION lib)
 install(TARGETS qdmi_cpp_static ARCHIVE DESTINATION lib)
+
+# ------------------------------------------------------------------------------
+# Tests
+# ------------------------------------------------------------------------------
+find_package(GTest REQUIRED)
+enable_testing()
+add_subdirectory(test)

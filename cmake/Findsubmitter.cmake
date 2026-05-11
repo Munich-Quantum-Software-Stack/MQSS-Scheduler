@@ -18,25 +18,32 @@
 
 # ------------------------------------------------------------------------------
 # FindSubmitter.cmake
+#
+# Imported variables:
+#   SUBMITTER_FOUND        - True if found
+#   SUBMITTER_INCLUDE_DIR  - Directory containing submitter.hpp
+#   SUBMITTER_LIBRARIES    - Full path to libsubmitter
 # ------------------------------------------------------------------------------
-set(SUBMITTER_ROOT "/home/admin/shared/submitter/install")
-set(CMAKE_PREFIX_PATH "${SUBMITTER_ROOT};${CMAKE_PREFIX_PATH}")
 
-# ------------------------------------------------------------------------------
-# Submitter Headers and Libs
-# ------------------------------------------------------------------------------
+# Default root: dependencies/installed/ (relative to this file's location)
+if(NOT SUBMITTER_ROOT)
+    set(SUBMITTER_ROOT
+        "${CMAKE_CURRENT_LIST_DIR}/../dependencies/installed"
+        CACHE PATH "Path to submitter install prefix")
+endif()
+
 find_path(SUBMITTER_INCLUDE_DIR
     NAMES submitter.hpp
-    PATHS ${SUBMITTER_ROOT}/include
+    PATHS "${SUBMITTER_ROOT}/include"
+    NO_DEFAULT_PATH
 )
 find_library(SUBMITTER_LIBRARY
     NAMES submitter
-    PATHS ${SUBMITTER_ROOT}/lib
+    PATHS "${SUBMITTER_ROOT}/lib"
+          "${SUBMITTER_ROOT}/lib64"
+    NO_DEFAULT_PATH
 )
 
-# ------------------------------------------------------------------------------
-# Check If Submitter Found
-# ------------------------------------------------------------------------------
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(submitter
     REQUIRED_VARS SUBMITTER_LIBRARY SUBMITTER_INCLUDE_DIR

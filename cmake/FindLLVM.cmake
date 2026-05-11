@@ -17,26 +17,35 @@
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-# LLVM Headers and Library
+# FindLLVM.cmake
+#
+# Wrapper that locates the pre-built LLVM installation via its own
+# LLVMConfig.cmake. Sets LLVM_DIR and delegates to the official config module
+# so all LLVM imported targets (e.g. "LLVM") and variables are available.
+#
+# Set LLVM_ROOT to override the search location. Default is the value of
+# the LLVM_ROOT environment variable, or /home/admin/shared/dependencies/installed
+# (the shared LLVM pre-built by the top-level dependency scripts).
 # ------------------------------------------------------------------------------
-if(NOT LLVM_ROOT)
-    set(LLVM_ROOT "/usr" CACHE PATH "Path to LLVM root install")
-endif()
-find_path(LLVM_INCLUDE_DIR
-    NAMES llvm/IR/LLVMContext.h
-    PATHS /usr/include)
-find_library(LLVM_LIBRARY 
-    NAMES LLVM 
-    PATHS /usr/lib/llvm-18/lib)
 
-# ------------------------------------------------------------------------------
-# Check If LLVM Found
-# ------------------------------------------------------------------------------
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(LLVM DEFAULT_MSG LLVM_LIBRARY LLVM_INCLUDE_DIR)
-message(STATUS "LLVM_LIBRARY        = ${LLVM_LIBRARY}")
-message(STATUS "LLVM_INCLUDE_DIR    = ${LLVM_INCLUDE_DIR}")
-if(LLVM_FOUND)
-    set(LLVM_LIBRARY ${SUBMITTER_LIBRARY})
-    set(LLVM_INCLUDE_DIR ${SUBMITTER_INCLUDE_DIR})
+if(NOT LLVM_ROOT)
+    if(DEFINED ENV{LLVM_ROOT})
+        set(LLVM_ROOT "$ENV{LLVM_ROOT}" CACHE PATH "Path to LLVM root install")
+    else()
+        set(LLVM_ROOT "/home/admin/shared/dependencies/installed"
+            CACHE PATH "Path to LLVM root install")
+    endif()
 endif()
+
+set(LLVM_DIR "${LLVM_ROOT}/lib/cmake/llvm" CACHE PATH "Path to LLVMConfig.cmake" FORCE)
+
+# Delegate to the official LLVM config — provides all imported targets and vars
+find_package(LLVM CONFIG REQUIRED
+    HINTS "${LLVM_DIR}"
+    NO_CMAKE_FIND_ROOT_PATH
+)
+
+message(STATUS "LLVM_ROOT         = ${LLVM_ROOT}")
+message(STATUS "LLVM_DIR          = ${LLVM_DIR}")
+message(STATUS "LLVM_VERSION      = ${LLVM_VERSION}")
+message(STATUS "LLVM_INCLUDE_DIRS = ${LLVM_INCLUDE_DIRS}")

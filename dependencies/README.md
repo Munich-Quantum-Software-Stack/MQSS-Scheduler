@@ -18,12 +18,12 @@ dependencies/
 
 ## Dependencies
 
-| Package                  | Source                                        | Ref             |
-|--------------------------|-----------------------------------------------|-----------------|
-| QDMI                     | Munich-Quantum-Software-Stack/QDMI            | tag `v1.1.0`    |
-| FakeQDMI-Device-Example  | bundled in `dependencies/FakeQDMI-Device-Example/` | —          |
-| QInfo                    | Munich-Quantum-Software-Stack/QInfo           | branch `develop`|
-| submitter                | Munich-Quantum-Software-Stack/submitter       | branch `minh/ssintegrat` |
+| Package                  | Source                                             | Ref                      |
+|--------------------------|----------------------------------------------------|--------------------------|
+| QDMI                     | Munich-Quantum-Software-Stack/QDMI                 | tag `v1.1.0`             |
+| FakeQDMI-Device-Example  | bundled in `dependencies/FakeQDMI-Device-Example/` | —                        |
+| QInfo                    | Munich-Quantum-Software-Stack/QInfo                | branch `develop`         |
+| submitter                | Munich-Quantum-Software-Stack/submitter            | branch `minh/ssintegrat` |
 
 
 ## Quick Start
@@ -47,14 +47,9 @@ bash clone.sh --update
 
 ## Notes
 
-**FakeQDMI-Device-Example** is the local C++ QDMI binding (adapted from the
-internal CxxQDMI package). It is built directly from source inside this folder —
-no cloning needed.
+**FakeQDMI-Device-Example** is the local C++ QDMI binding (adapted from the internal CxxQDMI package). It is built directly from source inside this folder — no cloning needed.
 
-**LLVM** is not built here. It is pre-built and lives in the top-level
-`dependencies/installed/` (see `../../dependencies/scripts/`). The build script
-reads the `LLVM_ROOT` environment variable (default:
-`/home/admin/shared/dependencies/installed`).
+**LLVM** is not built here. It is pre-built and lives in the top-level or somewhere you can specify.
 
 ## Build Order
 
@@ -68,9 +63,7 @@ QDMI → FakeQDMI-Device-Example → QInfo → submitter
 
 ## After Building
 
-The scheduler's CMake `Find*.cmake` modules look for headers and libraries
-under `dependencies/installed/`. Once the build is done, configure the
-scheduler normally:
+The scheduler's CMake `Find*.cmake` modules look for headers and libraries under `dependencies/installed/`. Once the build is done, configure the scheduler normally:
 
 ```bash
 cd ../build

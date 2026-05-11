@@ -44,42 +44,56 @@ target_link_libraries(gtest_scheduler PRIVATE scheduler submitter LLVM Threads::
 target_link_libraries(gtest_scheduler PUBLIC GTest::gtest_main pthread)
 
 # Register the test
-add_test(NAME Scheduler_QDMI_Test COMMAND gtest_scheduler)
+add_test(NAME Scheduler_Test COMMAND gtest_scheduler)
 # message(STATUS "[CMAKE-CHECK] QDMI_INCLUDE_BUILD_DIR: ${QDMI_INCLUDE_BUILD_DIR}")
 # message(STATUS "[CMAKE-CHECK] qdmi_BINARY_DIR: ${qdmi_BINARY_DIR}")
 # message(STATUS "[CMAKE-CHECK] CMAKE_CURRENT_BINARY_DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 
+# External shared directory (LLVM, CxxQDMI — not bundled under scheduler)
 set(WORKDIR "/home/admin/shared")
-set(QDMI_INC "${WORKDIR}/QDMI/install/include")
-set(QDMI_EXAMPLE_DRIVER "${WORKDIR}/QDMI/build/examples/driver")
-set(QDMI_EXAMPLE_DEVICE "${WORKDIR}/QDMI/build/examples/device/cxx")
-set(QDMI_FCXX_DEV "${WORKDIR}/CxxQDMI/build/src")
-set(QINFO_INC "${WORKDIR}/QInfo/install/include")
-set(QINFO_LIB "${WORKDIR}/QInfo/install/lib")
-set(SUBMITTER_INC "${WORKDIR}/submitter/install/include")
-set(SUBMITTER_LIB "${WORKDIR}/submitter/install/lib")
-set(LLVM_INC "${WORKDIR}/dependencies/installed/include")
-set(LLVM_LIB "${WORKDIR}/dependencies/installed/lib")
 set(LLVM_ROOT "${WORKDIR}/dependencies/installed")
-set(CXX_QDMI_ROOT "${WORKDIR}/CxxQDMI/install")
-set(CXX_QDMI_BUILD_DIR "${WORKDIR}/CxxQDMI/build")
+set(LLVM_INC "${LLVM_ROOT}/include")
+set(LLVM_LIB "${LLVM_ROOT}/lib")
+
+# All MQSS packages (QDMI, FakeQDMI-Dev, QInfo, submitter) share one install prefix
+set(DEPS_INSTALLED "${CMAKE_SOURCE_DIR}/dependencies/installed")
+
+set(QDMI_ROOT "${DEPS_INSTALLED}")
+set(QDMI_INC "${DEPS_INSTALLED}/include")
+set(QDMI_LIB "${DEPS_INSTALLED}/lib")
+set(QDMI_EXAMPLE_DRIVER "${CMAKE_SOURCE_DIR}/dependencies/QDMI/build/examples/driver")
+set(QDMI_EXAMPLE_DEVICE "${CMAKE_SOURCE_DIR}/dependencies/QDMI/build/examples/device/cxx")
+
+set(FAKEQDMI_DEV_ROOT "${DEPS_INSTALLED}")
+set(FAKEQDMI_DEV_INC "${DEPS_INSTALLED}/include")
+set(FAKEQDMI_DEV_LIB "${DEPS_INSTALLED}/lib")
+
+set(QINFO_ROOT "${DEPS_INSTALLED}")
+set(QINFO_INC "${DEPS_INSTALLED}/include")
+set(QINFO_LIB "${DEPS_INSTALLED}/lib")
+
+set(SUBMITTER_ROOT "${DEPS_INSTALLED}")
+set(SUBMITTER_INC "${DEPS_INSTALLED}/include")
+set(SUBMITTER_LIB "${DEPS_INSTALLED}/lib")
 
 set(TEST_LD_LIBRARY_PATH
+    "${DEPS_INSTALLED}/lib"        # QDMI, FakeQDMI-Dev, QInfo, submitter (shared prefix)
     "${LLVM_ROOT}/lib"
     "${QDMI_EXAMPLE_DRIVER}"
     "${QDMI_EXAMPLE_DEVICE}"
-    "${QINFO_LIB}"
-    "${SUBMITTER_LIB}"
     "${CMAKE_BINARY_DIR}"
     "/usr/local/lib"
 )
 
 list(JOIN TEST_LD_LIBRARY_PATH ":" TEST_LD_LIBRARY_PATH_STR)
 
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/qdmi.conf"
+    "${QDMI_EXAMPLE_DEVICE}/libcxx_device.${LIB_EXT} CXX read_write")
+
 set_tests_properties(
-    Scheduler_QDMI_Test
+    Scheduler_Test
     PROPERTIES
     ENVIRONMENT
-    "LD_LIBRARY_PATH=${TEST_LD_LIBRARY_PATH_STR};QDMI_CONF=${CXX_QDMI_BUILD_DIR}/tests/qdmi.conf"
+    "LD_LIBRARY_PATH=${TEST_LD_LIBRARY_PATH_STR};QDMI_CONF=${CMAKE_CURRENT_BINARY_DIR}/qdmi.conf"
 )
 

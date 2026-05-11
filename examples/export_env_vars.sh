@@ -1,31 +1,56 @@
-WORKDIR=/home/admin/shared
+# ------------------------------------------------------------------------------
+# Source this file to set up the environment for running the scheduler examples.
+# All MQSS packages (QDMI, FakeQDMI-Dev, QInfo, submitter) are expected to be
+# installed under scheduler/dependencies/installed/.
+#
+# Usage:
+#   source examples/export_env_vars.sh
+#
+# LLVM is pre-built externally; override LLVM_ROOT if needed:
+#   LLVM_ROOT=/path/to/llvm source examples/export_env_vars.sh
+# ------------------------------------------------------------------------------
 
-QDMI_INC=$WORKDIR/QDMI/install/include
-QDMI_LIB=$WORKDIR/QDMI/install/lib
-QDMI_EXAMPLE_DEV=$WORKDIR/QDMI/build/examples/device/cxx
-QDMI_FCXX_DEV=$WORKDIR/CxxQDMI/build/src
+# Avoid re-exporting if already loaded
+[ -n "$MQSS_ENVS_LOADED" ] && return 0
 
-QINFO_INC=$WORKDIR/QInfo/install/include
-QINFO_LIB=$WORKDIR/QInfo/install/lib
+# Directory of this script → scheduler root is one level up
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCHEDULER_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SCHEDULER_INSTALLED_DIR="$SCHEDULER_ROOT/install"
 
-SUBMITTER_INC=$WORKDIR/submitter/install/include
-SUBMITTER_LIB=$WORKDIR/submitter/install/lib
+# All MQSS dependencies live here
+DEPS_INSTALLED="$SCHEDULER_ROOT/dependencies/installed"
 
-SCHEDULER_INC=$WORKDIR/scheduler/install/include
-SCHEDULER_LIB=$WORKDIR/scheduler/install/lib
+# LLVM is built separately (top-level shared install)
+LLVM_ROOT="${LLVM_ROOT:-/home/admin/shared/dependencies/installed}"
 
-LLVM_INC=$WORKDIR/dependencies/installed/include
-LLVM_LIB=$WORKDIR/dependencies/installed/lib
+LLVM_INC="$LLVM_ROOT/include"
+LLVM_LIB="$LLVM_ROOT/lib"
 
-export LLVM_ROOT=$WORKDIR/dependencies/installed
-export QDMI_ROOT=$WORKDIR/QDMI/install
-export CXX_QDMI_ROOT=$WORKDIR/CxxQDMI/install
-export QDMI_CONF=$WORKDIR/CxxQDMI/build/tests/qdmi.conf
-export SPDLOG_INC=$WORKDIR/scheduler/build/_deps/spdlog-src/include
-export SPDLOG_LIB=$WORKDIR/shared/scheduler/build/_deps/spdlog-build
+QDMI_EXAMPLE_DRIVER="$SCHEDULER_ROOT/dependencies/QDMI/build/examples/driver"
+QDMI_EXAMPLE_DEVICE="$SCHEDULER_ROOT/dependencies/QDMI/build/examples/device/cxx"
 
-export CPATH=$SUBMITTER_INC:$QDMI_INC:$QINFO_INC:$LLVM_INC:$SPDLOG_INC:$SCHEDULER_INC:$CPATH
-export INCLUDE=$SUBMITTER_INC:$QDMI_INC:$QINFO_INC:$LLVM_INC:$SPDLOG_INC:$SCHEDULER_INC:$INCLUDE
-export LD_LIBRARY_PATH=$SUBMITTER_LIB:$QINFO_LIB:$LLVM_LIB:$QDMI_EXAMPLE_DEV:$QINFO_LIB:$QDMI_FCXX_DEV:$SPDLOG_LIB:/usr/local/lib:$SCHEDULER_LIB:$LD_LIBRARY_PATH
-export LIBRARY_PATH=$SUBMITTER_LIB:$QINFO_LIB:$LLVM_LIB:$QDMI_EXAMPLE_DEV:$QINFO_LIB:$QDMI_FCXX_DEV:$SPDLOG_LIB:/usr/local/lib:$LIBRARY_PATH
-export PATH=/usr/lib64/openmpi/bin:$PATH
+# Generate qdmi.conf so the QDMI driver knows which device library to load
+_LIB_EXT=$( [[ "$(uname)" == "Darwin" ]] && echo "dylib" || echo "so" )
+_QDMI_CONF="$QDMI_EXAMPLE_DEVICE/qdmi.conf"
+echo "$QDMI_EXAMPLE_DEVICE/libcxx_device.$_LIB_EXT CXX read_write" > "$_QDMI_CONF"
+export QDMI_CONF="$_QDMI_CONF"
+unset _LIB_EXT _QDMI_CONF
+
+# Export CMake-relevant roots
+export LLVM_ROOT
+export QDMI_ROOT="$DEPS_INSTALLED"
+export FAKEQDMI_DEV_ROOT="$DEPS_INSTALLED"
+export QINFO_ROOT="$DEPS_INSTALLED"
+export SUBMITTER_ROOT="$DEPS_INSTALLED"
+
+# Compiler and linker search paths
+export CPATH="$DEPS_INSTALLED/include:$SCHEDULER_INSTALLED_DIR/include:$LLVM_INC${CPATH:+:$CPATH}"
+export INCLUDE="$DEPS_INSTALLED/include:$SCHEDULER_INSTALLED_DIR/include:$LLVM_INC${INCLUDE:+:$INCLUDE}"
+export LD_LIBRARY_PATH="$DEPS_INSTALLED/lib:$SCHEDULER_INSTALLED_DIR/lib:$SCHEDULER_INSTALLED_DIR/lib64:$LLVM_LIB:$QDMI_EXAMPLE_DRIVER:$QDMI_EXAMPLE_DEVICE:/usr/local/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export LIBRARY_PATH="$DEPS_INSTALLED/lib:$SCHEDULER_INSTALLED_DIR/lib:$SCHEDULER_INSTALLED_DIR/lib64:$LLVM_LIB:$QDMI_EXAMPLE_DRIVER:$QDMI_EXAMPLE_DEVICE:/usr/local/lib${LIBRARY_PATH:+:$LIBRARY_PATH}"
+
+# Make LLVM tools and MPI available on PATH
+export PATH="$LLVM_ROOT/bin:/usr/lib64/openmpi/bin${PATH:+:$PATH}"
+
+export MQSS_ENVS_LOADED=1

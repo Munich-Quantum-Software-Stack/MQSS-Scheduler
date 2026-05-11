@@ -20,12 +20,13 @@ include(FetchContent)
 set(FETCH_DEPENDENT_PACKAGES "")
 
 # ------------------------------------------------------------------------------
-# Fectch Google Tests
+# Google Tests — use pre-installed version if available, fetch otherwise
 # ------------------------------------------------------------------------------
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.16.0)
+  GIT_TAG v1.16.0
+  FIND_PACKAGE_ARGS NAMES GTest)
 list(APPEND FETCH_DEPENDENT_PACKAGES googletest)
 
 # ------------------------------------------------------------------------------

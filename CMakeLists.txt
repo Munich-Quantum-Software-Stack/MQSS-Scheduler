@@ -36,7 +36,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 include(cmake/ExternalDependencies.cmake)
 find_package(submitter REQUIRED)
-find_package(CxxQDMI REQUIRED)
+find_package(FakeQDMI_Dev REQUIRED)
+find_package(Qinfo REQUIRED)
 find_package(LLVM REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -51,11 +52,13 @@ file(GLOB SCHEDULER_SRC
 )
 add_library(scheduler SHARED ${SCHEDULER_SRC})
 set_target_properties(scheduler PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(scheduler PUBLIC 
+target_include_directories(scheduler PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    ${QDMI_INCLUDE_DIR} ${CXXQDMI_INCLUDE_DIR} ${SUBMITTER_INCLUDE_DIR})
-target_link_libraries(scheduler PUBLIC LLVM Threads::Threads spdlog::spdlog Qinfo ${CXXQDMI_LIBRARIES} ${SUBMITTER_LIBRARIES})
+    ${QDMI_INCLUDE_DIR} ${FAKEQDMI_DEV_INCLUDE_DIR} ${QINFO_INCLUDE_DIR}
+    ${SUBMITTER_INCLUDE_DIR} ${LLVM_INCLUDE_DIRS})
+target_link_libraries(scheduler PUBLIC LLVM Threads::Threads spdlog::spdlog
+    ${QINFO_LIBRARIES} ${FAKEQDMI_DEV_LIBRARIES} ${SUBMITTER_LIBRARIES})
 
 # Add the test
 enable_testing()

@@ -17,32 +17,44 @@
 # ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
-# Qinfo Headers and Library
+# FindQinfo.cmake
+#
+# Imported variables:
+#   QINFO_FOUND        - True if found
+#   QINFO_INCLUDE_DIR  - Directory containing qinfo/qinfo.h
+#   QINFO_LIBRARIES    - Full path to libqinfo
 # ------------------------------------------------------------------------------
+
+# Default root: dependencies/installed/ (relative to this file's location)
+if(NOT QINFO_ROOT)
+    set(QINFO_ROOT
+        "${CMAKE_CURRENT_LIST_DIR}/../dependencies/installed"
+        CACHE PATH "Path to QInfo install prefix")
+endif()
+
 find_path(QINFO_INCLUDE_DIR
     NAMES qinfo/qinfo.h
-    PATHS /home/admin/shared/QInfo/install/include
+    PATHS "${QINFO_ROOT}/include"
+    NO_DEFAULT_PATH
 )
 find_library(QINFO_LIBRARY
     NAMES qinfo
-    PATHS /home/admin/shared/QInfo/install/lib
+    PATHS "${QINFO_ROOT}/lib"
+          "${QINFO_ROOT}/lib64"
+    NO_DEFAULT_PATH
 )
 
-# ------------------------------------------------------------------------------
-# Check Qinfo Paths
-# ------------------------------------------------------------------------------
-message(STATUS "QINFO_INCLUDE_DIR   = ${QINFO_INCLUDE_DIR}")
-message(STATUS "QINFO_LIBRARY       = ${QINFO_LIBRARY}")
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Qinfo
     REQUIRED_VARS QINFO_INCLUDE_DIR QINFO_LIBRARY
 )
 
-# ------------------------------------------------------------------------------
-# Set Qinfo Env Variables
-# ------------------------------------------------------------------------------
 if(QINFO_FOUND)
-    set(QINFO_INCLUDE_DIR ${QINFO_INCLUDE_DIR})
-    set(QINFO_LIBRARY ${QINFO_LIBRARY})
+    set(QINFO_INCLUDE_DIRS ${QINFO_INCLUDE_DIR})
+    set(QINFO_LIBRARIES ${QINFO_LIBRARY})
 endif()
+
 mark_as_advanced(QINFO_INCLUDE_DIR QINFO_LIBRARY)
+message(STATUS "QINFO_ROOT        = ${QINFO_ROOT}")
+message(STATUS "QINFO_INCLUDE_DIR = ${QINFO_INCLUDE_DIR}")
+message(STATUS "QINFO_LIBRARY     = ${QINFO_LIBRARY}")

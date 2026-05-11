@@ -15,6 +15,7 @@ __pycache__
 # CMake build and install outputs
 # ------------------------------------------------------------------------------
 build/
+!build/*.sh
 install/
 **/build/
 **/install/
@@ -39,5 +40,8 @@ compile_commands.json
 # ------------------------------------------------------------------------------
 # Dependencies: cloned sources and installed binaries are local only
 # ------------------------------------------------------------------------------
-dependencies/src/
+dependencies/FakeQDMI-Device-Example/
+dependencies/QDMI/
+dependencies/QInfo/
+dependencies/submitter/
 dependencies/installed/

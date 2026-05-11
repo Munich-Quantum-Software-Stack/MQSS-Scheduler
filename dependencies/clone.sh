@@ -7,8 +7,6 @@
 set -euo pipefail
 
 DEPS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC_DIR="$DEPS_DIR/src"
-mkdir -p "$SRC_DIR"
 
 UPDATE=false
 if [[ "${1:-}" == "--update" ]]; then
@@ -21,7 +19,7 @@ clone_or_update() {
     local ref="$3"       # branch or tag
     local ref_type="$4"  # "branch" or "tag"
 
-    local dest="$SRC_DIR/$name"
+    local dest="$name"
 
     if [ -d "$dest/.git" ]; then
         if $UPDATE; then
@@ -37,7 +35,7 @@ clone_or_update() {
     else
         echo "[clone]  $name  ($url @ $ref)"
         if [ "$ref_type" = "tag" ]; then
-            git clone --depth 1 --branch "$ref" "$url" "$dest"
+            git -c advice.detachedHead=false clone --depth 1 --branch "$ref" "$url" "$dest"
         else
             git clone --branch "$ref" "$url" "$dest"
         fi
@@ -68,5 +66,5 @@ clone_or_update \
     "branch"
 
 echo ""
-echo "All sources are in: $SRC_DIR"
+echo "All sources are in: $DEPS_DIR"
 echo "Run build.sh next to compile and install them."
