@@ -70,3 +70,41 @@ cd ../build
 cmake ..
 make -j$(nproc)
 ```
+
+Notes with the updated version of QDMI: Breaking API changes (develop vs v1.1.0)
+1. QDMI_job_wait signature changed — hardest break
+
+// v1.1.0
+int QDMI_job_wait(QDMI_Job job);
+
+// develop
+int QDMI_job_wait(QDMI_Job job, size_t timeout);
+This breaks the function pointer typedef in FakeQDMI-Device-Example/include/qdmi_lib.hpp and every caller of QDMI_job_wait in qdmi_lib.cpp and anywhere in the submitter/examples.
+
+2. QDMI_SESSION_PARAMETER_* enum values renumbered
+
+// v1.1.0               → develop
+QDMI_SESSION_PARAMETER_USERNAME  = 1  →  3  (new AUTHFILE=1, AUTHURL=2 inserted before it)
+QDMI_SESSION_PARAMETER_PROJECTID = 2  →  5  (new PASSWORD=4 inserted)
+QDMI_SESSION_PARAMETER_MAX       = 3  →  6
+Any code passing these as integers over a binary boundary breaks silently.
+
+3. New QDMI_job_query_property function added
+A new function + QDMI_Job_Property enum is introduced. FakeQDMI-Device-Example would need to implement and expose it.
+
+4. QDMI_SITE_PROPERTY_T1 type changed
+
+// v1.1.0: double t1
+// develop: uint64_t t1
+Any code reading T1 values with the old type assumption silently reads garbage.
+
+What needs updating to use develop
+What	Change needed
+qdmi_lib.hpp	QDMI_job_wait_t typedef: add size_t timeout param
+qdmi_lib.cpp	All QDMI_job_wait_ptr(job) calls → QDMI_job_wait_ptr(job, 0)
+qdmi_lib.hpp + qdmi_lib.cpp	Add QDMI_job_query_property_t typedef + load_symbol + implementation
+FakeQDMI-Device-Example device impl	Implement QDMI_job_query_property in the device
+Any code using QDMI_SESSION_PARAMETER_USERNAME/PROJECTID	Recompile against new headers (enum values shifted)
+Any code reading QDMI_SITE_PROPERTY_T1	Change buffer type from double to uint64_t
+clone.sh	Change v1.1.0 → new tag or develop
+The QDMI_job_wait signature change is the most impactful — it touches FakeQDMI-Device-Example, the submitter, and potentially the scheduler. It's doable but requires careful tracing of all callers.
