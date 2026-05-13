@@ -1,20 +1,21 @@
-/*------------------------------------------------------------------------------
-Copyright 2024 Munich Quantum Software Stack Project
-
-Licensed under the Apache License, Version 2.0 with LLVM Exceptions (the
-"License"); you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/develop/LICENSE
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-License for the specific language governing permissions and limitations under
-the License.
-
-SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-------------------------------------------------------------------------------*/
+/*
+ * Copyright 2024 - 2026 Munich Quantum Software Stack
+ * All rights reserved.
+ *
+ * Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://llvm.org/LICENSE.txt
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ *
+ * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+ */
 
 #ifndef SCHEDULER_CPP
 #define SCHEDULER_CPP
@@ -131,9 +132,36 @@ void Scheduler::handleJobs2Submitters(int qjob_id, Submitter *submitter_ptr) {
 /**
  * @brief Function for scheduling jobs using First-Come, First-Served (FCFS) method
  *
- * This method will schedule the jobs in the queue using the FCFS method.
+ * Jobs are ordered strictly by SubmitTime — the earliest arrival is dispatched
+ * first. The deque is sorted in-place and ExecutionOrder is updated to reflect
+ * each job's position in the resulting schedule.
  */
-void Scheduler::scheduleFCFS() { spdlog::info("SCHEDULER: Scheduling Quantum Jobs using FCFS"); }
+void Scheduler::scheduleFCFS() {
+    spdlog::info("SCHEDULER: Scheduling Quantum Jobs using FCFS");
+
+    if (sched_queue->jobs.empty()) {
+        spdlog::warn("SCHEDULER [FCFS]: Queue is empty, nothing to schedule");
+        return;
+    }
+
+    // Sort by arrival time — stable to preserve insertion order for ties
+    std::stable_sort(sched_queue->jobs.begin(), sched_queue->jobs.end(),
+        [](const std::shared_ptr<QuantumTask> &a, const std::shared_ptr<QuantumTask> &b) {
+            return a->SubmitTime < b->SubmitTime;
+        });
+
+    // Assign execution order based on sorted position
+    for (int i = 0; i < static_cast<int>(sched_queue->jobs.size()); i++) {
+        sched_queue->jobs[i]->ExecutionOrder = i;
+    }
+
+    spdlog::info("SCHEDULER [FCFS]: {} jobs ordered by submit time:", sched_queue->jobs.size());
+    for (const auto &job : sched_queue->jobs) {
+        spdlog::info("  [order={}] Job {:3d} | submitted: {} | circuit: {}",
+                     job->ExecutionOrder, job->TaskId,
+                     job->SubmitTime, job->CircuitFile);
+    }
+}
 
 /**
  * @brief Function for scheduling jobs using Round Robin (RR) method
