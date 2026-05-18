@@ -28,6 +28,11 @@ jobs:
 
       - name: Install system dependencies
         run: |
+          # Add LLVM 16 apt repository (not in Ubuntu 22.04 default repos)
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key \
+            | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
+          echo "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-16 main" \
+            | sudo tee /etc/apt/sources.list.d/llvm-16.list
           sudo apt-get update -q
           sudo apt-get install -y \
             llvm-16-dev \
