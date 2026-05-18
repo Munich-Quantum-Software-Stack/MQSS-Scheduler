@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # ------------------------------------------------------------------------------
 # Source this file to set up the environment for running the scheduler examples.
 # All MQSS packages (QDMI, FakeQDMI-Dev, QInfo, submitter) are expected to be

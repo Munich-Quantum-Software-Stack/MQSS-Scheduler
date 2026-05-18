@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 echo "Running experiments for the circuits with 2 qubits"
 python sim_qcircuits_ibm_fake_backends.py --input="../data/benchmark_circuits/mqtbench_circuits/2_qubits"
 echo "--------------------------------------------------"

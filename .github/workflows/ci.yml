@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------------------------------------
+  # Build the scheduler library and run the GTest suite.
+  # LLVM-16 is installed from apt; all other dependencies are
+  # cloned and built from source via the project's own scripts.
+  # ------------------------------------------------------------
+  build-and-test:
+    name: Build & Test
+    runs-on: ubuntu-22.04
+
+    env:
+      LLVM_ROOT: /usr/lib/llvm-16
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y \
+            llvm-16-dev \
+            libopenmpi-dev openmpi-bin \
+            cmake ninja-build \
+            git
+
+      - name: Cache built dependencies
+        uses: actions/cache@v4
+        with:
+          path: dependencies/installed
+          key: deps-${{ runner.os }}-${{ hashFiles('dependencies/clone.sh', 'dependencies/build.sh') }}
+
+      - name: Clone dependency sources
+        working-directory: dependencies
+        run: bash clone.sh
+
+      - name: Build and install dependencies
+        working-directory: dependencies
+        run: |
+          LLVM_ROOT=${{ env.LLVM_ROOT }} bash build.sh --jobs $(nproc)
+
+      - name: Configure scheduler
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DLLVM_ROOT=${{ env.LLVM_ROOT }}
+
+      - name: Build scheduler
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Run tests
+        run: |
+          QDMI_EXAMPLE_DEVICE=$(pwd)/dependencies/QDMI/build/examples/device/cxx
+          QDMI_EXAMPLE_DRIVER=$(pwd)/dependencies/QDMI/build/examples/driver
+          echo "$QDMI_EXAMPLE_DEVICE/libcxx_device.so CXX read_write" \
+            > "$QDMI_EXAMPLE_DEVICE/qdmi.conf"
+          export QDMI_CONF="$QDMI_EXAMPLE_DEVICE/qdmi.conf"
+          export LD_LIBRARY_PATH=\
+            "$(pwd)/dependencies/installed/lib:\
+            $(pwd)/build:\
+            $QDMI_EXAMPLE_DRIVER:\
+            $QDMI_EXAMPLE_DEVICE:\
+            ${{ env.LLVM_ROOT }}/lib"
+          ctest --test-dir build --output-on-failure
+
+  # ------------------------------------------------------------
+  # Static analysis for all shell scripts in the project.
+  # ------------------------------------------------------------
+  lint-shell:
+    name: Lint Shell Scripts
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y shellcheck
+
+      - name: Run shellcheck
+        run: |
+          find . -name "*.sh" \
+            -not -path "./.git/*" \
+            -not -path "./dependencies/QDMI/*" \
+            -not -path "./dependencies/QInfo/*" \
+            -not -path "./dependencies/submitter/*" \
+            -not -path "./dependencies/installed/*" \
+            | xargs shellcheck --severity=error
+
+  # ------------------------------------------------------------
+  # Python syntax check for the selector module.
+  # ------------------------------------------------------------
+  lint-python:
+    name: Lint Python Scripts
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install flake8
+        run: pip install flake8
+
+      - name: Run flake8
+        run: |
+          find selector/ src/rl-scheduler-agent/ -name "*.py" \
+            | xargs flake8 --select=E9 --show-source
