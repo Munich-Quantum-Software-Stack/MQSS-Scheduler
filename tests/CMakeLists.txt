@@ -40,7 +40,7 @@ include(GoogleTest)
 add_executable(gtest_scheduler gtest_scheduler.cpp)
 target_include_directories(gtest_scheduler PRIVATE ${QDMI_INCLUDE_DIR} ${CXXQDMI_INCLUDE_DIR})
 target_include_directories(gtest_scheduler PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_link_libraries(gtest_scheduler PRIVATE scheduler submitter LLVM Threads::Threads ${CXXQDMI_LIBRARIES})
+target_link_libraries(gtest_scheduler PRIVATE scheduler ${SUBMITTER_LIBRARIES} LLVM Threads::Threads ${CXXQDMI_LIBRARIES})
 target_link_libraries(gtest_scheduler PUBLIC GTest::gtest_main pthread)
 
 # Register the test
