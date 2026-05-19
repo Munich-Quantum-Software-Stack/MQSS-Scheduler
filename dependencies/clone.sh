@@ -59,12 +59,7 @@ clone_or_update \
     "develop" \
     "branch"
 
-clone_or_update \
-    "submitter" \
-    "https://github.com/Munich-Quantum-Software-Stack/submitter.git" \
-    "minh/ssintegrat" \
-    "branch"
-
 echo ""
 echo "All sources are in: $DEPS_DIR"
+echo "Note: submitter is bundled locally in dependencies/submitter/ — no clone needed."
 echo "Run build.sh next to compile and install them."

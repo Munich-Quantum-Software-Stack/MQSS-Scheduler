@@ -23,7 +23,7 @@ dependencies/
 | QDMI                     | Munich-Quantum-Software-Stack/QDMI                 | tag `v1.1.0`             |
 | FakeQDMI-Device-Example  | bundled in `dependencies/FakeQDMI-Device-Example/` | —                        |
 | QInfo                    | Munich-Quantum-Software-Stack/QInfo                | branch `develop`         |
-| submitter                | Munich-Quantum-Software-Stack/submitter            | branch `minh/ssintegrat` |
+| submitter                | bundled in `dependencies/submitter/`               | —                        |
 
 
 ## Quick Start

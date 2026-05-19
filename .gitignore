@@ -43,5 +43,5 @@ compile_commands.json
 dependencies/FakeQDMI-Device-Example/
 dependencies/QDMI/
 dependencies/QInfo/
-dependencies/submitter/
+dependencies/submitter/build/
 dependencies/installed/

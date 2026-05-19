@@ -1,0 +1,28 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# The vscode settings
+.vscode/
+
+# The vscode generated files
+.cache/
+
+# The library files
+*.so
+*.pyd
+*.dll
+*.pyc
+*.dylib
+
+# The .DS_Store files
+.DS_Store
+
+# The CMake generated files
