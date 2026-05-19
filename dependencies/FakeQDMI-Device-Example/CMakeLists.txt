@@ -77,6 +77,9 @@ install(TARGETS qdmi_cpp_static ARCHIVE DESTINATION lib)
 # ------------------------------------------------------------------------------
 # Tests
 # ------------------------------------------------------------------------------
-find_package(GTest REQUIRED)
-enable_testing()
-add_subdirectory(test)
+option(BUILD_FAKEQDMI_TESTS "Build FakeQDMI-Device-Example tests" OFF)
+if(BUILD_FAKEQDMI_TESTS)
+    find_package(GTest REQUIRED)
+    enable_testing()
+    add_subdirectory(test)
+endif()
