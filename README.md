@@ -80,13 +80,13 @@ scheduler/
 |---------|-----------|---------|
 | [QDMI](https://github.com/Munich-Quantum-Software-Stack/QDMI) | Munich-Quantum-Software-Stack/QDMI | `v1.1.0` |
 | [QInfo](https://github.com/Munich-Quantum-Software-Stack/QInfo) | Munich-Quantum-Software-Stack/QInfo | `develop` |
-| [submitter](https://github.com/Munich-Quantum-Software-Stack/submitter) | Munich-Quantum-Software-Stack/submitter | `minh/ssintegrat` |
 
 ### Bundled
 
 | Package | Location | Description |
 |---------|----------|-------------|
 | FakeQDMI-Device-Example | `dependencies/FakeQDMI-Device-Example/` | C++ QDMI session/device binding |
+| submitter | `dependencies/submitter/` | Job lifecycle and queue management |
 
 ### Pre-built (not managed here)
 
