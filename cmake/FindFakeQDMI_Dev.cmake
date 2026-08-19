@@ -1,11 +1,12 @@
 # ------------------------------------------------------------------------------
-# Copyright 2024 Munich Quantum Software Stack Project
+# Copyright 2024 - 2026 Munich Quantum Software Stack
+# All rights reserved.
 #
-# Licensed under the Apache License, Version 2.0 with LLVM Exceptions (the
-# "License"); you may not use this file except in compliance with the License.
+# Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
+# you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# https://github.com/Munich-Quantum-Software-Stack/QDMI/blob/develop/LICENSE
+# https://llvm.org/LICENSE.txt
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -20,7 +21,7 @@
 # FindFakeQDMI_Dev.cmake
 #
 # Finds the FakeQDMI-Device-Example library (local C++ QDMI binding) and the
-# QDMI C headers, both installed under dependencies/installed/.
+# QDMI C headers, both installed under external/installed/.
 #
 # Imported variables:
 #   FAKEQDMI_DEV_FOUND        - True if found
@@ -29,10 +30,10 @@
 #   QDMI_INCLUDE_DIR          - Directory containing qdmi/client.h
 # ------------------------------------------------------------------------------
 
-# Default root: dependencies/installed/ (relative to this file's location)
+# Default root: external/installed/ (relative to this file's location)
 if(NOT FAKEQDMI_DEV_ROOT)
     set(FAKEQDMI_DEV_ROOT
-        "${CMAKE_CURRENT_LIST_DIR}/../dependencies/installed"
+        "${CMAKE_CURRENT_LIST_DIR}/../external/installed"
         CACHE PATH "Path to FakeQDMI-Dev (and QDMI) install prefix")
 endif()
 
