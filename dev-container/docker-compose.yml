@@ -64,7 +64,7 @@ services:
       # (and any other readdir/stat-heavy operation) crawl or hang, since it
       # pulls in every sibling repo's build output too — hundreds of
       # thousands of files across a slow bind-mount layer. Everything this
-      # container's build needs (QDMI/QInfo/submitter/FakeQDMI-Device-Example)
+      # container's build needs (QDMI/QInfo/submitter/QDMI-Device-Example)
       # is vendored under dependencies/ in this repo already.
       - ..:/home/admin/shared/MQSS-Scheduler
       # LLVM is the one thing not vendored here — it's shared across all

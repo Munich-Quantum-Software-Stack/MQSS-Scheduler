@@ -1,6 +1,6 @@
 # ------------------------------------------------------------------------------
 # Source this file to set up the environment for running the scheduler examples.
-# All MQSS packages (QDMI, FakeQDMI-Dev, QInfo, submitter) are expected to be
+# All MQSS packages (QDMI, QDMI-Device-Example, QInfo, submitter) are expected to be
 # installed under scheduler/external/installed/.
 #
 # Usage:
@@ -59,7 +59,7 @@ export MQSS_SIM_SCRIPT="$SCHEDULER_ROOT/external/QDMI/examples/device/src/run_ci
 # Export CMake-relevant roots
 export LLVM_ROOT
 export QDMI_ROOT="$DEPS_INSTALLED"
-export FAKEQDMI_DEV_ROOT="$DEPS_INSTALLED"
+export QDMI_DEVICE_EXAMPLE_ROOT="$DEPS_INSTALLED"
 export QINFO_ROOT="$DEPS_INSTALLED"
 export SUBMITTER_ROOT="$DEPS_INSTALLED"
 

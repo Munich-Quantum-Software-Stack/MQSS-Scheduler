@@ -1,0 +1,11 @@
+# One QC alias per line, matching the Slurm-side GRES/license aliases
+# configured in slurm-spank-plugins/mqss-spank-plugin/slurm-config/slurm.conf.
+# Read by dependencies/generate_qdmi_device_variants.sh, dependencies/build.sh,
+# and examples/export_env_vars.sh - keep all three in sync via this one file
+# rather than editing hardcoded lists in each.
+#
+# Stage 1 (proving the multi-device pattern): just 2 aliases. Extend to the
+# full 5 (iqm_eqe1, iqm_eqe1_mock, iqm_qexa, aqt, qlm) for Stage 2 once this
+# works end to end.
+iqm_eqe1
+aqt

@@ -1,0 +1,78 @@
+{
+    "circuit_name": "qnn",
+    "num_qubits": 2,
+    "num_shots": 1000,
+    "counts_aer_simulator": {
+        "01": 130,
+        "10": 827,
+        "11": 39,
+        "00": 4
+    },
+    "counts_fake_almaden": {
+        "10": 767,
+        "00": 66,
+        "01": 125,
+        "11": 42
+    },
+    "counts_fake_athens": {
+        "01": 119,
+        "10": 787,
+        "00": 42,
+        "11": 52
+    },
+    "counts_fake_auckland": {
+        "10": 825,
+        "00": 18,
+        "01": 108,
+        "11": 49
+    },
+    "counts_fake_belem": {
+        "10": 747,
+        "11": 65,
+        "01": 129,
+        "00": 59
+    },
+    "counts_fake_brooklyn": {
+        "01": 127,
+        "10": 791,
+        "11": 54,
+        "00": 28
+    },
+    "counts_fake_cairo": null,
+    "counts_fake_casablanca": {
+        "10": 798,
+        "01": 114,
+        "00": 32,
+        "11": 56
+    },
+    "counts_fake_cambridge": {
+        "10": 733,
+        "01": 118,
+        "00": 82,
+        "11": 67
+    },
+    "counts_fake_guadalupe": {
+        "10": 781,
+        "01": 128,
+        "11": 54,
+        "00": 37
+    },
+    "counts_fake_melbourne": {
+        "00": 78,
+        "10": 740,
+        "01": 120,
+        "11": 62
+    },
+    "counts_fake_prague": {
+        "11": 48,
+        "10": 818,
+        "01": 118,
+        "00": 16
+    },
+    "counts_fake_yorktown": {
+        "01": 135,
+        "10": 682,
+        "11": 112,
+        "00": 71
+    }
+}

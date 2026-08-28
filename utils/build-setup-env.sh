@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # ------------------------------------------------------------------------------
 # Source this file to set up the environment for building and running the
-# scheduler. All MQSS packages (QDMI, FakeQDMI-Dev, QInfo, submitter) are
+# scheduler. All MQSS packages (QDMI, QDMI-Device-Example, QInfo, submitter) are
 # expected to be installed under scheduler/external/installed/.
 #
 # Usage:
@@ -29,8 +29,8 @@ LLVM_ROOT="${LLVM_ROOT:-/home/admin/shared/dependencies/installed}"
 QDMI_INC="$DEPS_INSTALLED/include"
 QDMI_LIB="$DEPS_INSTALLED/lib"
 
-FAKEQDMI_DEV_INC="$DEPS_INSTALLED/include"
-FAKEQDMI_DEV_LIB="$DEPS_INSTALLED/lib"
+QDMI_DEVICE_EXAMPLE_INC="$DEPS_INSTALLED/include"
+QDMI_DEVICE_EXAMPLE_LIB="$DEPS_INSTALLED/lib"
 
 QINFO_INC="$DEPS_INSTALLED/include"
 QINFO_LIB="$DEPS_INSTALLED/lib"
@@ -44,12 +44,12 @@ LLVM_LIB="$LLVM_ROOT/lib"
 # Export CMake-relevant roots
 export LLVM_ROOT
 export QDMI_ROOT="$DEPS_INSTALLED"
-export FAKEQDMI_DEV_ROOT="$DEPS_INSTALLED"
+export QDMI_DEVICE_EXAMPLE_ROOT="$DEPS_INSTALLED"
 export QINFO_ROOT="$DEPS_INSTALLED"
 export SUBMITTER_ROOT="$DEPS_INSTALLED"
 
 # Compiler and linker search paths
-# All MQSS packages share the same prefix, so one entry covers QDMI/FakeQDMI/QInfo/submitter
+# All MQSS packages share the same prefix, so one entry covers QDMI/QDMI-Device-Example/QInfo/submitter
 export CPATH="$DEPS_INSTALLED/include:$SCHEDULER_INSTALLED_DIR/include:$LLVM_INC${CPATH:+:$CPATH}"
 export INCLUDE="$DEPS_INSTALLED/include:$SCHEDULER_INSTALLED_DIR/include:$LLVM_INC${INCLUDE:+:$INCLUDE}"
 QDMI_EXAMPLE_DRIVER="$SCHEDULER_ROOT/external/QDMI/build/examples/driver"

@@ -45,7 +45,7 @@ scheduler/
 ├── external/
 │   ├── clone.sh                    # Clone QDMI/QInfo/submitter sources
 │   ├── build.sh                    # Build and install them (+ per-alias QDMI device variants)
-│   ├── FakeQDMI-Device-Example/    # Bundled C++ QDMI client binding
+│   ├── QDMI-Device-Example/        # Bundled C++ QDMI client binding
 │   ├── selector/                   # Python-based device/pass selector (separate subproject)
 │   └── installed/                  # Shared install prefix (created by build.sh)
 ├── dev-container/                  # docker compose dev environment + Slurm testbed

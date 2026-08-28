@@ -42,7 +42,7 @@ compile_commands.json
 
 # ------------------------------------------------------------------------------
 # External: externally cloned sources (via clone.sh) and installed binaries
-# are local only. FakeQDMI-Device-Example is NOT one of these — per root
+# are local only. QDMI-Device-Example is NOT one of these — per root
 # README.md's Dependencies table it's "Bundled" (committed source, not
 # cloned), so it must stay out of this list.
 # ------------------------------------------------------------------------------
@@ -56,4 +56,7 @@ external/installed/
 # carries a local, uncommitted patch on top of upstream QDMI.
 external/qdmi-device-variants/
 
-
+# ------------------------------------------------------------------------------
+# Deployment at LRZ
+# ------------------------------------------------------------------------------
+slurm-spank-plugins/lrz-deployment/

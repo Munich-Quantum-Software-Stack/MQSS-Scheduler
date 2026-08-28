@@ -63,7 +63,7 @@ to exist rather than creating it.
 - `qc-container`'s image only provisions the OS/toolchain (grpc, protobuf, openmpi,
   build tools) — QDMI/QInfo/submitter still need building inside it via this repo's own
   `external/clone.sh`+`external/build.sh` (already done for QDMI and
-  `FakeQDMI-Device-Example` as of this writing; QInfo/submitter not yet).
+  `QDMI-Device-Example` as of this writing; QInfo/submitter not yet).
 - **`qc-container` is Ubuntu 24.04, `mqss_scheduler_dev` is Rocky Linux 9.3** (see
   `qc-dockerfile/Dockerfile`'s top comment) — but this turned out not to be the
   compatibility problem it looked like. LLVM at `~/Projects/mqss/dependencies/installed`
