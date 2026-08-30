@@ -60,6 +60,11 @@ target_link_libraries(scheduler PUBLIC Threads::Threads)
 enable_testing()
 add_subdirectory(tests)
 
+option(BUILD_SCHEDULER_DOCS "Build Doxygen API documentation" OFF)
+if(BUILD_SCHEDULER_DOCS)
+  add_subdirectory(docs)
+endif()
+
 # Set the installation
 install(TARGETS scheduler
     LIBRARY DESTINATION lib
