@@ -34,7 +34,7 @@ include(GoogleTest)
 # include/ directory - no LD_LIBRARY_PATH or QDMI_CONF environment setup
 # required to run it.
 add_executable(gtest_scheduler gtest_scheduler.cpp)
-target_include_directories(gtest_scheduler PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(gtest_scheduler PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_link_libraries(gtest_scheduler PRIVATE GTest::gtest_main Threads::Threads)
 
 add_test(NAME Scheduler_Test COMMAND gtest_scheduler)
