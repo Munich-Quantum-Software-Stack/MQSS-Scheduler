@@ -21,13 +21,27 @@ include(FetchContent)
 set(FETCH_DEPENDENT_PACKAGES "")
 
 # ------------------------------------------------------------------------------
-# Google Tests — use pre-installed version if available, fetch otherwise
+# Google Test — use a pre-installed version if available and possible, fetch and 
+# build the pinned GIT_TAG below otherwise.
 # ------------------------------------------------------------------------------
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.16.0
+  GIT_TAG v1.17.0
   FIND_PACKAGE_ARGS NAMES GTest)
 list(APPEND FETCH_DEPENDENT_PACKAGES googletest)
 
+# GoogleTest doesn't need to be a shared library just because
+# this project defaults to one (BUILD_SHARED_LIBS ON, set in the
+# CMakeLists.txt file for the Scheduler library itself, and inherited 
+# by subdirectory added afterward including this FetchContent population)
+# 
+# gtest_main is only ever linked into the private tests/gtest_scheduler
+# executable, never installed or used as a runtime dependency elsewhere.
+# We can force it static for just this one dependency. Static linking
+# sidesteps it entirely.
+set(_saved_build_shared_libs "${BUILD_SHARED_LIBS}")
+set(BUILD_SHARED_LIBS OFF)
 FetchContent_MakeAvailable(${FETCH_DEPENDENT_PACKAGES})
+set(BUILD_SHARED_LIBS "${_saved_build_shared_libs}")
+unset(_saved_build_shared_libs)

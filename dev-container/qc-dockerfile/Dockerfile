@@ -72,8 +72,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libz3-dev \
     libboost-all-dev \
     libzip-dev \
-    libgtest-dev \
-    libgmock-dev \
     libopenmpi-dev \
     openmpi-bin \
     libprotobuf-dev \
