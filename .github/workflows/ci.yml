@@ -36,9 +36,7 @@ jobs:
 
       # Same image developers use locally (dev-container/qc-dockerfile/Dockerfile) -
       # one toolchain definition instead of a second, separately-drifting apt
-      # install list just for CI. GHA layer caching keeps this fast on repeat
-      # runs; only the apt-get layer needs rebuilding when the Dockerfile
-      # itself changes.
+      # install list just for CI.
       - name: Build dev-container image
         uses: docker/build-push-action@v6
         with:
@@ -49,11 +47,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Repo checkout is bind-mounted, not baked into the image, so this
-      # always builds against the exact commit under test - only the
-      # toolchain itself comes from the (cached) image. Runs as root: this
-      # is a throwaway CI container, and the image's default `admin` user
-      # doesn't own the bind-mounted checkout directory.
       - name: Configure, build, and test
         run: |
           docker run --rm --user root \
