@@ -24,4 +24,4 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // instantiable for whatever TaskType a project uses (see
 // scheduler.tpp's header comment). This can be used to explicitly 
 // instantiate the Scheduler for a specific TaskType.
-template class mqss::Scheduler<mqss::QuantumTask>;
+template class mqss::scheduler::Scheduler<mqss::scheduler::QuantumTask>;

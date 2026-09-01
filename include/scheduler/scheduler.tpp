@@ -21,7 +21,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // kept header-visible - rather than moved into scheduler.cpp as ordinary
 // out-of-line definitions. This might be clear for Scheduler as it must stay 
 // instantiable for any TaskType a *consumer* project chooses (e.g. QRM's protobuf
-// mqss::QuantumTask).
+// mqss::scheduler::QuantumTask).
 // scheduler.cpp only explicitly instantiates it for this repo's own
 // QuantumTask type, as a concrete, compiled example/test target.
 
@@ -30,7 +30,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 #include <algorithm>
 
-namespace mqss {
+namespace mqss::scheduler {
 
 template <Schedulable TaskType>
 Scheduler<TaskType>::Scheduler(SchedulingPolicy policy) : currentPolicy(policy) {}
@@ -200,6 +200,6 @@ template <Schedulable TaskType> std::optional<TaskType> Scheduler<TaskType>::get
     return std::nullopt;
 }
 
-} // namespace mqss
+} // namespace mqss::scheduler
 
 #endif // SCHEDULER_TPP

@@ -27,7 +27,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <string>
 #include <vector>
 
-namespace mqss {
+namespace mqss::scheduler {
 
 /**
  * @brief Quantum Task follows the MQSS Quantum resource manager.
@@ -93,6 +93,6 @@ private:
     bool via_hpc_ = false;
 };
 
-} // namespace mqss
+} // namespace mqss::scheduler
 
 #endif // MQSS_SCHEDULER_QUANTUM_TASK_HPP

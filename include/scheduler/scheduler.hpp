@@ -27,7 +27,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include <optional>
 #include <vector>
 
-namespace mqss {
+namespace mqss::scheduler {
 
 /**
  * @brief Minimal shape a task must expose to be schedulable.
@@ -45,7 +45,7 @@ concept Schedulable = requires(T task) {
 /**
  * @brief Schedulable concept with a qubit-count accessor/operand.
  *
- * This might be usefull for the Backfilling policy and only when 
+ * This might be useful for the Backfilling policy and only when 
  * a concrete TaskType happens to provide it (checked via
  * `if constexpr`). Protobuf's QuantumTask satisfies this too 
  * (its `n_qbits` field generates an `n_qbits()` getter).
@@ -60,7 +60,7 @@ concept SizedSchedulable = Schedulable<T> && requires(T task) {
  *
  * Be able to add more scheduling policies in the future. For now,
  * FirstInFirstOut/PriorityBased are basic, RoundRobin/Backfilling/MixNMulti 
- * might be usefull for the quantum task scheduling. The policies are designed to be
+ * might be useful for the quantum task scheduling. The policies are designed to be
  * compatible with the MQSS QRM design, and can be used in the future 
  * depending on the requirements.
  */
@@ -114,7 +114,7 @@ public:
 
     /// Capacity (in qubits) available to admit a queued task
     /// out of order. A negative value (the default) disables the capacity
-    /// check, which might be usefull for Backfilling, otherwise it behaves
+    /// check, which might be useful for Backfilling, otherwise it behaves
     /// like FirstInFirstOut.
     void setAvailableQubits(int qubits);
 
@@ -157,7 +157,7 @@ private:
     double agingWeight = 1.0;
 };
 
-} // namespace mqss
+} // namespace mqss::scheduler
 
 #include "scheduler.tpp"
 
