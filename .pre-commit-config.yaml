@@ -12,6 +12,12 @@ ci:
   autoupdate_schedule: quarterly
   autofix_commit_msg: "🎨 pre-commit fixes"
 
+# external/ holds cloned/vendored dependency sources and subprojects (see
+# external/README.md) - not this repo's own code, and external/selector/
+# already has its own .pre-commit-config.yaml. Applies to every hook below
+# unless a hook sets its own exclude that overrides it.
+exclude: ^external/
+
 repos:
   # Standard hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
