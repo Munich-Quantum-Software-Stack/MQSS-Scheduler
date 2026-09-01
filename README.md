@@ -2,7 +2,7 @@
 
 > Part of the [Munich Quantum Software Stack (MQSS)](https://github.com/Munich-Quantum-Software-Stack) — Apache License 2.0 with LLVM Exceptions
 
-A dependency-free, header-driven C++20 task scheduler (`mqss::Scheduler<TaskType>`) for dispatching quantum circuits to quantum hardware devices via [QDMI](https://github.com/Munich-Quantum-Software-Stack/QDMI). Any task type exposing `task_id()`/`priority()` works — the library itself has no coupling to a specific task struct, compiler pipeline, or logging framework.
+A dependency-free, header-driven C++20 task scheduler (`mqss::scheduler::Scheduler<TaskType>`) for dispatching quantum circuits to quantum hardware devices via [QDMI](https://github.com/Munich-Quantum-Software-Stack/QDMI). Any task type exposing `task_id()`/`priority()` works — the library itself has no coupling to a specific task struct, compiler pipeline, or logging framework.
 
 ![Scheduler Architecture](docs/figures/mqss_scheduler.svg)
 
@@ -24,7 +24,7 @@ A dependency-free, header-driven C++20 task scheduler (`mqss::Scheduler<TaskType
 
 `Scheduler<TaskType>` is constrained by the `Schedulable` concept (`task_id()`, `priority()`) and, optionally, `SizedSchedulable` (`n_qbits()`, used only by the `Backfilling` policy). It queues tasks (`scheduleTask`/`scheduleTasks`) and dispatches them one at a time (`getNextReadyTask`) according to a `SchedulingPolicy` fixed at construction — see [Scheduling Policies](#scheduling-policies).
 
-`include/scheduler/quantum_task.hpp`'s `mqss::QuantumTask` is a lightweight example task type (mirroring the MQSS protocol's `QuantumTask` message field-for-field) used to exercise the scheduler in tests and examples. QDMI/LLVM/submitter only enter the picture at the *example* level (`examples/qrm-sscheduler/`), where a scheduled task actually gets submitted to a device — the scheduler library itself never touches them.
+`include/scheduler/quantum_task.hpp`'s `mqss::scheduler::QuantumTask` is a lightweight example task type (mirroring the MQSS protocol's `QuantumTask` message field-for-field) used to exercise the scheduler in tests and examples. QDMI/LLVM/submitter only enter the picture at the *example* level (`examples/qrm-sscheduler/`), where a scheduled task actually gets submitted to a device — the scheduler library itself never touches them.
 
 ## Project Structure
 
@@ -35,9 +35,9 @@ scheduler/
 ├── include/scheduler/
 │   ├── scheduler.hpp               # Scheduler<TaskType>, Schedulable/SizedSchedulable, SchedulingPolicy
 │   ├── scheduler.tpp               # Template method bodies
-│   └── quantum_task.hpp            # mqss::QuantumTask - example Schedulable task type
+│   └── quantum_task.hpp            # mqss::scheduler::QuantumTask - example Schedulable task type
 ├── src/
-│   └── scheduler.cpp               # Explicit template instantiation for mqss::QuantumTask
+│   └── scheduler.cpp               # Explicit template instantiation for mqss::scheduler::QuantumTask
 ├── tests/
 │   └── gtest_scheduler.cpp         # Example-based + property-based tests, one per policy
 ├── examples/
