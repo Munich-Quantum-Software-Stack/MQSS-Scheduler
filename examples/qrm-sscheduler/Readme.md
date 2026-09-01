@@ -24,8 +24,7 @@ qc-container
 ## Architecture
 
 This follows QRM's own
-[`deployment/workflow-aio/main.cpp`](
-https://github.com/Munich-Quantum-Software-Stack/QRM/blob/qrm-ci/deployment/workflow-aio/main.cpp#L23)
+[`deployment/workflow-aio/main.cpp`](https://github.com/Munich-Quantum-Software-Stack/QRM/blob/qrm-ci/deployment/workflow-aio/main.cpp#L23)
 pattern: a scheduler with a background thread that owns the QDMI submission path, decoupled
 from however tasks arrive. QRM runs that as two `std::thread`s in one process; here it's 2
 MPI ranks (rank 0 = gRPC ingress, rank 1 = `Scheduler` + an embedded submitter thread).

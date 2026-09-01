@@ -17,11 +17,11 @@
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
 
-#include <scheduler/scheduler.hpp>
 #include <scheduler/quantum_task.hpp>
+#include <scheduler/scheduler.hpp>
 
 // Scheduler's methods are defined header-side (scheduler.tpp). As we can keep
 // instantiable for whatever TaskType a project uses (see
-// scheduler.tpp's header comment). This can be used to explicitly 
+// scheduler.tpp's header comment). This can be used to explicitly
 // instantiate the Scheduler for a specific TaskType.
 template class mqss::scheduler::Scheduler<mqss::scheduler::QuantumTask>;

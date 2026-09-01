@@ -20,9 +20,9 @@
 #ifndef SCHEDULER_HPP
 #define SCHEDULER_HPP
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
-#include <concepts>
 #include <mutex>
 #include <optional>
 #include <vector>
@@ -33,7 +33,7 @@ namespace mqss::scheduler {
  * @brief Minimal shape a task must expose to be schedulable.
  *
  * Following the MQSS QRM design, the concept of Schedulable is defined
- * in which quantum tasks must be schedulable objects. It can be usable 
+ * in which quantum tasks must be schedulable objects. It can be usable
  * here with minimal modification.
  */
 template <typename T>
@@ -45,9 +45,9 @@ concept Schedulable = requires(T task) {
 /**
  * @brief Schedulable concept with a qubit-count accessor/operand.
  *
- * This might be useful for the Backfilling policy and only when 
+ * This might be useful for the Backfilling policy and only when
  * a concrete TaskType happens to provide it (checked via
- * `if constexpr`). Protobuf's QuantumTask satisfies this too 
+ * `if constexpr`). Protobuf's QuantumTask satisfies this too
  * (its `n_qbits` field generates an `n_qbits()` getter).
  */
 template <typename T>
@@ -59,18 +59,12 @@ concept SizedSchedulable = Schedulable<T> && requires(T task) {
  * @brief Available scheduling policies.
  *
  * Be able to add more scheduling policies in the future. For now,
- * FirstInFirstOut/PriorityBased are basic, RoundRobin/Backfilling/MixNMulti 
+ * FirstInFirstOut/PriorityBased are basic, RoundRobin/Backfilling/MixNMulti
  * might be useful for the quantum task scheduling. The policies are designed to be
- * compatible with the MQSS QRM design, and can be used in the future 
+ * compatible with the MQSS QRM design, and can be used in the future
  * depending on the requirements.
  */
-enum class SchedulingPolicy {
-    FirstInFirstOut,
-    PriorityBased,
-    RoundRobin,
-    Backfilling,
-    MixNMulti
-};
+enum class SchedulingPolicy { FirstInFirstOut, PriorityBased, RoundRobin, Backfilling, MixNMulti };
 
 /**
  * @brief A standalone, dependency-free quantum task scheduler.
@@ -119,9 +113,9 @@ public:
     void setAvailableQubits(int qubits);
 
     /// A waiting time offset priority to set the effective priority of a task.
-    /// The effective priority is calculated as tick of queue age adds `weight` 
-    /// to a task's effective priority, so a low-priority task that has waited 
-    /// long enough still eventually wins over a freshly-arrived high-priority 
+    /// The effective priority is calculated as tick of queue age adds `weight`
+    /// to a task's effective priority, so a low-priority task that has waited
+    /// long enough still eventually wins over a freshly-arrived high-priority
     /// one, default: 1.0.
     void setAgingWeight(double weight);
 
@@ -132,8 +126,8 @@ private:
         uint64_t sequence;
     };
 
-    // The callers scheduleTask/scheduleTasks methods take the mutex 
-    // and then call this helper. Split out so scheduleTasks can lock 
+    // The callers scheduleTask/scheduleTasks methods take the mutex
+    // and then call this helper. Split out so scheduleTasks can lock
     // once for the whole batch instead of once per task.
     void scheduleTaskLocked(const TaskType &task);
 

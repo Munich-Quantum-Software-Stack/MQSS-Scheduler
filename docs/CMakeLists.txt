@@ -55,9 +55,9 @@ configure_file("${SCHEDULER_DOXYGEN_CONFIG_FILE_IN}"
                "${SCHEDULER_DOXYGEN_CONFIG_FILE}" @ONLY)
 
 file(MAKE_DIRECTORY "${SCHEDULER_DOXYGEN_OUTPUT_DIR}/html")
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/_static/mqss_logo_dark.svg"
-               "${SCHEDULER_DOXYGEN_OUTPUT_DIR}/html/mqss_logo_dark.svg"
-               COPYONLY)
+configure_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/_static/mqss_logo_dark.svg"
+  "${SCHEDULER_DOXYGEN_OUTPUT_DIR}/html/mqss_logo_dark.svg" COPYONLY)
 
 add_custom_command(
   OUTPUT "${SCHEDULER_DOXYGEN_OUTPUT_DIR}/html/index.html"
@@ -70,4 +70,5 @@ add_custom_command(
   COMMENT "Generating Scheduler documentation with Doxygen"
   VERBATIM)
 
-add_custom_target(docs DEPENDS "${SCHEDULER_DOXYGEN_OUTPUT_DIR}/html/index.html")
+add_custom_target(docs
+                  DEPENDS "${SCHEDULER_DOXYGEN_OUTPUT_DIR}/html/index.html")

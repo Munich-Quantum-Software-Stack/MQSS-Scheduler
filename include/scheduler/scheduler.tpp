@@ -19,7 +19,7 @@
 
 // Template for the quantum task scheduler, split out of scheduler.hpp;
 // kept header-visible - rather than moved into scheduler.cpp as ordinary
-// out-of-line definitions. This might be clear for Scheduler as it must stay 
+// out-of-line definitions. This might be clear for Scheduler as it must stay
 // instantiable for any TaskType a *consumer* project chooses (e.g. QRM's protobuf
 // mqss::scheduler::QuantumTask).
 // scheduler.cpp only explicitly instantiates it for this repo's own
@@ -35,12 +35,12 @@ namespace mqss::scheduler {
 template <Schedulable TaskType>
 Scheduler<TaskType>::Scheduler(SchedulingPolicy policy) : currentPolicy(policy) {}
 
-template <Schedulable TaskType>
-void Scheduler<TaskType>::scheduleTaskLocked(const TaskType &task) {
+template <Schedulable TaskType> void Scheduler<TaskType>::scheduleTaskLocked(const TaskType &task) {
     if (currentPolicy == SchedulingPolicy::PriorityBased) {
         // Insert the new task into the queue in priority order (higher priority first).
-        auto it = std::find_if(taskQueue.begin(), taskQueue.end(),
-                                [&](const Entry &existing) { return task.priority() > existing.task.priority(); });
+        auto it = std::find_if(taskQueue.begin(), taskQueue.end(), [&](const Entry &existing) {
+            return task.priority() > existing.task.priority();
+        });
         taskQueue.insert(it, Entry{task, nextSequence++});
     } else {
         // FirstInFirstOut, RoundRobin, Backfilling, and MixNMulti all keep
@@ -112,7 +112,8 @@ template <Schedulable TaskType> std::optional<TaskType> Scheduler<TaskType>::nex
     return task;
 }
 
-template <Schedulable TaskType> std::optional<TaskType> Scheduler<TaskType>::nextRoundRobinLocked() {
+template <Schedulable TaskType>
+std::optional<TaskType> Scheduler<TaskType>::nextRoundRobinLocked() {
     if (taskQueue.empty()) {
         return std::nullopt;
     }
@@ -139,7 +140,8 @@ template <Schedulable TaskType> std::optional<TaskType> Scheduler<TaskType>::nex
     return std::nullopt;
 }
 
-template <Schedulable TaskType> std::optional<TaskType> Scheduler<TaskType>::nextBackfillingLocked() {
+template <Schedulable TaskType>
+std::optional<TaskType> Scheduler<TaskType>::nextBackfillingLocked() {
     if (taskQueue.empty()) {
         return std::nullopt;
     }
@@ -171,14 +173,17 @@ template <Schedulable TaskType> std::optional<TaskType> Scheduler<TaskType>::nex
     // low-priority task doesn't starve behind a steady stream of
     // higher-priority arrivals - the same intent as the `Age` field
     // (prevents starvation in the queue).
-    auto it = std::max_element(taskQueue.begin(), taskQueue.end(), [&](const Entry &a, const Entry &b) {
-        const double scoreA = a.task.priority() + agingWeight * static_cast<double>(nextSequence - a.sequence);
-        const double scoreB = b.task.priority() + agingWeight * static_cast<double>(nextSequence - b.sequence);
-        if (scoreA != scoreB) {
-            return scoreA < scoreB;
-        }
-        return a.sequence > b.sequence; // tie-break: earlier arrival wins
-    });
+    auto it =
+        std::max_element(taskQueue.begin(), taskQueue.end(), [&](const Entry &a, const Entry &b) {
+            const double scoreA =
+                a.task.priority() + agingWeight * static_cast<double>(nextSequence - a.sequence);
+            const double scoreB =
+                b.task.priority() + agingWeight * static_cast<double>(nextSequence - b.sequence);
+            if (scoreA != scoreB) {
+                return scoreA < scoreB;
+            }
+            return a.sequence > b.sequence; // tie-break: earlier arrival wins
+        });
     TaskType task = it->task;
     taskQueue.erase(it);
     return task;

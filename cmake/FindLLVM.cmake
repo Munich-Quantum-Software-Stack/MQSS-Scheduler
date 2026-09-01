@@ -21,30 +21,32 @@
 # FindLLVM.cmake
 #
 # Wrapper that locates the pre-built LLVM installation via its own
-# LLVMConfig.cmake. Sets LLVM_DIR and delegates to the official config module
-# so all LLVM imported targets (e.g. "LLVM") and variables are available.
+# LLVMConfig.cmake. Sets LLVM_DIR and delegates to the official config module so
+# all LLVM imported targets (e.g. "LLVM") and variables are available.
 #
-# Set LLVM_ROOT to override the search location. Default is the value of
-# the LLVM_ROOT environment variable, or /home/admin/shared/dependencies/installed
+# Set LLVM_ROOT to override the search location. Default is the value of the
+# LLVM_ROOT environment variable, or /home/admin/shared/dependencies/installed
 # (the shared LLVM pre-built by the top-level dependency scripts).
 # ------------------------------------------------------------------------------
 
 if(NOT LLVM_ROOT)
-    if(DEFINED ENV{LLVM_ROOT})
-        set(LLVM_ROOT "$ENV{LLVM_ROOT}" CACHE PATH "Path to LLVM root install")
-    else()
-        set(LLVM_ROOT "/home/admin/shared/dependencies/installed"
-            CACHE PATH "Path to LLVM root install")
-    endif()
+  if(DEFINED ENV{LLVM_ROOT})
+    set(LLVM_ROOT
+        "$ENV{LLVM_ROOT}"
+        CACHE PATH "Path to LLVM root install")
+  else()
+    set(LLVM_ROOT
+        "/home/admin/shared/dependencies/installed"
+        CACHE PATH "Path to LLVM root install")
+  endif()
 endif()
 
-set(LLVM_DIR "${LLVM_ROOT}/lib/cmake/llvm" CACHE PATH "Path to LLVMConfig.cmake" FORCE)
+set(LLVM_DIR
+    "${LLVM_ROOT}/lib/cmake/llvm"
+    CACHE PATH "Path to LLVMConfig.cmake" FORCE)
 
 # Delegate to the official LLVM config — provides all imported targets and vars
-find_package(LLVM CONFIG REQUIRED
-    HINTS "${LLVM_DIR}"
-    NO_CMAKE_FIND_ROOT_PATH
-)
+find_package(LLVM CONFIG REQUIRED HINTS "${LLVM_DIR}" NO_CMAKE_FIND_ROOT_PATH)
 
 message(STATUS "LLVM_ROOT         = ${LLVM_ROOT}")
 message(STATUS "LLVM_DIR          = ${LLVM_DIR}")

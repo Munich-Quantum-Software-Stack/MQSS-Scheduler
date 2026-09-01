@@ -20,39 +20,35 @@
 # ------------------------------------------------------------------------------
 # FindQinfo.cmake
 #
-# Imported variables:
-#   QINFO_FOUND        - True if found
-#   QINFO_INCLUDE_DIR  - Directory containing qinfo/qinfo.h
-#   QINFO_LIBRARIES    - Full path to libqinfo
+# Imported variables: QINFO_FOUND        - True if found QINFO_INCLUDE_DIR  -
+# Directory containing qinfo/qinfo.h QINFO_LIBRARIES    - Full path to libqinfo
 # ------------------------------------------------------------------------------
 
 # Default root: external/installed/ (relative to this file's location)
 if(NOT QINFO_ROOT)
-    set(QINFO_ROOT
-        "${CMAKE_CURRENT_LIST_DIR}/../external/installed"
-        CACHE PATH "Path to QInfo install prefix")
+  set(QINFO_ROOT
+      "${CMAKE_CURRENT_LIST_DIR}/../external/installed"
+      CACHE PATH "Path to QInfo install prefix")
 endif()
 
-find_path(QINFO_INCLUDE_DIR
-    NAMES qinfo/qinfo.h
-    PATHS "${QINFO_ROOT}/include"
-    NO_DEFAULT_PATH
-)
-find_library(QINFO_LIBRARY
-    NAMES qinfo
-    PATHS "${QINFO_ROOT}/lib"
-          "${QINFO_ROOT}/lib64"
-    NO_DEFAULT_PATH
-)
+find_path(
+  QINFO_INCLUDE_DIR
+  NAMES qinfo/qinfo.h
+  PATHS "${QINFO_ROOT}/include"
+  NO_DEFAULT_PATH)
+find_library(
+  QINFO_LIBRARY
+  NAMES qinfo
+  PATHS "${QINFO_ROOT}/lib" "${QINFO_ROOT}/lib64"
+  NO_DEFAULT_PATH)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Qinfo
-    REQUIRED_VARS QINFO_INCLUDE_DIR QINFO_LIBRARY
-)
+find_package_handle_standard_args(Qinfo REQUIRED_VARS QINFO_INCLUDE_DIR
+                                                      QINFO_LIBRARY)
 
 if(QINFO_FOUND)
-    set(QINFO_INCLUDE_DIRS ${QINFO_INCLUDE_DIR})
-    set(QINFO_LIBRARIES ${QINFO_LIBRARY})
+  set(QINFO_INCLUDE_DIRS ${QINFO_INCLUDE_DIR})
+  set(QINFO_LIBRARIES ${QINFO_LIBRARY})
 endif()
 
 mark_as_advanced(QINFO_INCLUDE_DIR QINFO_LIBRARY)

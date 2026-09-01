@@ -29,17 +29,15 @@
 
 #pragma once
 
+#include <grpcpp/grpcpp.h>
 #include <memory>
 #include <mutex>
 #include <string>
-
-#include <grpcpp/grpcpp.h>
 // grpcpp.h alone only forward-declares grpc::Service — MqssGrpcServer below
 // holds a std::unique_ptr<grpc::Service>, whose destructor needs the full
 // definition wherever it's instantiated (i.e. anywhere a MqssGrpcServer
 // goes out of scope, not just in mqss_grpc_server.cpp).
 #include <grpcpp/impl/service_type.h>
-
 #include <scheduler/quantum_task.hpp>
 
 // Shutdown-sentinel task_id, used across both ranks to signal a clean

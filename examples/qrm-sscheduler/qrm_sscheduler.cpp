@@ -41,38 +41,34 @@
 // preferred_qpu/scheduled_qpu (mirroring the real protobuf schema) but
 // nothing here reads them yet.
 
-#include <mpi.h>
-
 #include <atomic>
 #include <chrono>
 #include <csignal>
 #include <cstdio>
 #include <ctime>
+#include <grpcpp/grpcpp.h>
 #include <iostream>
 #include <memory>
+#include <mpi.h>
 #include <mutex>
 #include <optional>
+#include <qdmi.hpp>
+#include <qdmi/constants.h>
+#include <qinfo/qinfo.h>
 #include <string>
 #include <thread>
 #include <vector>
-
-#include <grpcpp/grpcpp.h>
-
-#include <qinfo/qinfo.h>
-#include <qdmi.hpp>
-#include <qdmi/constants.h>
 
 // The older, LLVM/JIT-coupled QuantumTask struct + Submitter class -
 // Submitter::submitTask still expects this type, not Scheduler's
 // mqss::scheduler::QuantumTask (see scheduler/quantum_task.hpp's header comment).
 // Distinguished from mqss::scheduler::QuantumTask below by namespace and include path.
-#include <submitter.hpp>
-#include <quantum_task.hpp>
-
-#include <scheduler/scheduler.hpp>
-#include <scheduler/quantum_task.hpp>
-
 #include "mqss_grpc_server.hpp"
+
+#include <quantum_task.hpp>
+#include <scheduler/quantum_task.hpp>
+#include <scheduler/scheduler.hpp>
+#include <submitter.hpp>
 
 // --------------------------------------------------------------
 // Graceful shutdown on Ctrl+C (SIGINT) / SIGTERM. mpirun forwards the
@@ -178,7 +174,8 @@ int main(int argc, char **argv) {
             printf("[P0] shutdown watcher: waiting in sigwait()\n");
             const int rc = sigwait(&shutdown_signals, &caught_signal);
             printf("[P0] shutdown watcher: sigwait() returned rc=%d "
-                   "signal=%d, calling Shutdown()\n", rc, caught_signal);
+                   "signal=%d, calling Shutdown()\n",
+                   rc, caught_signal);
             grpc_server.server->Shutdown();
             printf("[P0] shutdown watcher: Shutdown() returned\n");
         });
@@ -194,20 +191,21 @@ int main(int argc, char **argv) {
         const std::string stop_msg = serialize_quantum_task(stop_task);
         {
             std::lock_guard<std::mutex> lock(mpi_mutex);
-            MPI_Send(stop_msg.c_str(), static_cast<int>(stop_msg.size()) + 1,
-                     MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+            MPI_Send(stop_msg.c_str(), static_cast<int>(stop_msg.size()) + 1, MPI_CHAR, 1, 0,
+                     MPI_COMM_WORLD);
         }
         printf("[P0] gRPC listener shut down, shutdown signal forwarded to "
                "rank 1\n");
 
-    // --------------------------------------------------------------
-    // Rank 1: Scheduler, with the QDMI Submitter running as an embedded
-    // thread inside this same process rather than a further MPI rank -
-    // see this file's top-of-file comment for why.
-    // --------------------------------------------------------------
+        // --------------------------------------------------------------
+        // Rank 1: Scheduler, with the QDMI Submitter running as an embedded
+        // thread inside this same process rather than a further MPI rank -
+        // see this file's top-of-file comment for why.
+        // --------------------------------------------------------------
     } else if (rank == 1) {
         printf("[P%d] Initializing Scheduler\n", rank);
-        mqss::scheduler::Scheduler<mqss::scheduler::QuantumTask> scheduler(mqss::scheduler::SchedulingPolicy::FirstInFirstOut);
+        mqss::scheduler::Scheduler<mqss::scheduler::QuantumTask> scheduler(
+            mqss::scheduler::SchedulingPolicy::FirstInFirstOut);
 
         std::string driver_name = "qdmi_example_driver";
         std::string token = "test_token";
@@ -229,7 +227,8 @@ int main(int argc, char **argv) {
         std::atomic<bool> submitter_stop{false};
         std::thread submitter_thread([&]() {
             printf("[P%d] Submitter thread started. Waiting for ready "
-                   "tasks to submit.\n", rank);
+                   "tasks to submit.\n",
+                   rank);
             while (!submitter_stop.load()) {
                 auto next = scheduler.getNextReadyTask();
                 if (!next.has_value()) {
@@ -238,8 +237,8 @@ int main(int argc, char **argv) {
                 }
 
                 auto old_task = to_submitter_task(*next);
-                printf("[P%d] Submitter thread: submitting task %d - %s\n", rank,
-                       old_task->TaskId, old_task->CircuitFile.c_str());
+                printf("[P%d] Submitter thread: submitting task %d - %s\n", rank, old_task->TaskId,
+                       old_task->CircuitFile.c_str());
                 const QDMI_Job_Status status = submitter.submitTask(old_task, my_device);
                 printf("[P%d] Submitter thread: task %d finished with status "
                        "%d, results written to %s\n",
@@ -251,25 +250,25 @@ int main(int argc, char **argv) {
         char buffer[65536]; // circuits can be larger than a 1024-byte buffer
         MPI_Status sched_status;
         while (true) {
-            MPI_Recv(buffer, sizeof(buffer), MPI_CHAR, 0, 0, MPI_COMM_WORLD,
-                     &sched_status);
+            MPI_Recv(buffer, sizeof(buffer), MPI_CHAR, 0, 0, MPI_COMM_WORLD, &sched_status);
             std::string msg(buffer);
             mqss::scheduler::QuantumTask task = deserialize_quantum_task(msg);
 
             if (task.task_id() == kShutdownTaskId) {
                 printf("[P%d] Scheduler: shutdown signal received, "
-                       "stopping submitter thread and finalizing\n", rank);
+                       "stopping submitter thread and finalizing\n",
+                       rank);
                 submitter_stop.store(true);
                 submitter_thread.join();
                 break;
             }
 
-            printf("[P%d] Scheduler: received task %d - %s, scheduling\n",
-                   rank, task.task_id(),
+            printf("[P%d] Scheduler: received task %d - %s, scheduling\n", rank, task.task_id(),
                    task.circuit_files().empty() ? "" : task.circuit_files().front().c_str());
             scheduler.scheduleTask(task);
             printf("[P%d] Scheduler: task %d scheduled, %zu task(s) now "
-                   "queued\n", rank, task.task_id(), scheduler.getTaskCount());
+                   "queued\n",
+                   rank, task.task_id(), scheduler.getTaskCount());
         }
     }
 

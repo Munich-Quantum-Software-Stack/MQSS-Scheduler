@@ -17,7 +17,7 @@
  * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
  */
 
-// Note: This project has a similar QuantumTask structure with `mqss::QuantumTask` 
+// Note: This project has a similar QuantumTask structure with `mqss::QuantumTask`
 // to keep consistent with the MQSS Quantum resource manager.
 
 #ifndef MQSS_SCHEDULER_QUANTUM_TASK_HPP
@@ -31,11 +31,11 @@ namespace mqss::scheduler {
 
 /**
  * @brief Quantum Task follows the MQSS Quantum resource manager.
- * The task properties are based on the quantum scheduler concepts. 
- * In which, the task object is referred to protobuf to simplify 
+ * The task properties are based on the quantum scheduler concepts.
+ * In which, the task object is referred to protobuf to simplify
  * the communication protocol, serialization, and deserialization.
- * 
- * Some attributes might be not required for the scheduling, but they 
+ *
+ * Some attributes might be not required for the scheduling, but they
  * might be useful for the task submission and execution.
  *  + via_hpc: whether the task is submitted via HPC or not.
  *  + circuit_files: the list of circuit files for the task.
@@ -49,8 +49,8 @@ public:
     QuantumTask(int task_id, int priority, int n_qbits = 1, int n_shots = 1000)
         : task_id_(task_id), priority_(priority), n_qbits_(n_qbits), n_shots_(n_shots) {}
 
-    // To keep the task properties matching with the predefined quantum task in 
-    // the MQSS Quantum resource manager, the following variables are named 
+    // To keep the task properties matching with the predefined quantum task in
+    // the MQSS Quantum resource manager, the following variables are named
     // according to the proto fields, mqss::protocol::v1::QuantumTask.
     // Private members below use a trailing underscore rather than being
     // bare `task_id` etc.

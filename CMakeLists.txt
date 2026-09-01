@@ -30,9 +30,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_FLAGS "-g -DDEBUG")
 set(BUILD_SHARED_LIBS ON)
 
-# Tests and install rules default set OFF when built standalone when pulled
-# in by a parent project (add_subdirectory()/FetchContent). In case building
-# as top-level, lets set them ON.
+# Tests and install rules default set OFF when built standalone when pulled in
+# by a parent project (add_subdirectory()/FetchContent). In case building as
+# top-level, lets set them ON.
 option(BUILD_SCHEDULER_TESTS "Build the Scheduler test suite" OFF)
 option(SCHEDULER_INSTALL "Generate install rules for the Scheduler library" OFF)
 option(BUILD_SCHEDULER_DOCS "Build Doxygen API documentation" OFF)
@@ -40,25 +40,23 @@ option(BUILD_SCHEDULER_DOCS "Build Doxygen API documentation" OFF)
 # Include external dependencies and find packages
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
-# Scheduler<TaskType> (include/scheduler/scheduler.hpp) is header-only 
-# it only needs GoogleTest (fetched below, via
-# cmake/ExternalDependencies.cmake) for tests/gtest_scheduler.cpp and
-# GoogleTest itself is only fetched when tests are actually being built.
+# Scheduler<TaskType> (include/scheduler/scheduler.hpp) is header-only it only
+# needs GoogleTest (fetched below, via cmake/ExternalDependencies.cmake) for
+# tests/gtest_scheduler.cpp and GoogleTest itself is only fetched when tests are
+# actually being built.
 if(BUILD_SCHEDULER_TESTS)
   include(cmake/ExternalDependencies.cmake)
 endif()
 find_package(Threads REQUIRED)
 
 # Compile the scheduler library
-file(GLOB SCHEDULER_SRC
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
-)
+file(GLOB SCHEDULER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 add_library(scheduler SHARED ${SCHEDULER_SRC})
 set_target_properties(scheduler PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(scheduler PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>)
+target_include_directories(
+  scheduler PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+                   $<INSTALL_INTERFACE:include>)
 target_link_libraries(scheduler PUBLIC Threads::Threads)
 
 # Add the test
@@ -73,16 +71,20 @@ endif()
 
 # Set the installation
 if(SCHEDULER_INSTALL)
-  install(TARGETS scheduler
-      LIBRARY DESTINATION lib
-      INCLUDES DESTINATION include
-  )
+  install(
+    TARGETS scheduler
+    LIBRARY DESTINATION lib
+    INCLUDES
+    DESTINATION include)
   # INCLUDES DESTINATION above only tags metadata on the exported target for
   # downstream find_package(scheduler CONFIG) consumers - it does not copy any
-  # header files (same gap as external/submitter/CMakeLists.txt had), so
-  # the headers need installing explicitly too.
-  install(DIRECTORY include/
-      DESTINATION include
-      FILES_MATCHING PATTERN "*.hpp" PATTERN "*.h" PATTERN "*.tpp"
-  )
+  # header files (same gap as external/submitter/CMakeLists.txt had), so the
+  # headers need installing explicitly too.
+  install(
+    DIRECTORY include/
+    DESTINATION include
+    FILES_MATCHING
+    PATTERN "*.hpp"
+    PATTERN "*.h"
+    PATTERN "*.tpp")
 endif()

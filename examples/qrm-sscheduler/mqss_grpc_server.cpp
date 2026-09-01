@@ -19,16 +19,15 @@
 
 #include "mqss_grpc_server.hpp"
 
-#include <mpi.h>
+#include "quantum_job.grpc.pb.h"
 
 #include <atomic>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <mpi.h>
 #include <sstream>
 #include <vector>
-
-#include "quantum_job.grpc.pb.h"
 
 // --------------------------------------------------------------
 // Serialize/deserialize a mqss::scheduler::QuantumTask as a string (for sending over
@@ -51,10 +50,11 @@ mqss::scheduler::QuantumTask deserialize_quantum_task(const std::string &s) {
     std::istringstream iss(s);
     std::string token;
     std::vector<std::string> parts;
-    while (std::getline(iss, token, ';')) parts.push_back(token);
+    while (std::getline(iss, token, ';'))
+        parts.push_back(token);
 
     mqss::scheduler::QuantumTask task(std::stoi(parts[0]), std::stoi(parts[1]), std::stoi(parts[2]),
-                            std::stoi(parts[3]));
+                                      std::stoi(parts[3]));
     if (!parts[4].empty()) {
         task.add_circuit_file(parts[4]);
     }
@@ -88,9 +88,8 @@ public:
         // Rank 0/1 (and rank 1's embedded submitter thread) share this
         // container's filesystem, so this needs no cross-container sharing,
         // unlike the gRPC hop itself.
-        const std::string circuit_file = circuits_dir_ + "/job_" +
-                                         std::to_string(task_id) + "." +
-                                         request->program_format();
+        const std::string circuit_file =
+            circuits_dir_ + "/job_" + std::to_string(task_id) + "." + request->program_format();
         std::ofstream ofs(circuit_file);
         ofs << request->program();
         ofs.close();
@@ -105,19 +104,17 @@ public:
         task.add_circuit_file(circuit_file);
         task.set_circuit_file_type(request->program_format());
         task.set_result_destination(circuits_dir_ + "/job_" + std::to_string(task_id) +
-                                     "_result.txt");
+                                    "_result.txt");
 
         const std::string msg = serialize_quantum_task(task);
         {
             std::lock_guard<std::mutex> lock(mpi_mutex_);
-            MPI_Send(msg.c_str(), static_cast<int>(msg.size()) + 1, MPI_CHAR, 1, 0,
-                     MPI_COMM_WORLD);
+            MPI_Send(msg.c_str(), static_cast<int>(msg.size()) + 1, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
         }
 
         printf("[P0] gRPC listener: accepted external job_id=%s qc_alias=%s "
                "shots=%d -> internal task_id=%d, forwarded to Scheduler\n",
-               request->job_id().c_str(), request->qc_alias().c_str(),
-               request->shots(), task_id);
+               request->job_id().c_str(), request->qc_alias().c_str(), request->shots(), task_id);
 
         // Fire-and-forget: acknowledge acceptance into the pipeline, not
         // completion. `counts` is intentionally left empty.

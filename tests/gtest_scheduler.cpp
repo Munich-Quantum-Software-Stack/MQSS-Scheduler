@@ -23,15 +23,14 @@
 // pulled into another project (e.g. QRM) with none of this repo's other
 // dependencies in tow.
 
+#include "scheduler/quantum_task.hpp"
+#include "scheduler/scheduler.hpp"
+
 #include <algorithm>
 #include <deque>
+#include <gtest/gtest.h>
 #include <random>
 #include <utility>
-
-#include <gtest/gtest.h>
-
-#include "scheduler/scheduler.hpp"
-#include "scheduler/quantum_task.hpp"
 
 using mqss::scheduler::QuantumTask;
 using mqss::scheduler::Scheduler;
@@ -237,7 +236,7 @@ TEST(Scheduler, FirstInFirstOut_Property_MatchesArrivalOrder) {
 
 // --------------------------------------------------------
 // PriorityBased: draining the queue must equal a stable sort of all
-// scheduled jobs by descending priority (i.e., higher priority first, 
+// scheduled jobs by descending priority (i.e., higher priority first,
 // ties broken by arrival order).
 // Priorities are drawn from a small range to force frequent ties, since
 // that's where a non-stable implementation would show up.
@@ -260,7 +259,7 @@ TEST(Scheduler, PriorityBased_Property_MatchesStableSortByPriorityDescending) {
             recs.push_back({i, p});
         }
         std::stable_sort(recs.begin(), recs.end(),
-                          [](const Rec &a, const Rec &b) { return a.priority > b.priority; });
+                         [](const Rec &a, const Rec &b) { return a.priority > b.priority; });
 
         for (const auto &rec : recs) {
             auto job = sched.getNextReadyTask();
@@ -305,7 +304,8 @@ TEST(Scheduler, RoundRobin_Property_MatchesPerLaneFifoReferenceModel) {
         std::vector<int> perLaneCounter(numLanes, 0);
         size_t total = 0;
         for (int lane : lanesToSchedule) {
-            const int id = lane + static_cast<int>(numLanes) * perLaneCounter[static_cast<size_t>(lane)]++;
+            const int id =
+                lane + static_cast<int>(numLanes) * perLaneCounter[static_cast<size_t>(lane)]++;
             sched.scheduleTask(generateTask(id, 0));
             laneQueues[static_cast<size_t>(lane)].push_back(id);
             ++total;
@@ -321,7 +321,8 @@ TEST(Scheduler, RoundRobin_Property_MatchesPerLaneFifoReferenceModel) {
                     break;
                 }
             }
-            ASSERT_NE(found, numLanes) << "reference model ran out of jobs early - test bug, not scheduler bug";
+            ASSERT_NE(found, numLanes)
+                << "reference model ran out of jobs early - test bug, not scheduler bug";
             const int expectedId = laneQueues[found].front();
             laneQueues[found].pop_front();
             cursor = (found + 1) % numLanes;
@@ -362,7 +363,7 @@ TEST(Scheduler, Backfilling_Property_NeverExceedsCapacityAndPicksEarliestFit) {
             ++rounds;
             while (true) {
                 auto it = std::find_if(pending.begin(), pending.end(),
-                                        [&](const auto &p) { return p.second <= capacity; });
+                                       [&](const auto &p) { return p.second <= capacity; });
                 auto actual = sched.getNextReadyTask();
                 if (it == pending.end()) {
                     EXPECT_FALSE(actual.has_value());
@@ -376,16 +377,17 @@ TEST(Scheduler, Backfilling_Property_NeverExceedsCapacityAndPicksEarliestFit) {
             capacity += capacityStepDist(rng); // strictly grows -> guarantees termination
             sched.setAvailableQubits(capacity);
         }
-        EXPECT_TRUE(pending.empty()) << "capacity never grew enough to admit every job - test design issue";
+        EXPECT_TRUE(pending.empty())
+            << "capacity never grew enough to admit every job - test design issue";
         EXPECT_FALSE(sched.getNextReadyTask().has_value());
     }
 }
 
 // --------------------------------------------------------
 // MixNMulti: a reference model computes each job's score as
-// score = priority + agingWeight * (arrivals since this job 
-// was queued), highest score dispatched first, ties broken by 
-// earliest arrival - applied consistently for many random 
+// score = priority + agingWeight * (arrivals since this job
+// was queued), highest score dispatched first, ties broken by
+// earliest arrival - applied consistently for many random
 // (priority, agingWeight) combinations.
 // --------------------------------------------------------
 TEST(Scheduler, MixNMulti_Property_AlwaysPicksMaxScoreByItsOwnFormula) {
@@ -413,14 +415,17 @@ TEST(Scheduler, MixNMulti_Property_AlwaysPicksMaxScoreByItsOwnFormula) {
         const auto nextSequence = static_cast<uint64_t>(n);
 
         for (int step = 0; step < n; ++step) {
-            auto best = std::max_element(pending.begin(), pending.end(), [&](const Rec &a, const Rec &b) {
-                const double scoreA = a.priority + weight * static_cast<double>(nextSequence - a.sequence);
-                const double scoreB = b.priority + weight * static_cast<double>(nextSequence - b.sequence);
-                if (scoreA != scoreB) {
-                    return scoreA < scoreB;
-                }
-                return a.sequence > b.sequence; // earlier arrival wins ties
-            });
+            auto best =
+                std::max_element(pending.begin(), pending.end(), [&](const Rec &a, const Rec &b) {
+                    const double scoreA =
+                        a.priority + weight * static_cast<double>(nextSequence - a.sequence);
+                    const double scoreB =
+                        b.priority + weight * static_cast<double>(nextSequence - b.sequence);
+                    if (scoreA != scoreB) {
+                        return scoreA < scoreB;
+                    }
+                    return a.sequence > b.sequence; // earlier arrival wins ties
+                });
             const int expectedId = best->task_id;
             pending.erase(best);
 

@@ -24,7 +24,7 @@ A dependency-free, header-driven C++20 task scheduler (`mqss::scheduler::Schedul
 
 `Scheduler<TaskType>` is constrained by the `Schedulable` concept (`task_id()`, `priority()`) and, optionally, `SizedSchedulable` (`n_qbits()`, used only by the `Backfilling` policy). It queues tasks (`scheduleTask`/`scheduleTasks`) and dispatches them one at a time (`getNextReadyTask`) according to a `SchedulingPolicy` fixed at construction — see [Scheduling Policies](#scheduling-policies).
 
-`include/scheduler/quantum_task.hpp`'s `mqss::scheduler::QuantumTask` is a lightweight example task type (mirroring the MQSS protocol's `QuantumTask` message field-for-field) used to exercise the scheduler in tests and examples. QDMI/LLVM/submitter only enter the picture at the *example* level (`examples/qrm-sscheduler/`), where a scheduled task actually gets submitted to a device — the scheduler library itself never touches them.
+`include/scheduler/quantum_task.hpp`'s `mqss::scheduler::QuantumTask` is a lightweight example task type (mirroring the MQSS protocol's `QuantumTask` message field-for-field) used to exercise the scheduler in tests and examples. QDMI/LLVM/submitter only enter the picture at the _example_ level (`examples/qrm-sscheduler/`), where a scheduled task actually gets submitted to a device — the scheduler library itself never touches them.
 
 ## Project Structure
 
@@ -108,13 +108,13 @@ the result.
 
 ## Scheduling Policies
 
-| Policy | Description |
-|--------|-------------|
-| `FirstInFirstOut` | Dispatches tasks in arrival order |
-| `PriorityBased` | Dispatches the highest-priority task first; ties keep arrival order |
-| `RoundRobin` | Cycles dispatch across `task_id() % numLanes` lanes, so no lane's backlog starves the others |
-| `Backfilling` | Skips a queued task that doesn't fit `setAvailableQubits()` in favor of a smaller one that does |
-| `MixNMulti` | Dispatches by `priority() + agingWeight × waitTime`, so a long-waiting low-priority task eventually outranks a fresh high-priority one |
+| Policy            | Description                                                                                                                            |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `FirstInFirstOut` | Dispatches tasks in arrival order                                                                                                      |
+| `PriorityBased`   | Dispatches the highest-priority task first; ties keep arrival order                                                                    |
+| `RoundRobin`      | Cycles dispatch across `task_id() % numLanes` lanes, so no lane's backlog starves the others                                           |
+| `Backfilling`     | Skips a queued task that doesn't fit `setAvailableQubits()` in favor of a smaller one that does                                        |
+| `MixNMulti`       | Dispatches by `priority() + agingWeight × waitTime`, so a long-waiting low-priority task eventually outranks a fresh high-priority one |
 
 ---
 
