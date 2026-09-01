@@ -1,6 +1,6 @@
 # MQSS Quantum Task Scheduler
 
-A dependency-free, header-driven C++20 task scheduler (`mqss::Scheduler<TaskType>`) for
+A dependency-free, header-driven C++20 task scheduler (`mqss::scheduler::Scheduler<TaskType>`) for
 dispatching quantum circuits to quantum hardware devices via
 [QDMI](https://github.com/Munich-Quantum-Software-Stack/QDMI). Any task type exposing
 `task_id()`/`priority()` works — the library itself has no coupling to a specific task

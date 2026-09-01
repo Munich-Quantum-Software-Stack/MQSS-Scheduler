@@ -1,7 +1,7 @@
 # qrm-sscheduler: Slurm → gRPC → Scheduler → QDMI → Aer
 
 A gRPC ingress pipeline built on this repo's [`Scheduler`](../../include/scheduler/scheduler.hpp)
-(`mqss::Scheduler<mqss::QuantumTask>`) and its lightweight `mqss::QuantumTask` type, mirroring
+(`mqss::scheduler::Scheduler<mqss::scheduler::QuantumTask>`) and its lightweight `mqss::scheduler::QuantumTask` type, mirroring
 `mqss.protocol.v1.QuantumTask`. This is where to look for how `Scheduler` fits into a real
 submission pipeline, rather than just its own unit tests
 ([`../../tests/gtest_scheduler.cpp`](../../tests/gtest_scheduler.cpp)).
@@ -12,8 +12,8 @@ hpc-container (Slurm + mqss-spank-plugin)
     -> gRPC over hpcqc-net
 qc-container
     -> qrm_sscheduler rank 0: gRPC listener, writes circuit to /tmp/mqss-grpc-circuits/,
-       builds a mqss::QuantumTask, forwards it to rank 1
-    -> rank 1: Scheduler<mqss::QuantumTask> (FirstInFirstOut) queues incoming tasks;
+       builds a mqss::scheduler::QuantumTask, forwards it to rank 1
+    -> rank 1: Scheduler<mqss::scheduler::QuantumTask> (FirstInFirstOut) queues incoming tasks;
        an embedded std::thread inside the same rank owns the QDMI session + Submitter,
        polling getNextReadyTask() and submitting whatever comes back
     -> QDMI fake device (CXX_QDMI_device_job_submit) shells out to run_circuit.py
@@ -31,13 +31,13 @@ from however tasks arrive. QRM runs that as two `std::thread`s in one process; h
 MPI ranks (rank 0 = gRPC ingress, rank 1 = `Scheduler` + an embedded submitter thread).
 
 One QDMI device, submitted to from one thread — no per-alias fan-out or `qc_alias`-based
-routing. `mqss::QuantumTask` carries `preferred_qpu`/`scheduled_qpu` (mirroring the real
+routing. `mqss::scheduler::QuantumTask` carries `preferred_qpu`/`scheduled_qpu` (mirroring the real
 protobuf schema), but nothing in this example reads them yet.
 
 ## The adapter point
 
 `Submitter::submitTask` (this repo's own, `external/submitter/`) still expects the
-older, LLVM/JIT-coupled global `QuantumTask` struct, not `Scheduler`'s `mqss::QuantumTask` —
+older, LLVM/JIT-coupled global `QuantumTask` struct, not `Scheduler`'s `mqss::scheduler::QuantumTask` —
 see [`include/scheduler/quantum_task.hpp`](../../include/scheduler/quantum_task.hpp)'s header
 comment for why these are two separate types. `qrm_sscheduler.cpp`'s `to_submitter_task()`
 converts one into the other at the one point they need to meet — right where the embedded
@@ -76,7 +76,7 @@ cat /tmp/mqss-grpc-circuits/job_0_result.txt
   with `Scheduler`, not after execution completes.
 - Per-task dispatch, not real windowed batching/backfill.
 - `quantum_job.proto`'s `CircuitRequest` has no qubit-count or priority field, so every task
-  arrives with `n_qbits=1` (the `mqss::QuantumTask` default) and `priority=0`. `Scheduler` is
+  arrives with `n_qbits=1` (the `mqss::scheduler::QuantumTask` default) and `priority=0`. `Scheduler` is
   constructed with `SchedulingPolicy::FirstInFirstOut` accordingly — with every task at the
   same priority there's nothing for `PriorityBased` (or `RoundRobin`/`Backfilling`/
   `MixNMulti`) to differentiate on yet, unlike QRM's own workflow-aio, which defaults to

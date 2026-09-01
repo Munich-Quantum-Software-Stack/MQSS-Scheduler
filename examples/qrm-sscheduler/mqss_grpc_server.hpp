@@ -20,7 +20,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // The gRPC-facing half of the pipeline: receives circuits from outside this
 // container (see slurm-spank-plugins/mqss-spank-plugin/test/
 // bell_state_offload.py's --provider mqss-grpc) and forwards them to MPI
-// rank 1 as a mqss::QuantumTask (Scheduler's lightweight task type - see
+// rank 1 as a mqss::scheduler::QuantumTask (Scheduler's lightweight task type - see
 // include/scheduler/quantum_task.hpp - not the older, LLVM/JIT-coupled
 // global QuantumTask struct the Submitter still expects). Everything past
 // that point (Scheduler -> embedded Submitter thread -> QDMI) lives in
@@ -47,12 +47,12 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // shutdown-handling comment for how it's actually used end to end.
 constexpr int kShutdownTaskId = -1;
 
-// Wire format for a mqss::QuantumTask sent over MPI between rank 0 (this
+// Wire format for a mqss::scheduler::QuantumTask sent over MPI between rank 0 (this
 // file) and rank 1 (qrm_sscheduler.cpp) — carries Scheduler's task type
 // and its snake_case field names, distinct from the older struct's wire
 // format.
-std::string serialize_quantum_task(const mqss::QuantumTask &task);
-mqss::QuantumTask deserialize_quantum_task(const std::string &s);
+std::string serialize_quantum_task(const mqss::scheduler::QuantumTask &task);
+mqss::scheduler::QuantumTask deserialize_quantum_task(const std::string &s);
 
 // A running QuantumJobService gRPC listener, plus the grpc::Service it's
 // registered with — grpc::ServerBuilder::RegisterService() only stores a

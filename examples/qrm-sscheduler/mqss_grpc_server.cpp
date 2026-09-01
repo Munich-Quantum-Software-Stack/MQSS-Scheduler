@@ -31,13 +31,13 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "quantum_job.grpc.pb.h"
 
 // --------------------------------------------------------------
-// Serialize/deserialize a mqss::QuantumTask as a string (for sending over
+// Serialize/deserialize a mqss::scheduler::QuantumTask as a string (for sending over
 // MPI). quantum_job.proto's CircuitRequest carries only one circuit per
 // task, so `circuit_files` is serialized/parsed as a single field here even
 // though the type itself supports several (matching the real
 // mqss.protocol.v1.QuantumTask's `repeated string circuit_files`).
 // --------------------------------------------------------------
-std::string serialize_quantum_task(const mqss::QuantumTask &task) {
+std::string serialize_quantum_task(const mqss::scheduler::QuantumTask &task) {
     std::ostringstream oss;
     oss << task.task_id() << ";" << task.priority() << ";" << task.n_qbits() << ";"
         << task.n_shots() << ";"
@@ -47,13 +47,13 @@ std::string serialize_quantum_task(const mqss::QuantumTask &task) {
     return oss.str();
 }
 
-mqss::QuantumTask deserialize_quantum_task(const std::string &s) {
+mqss::scheduler::QuantumTask deserialize_quantum_task(const std::string &s) {
     std::istringstream iss(s);
     std::string token;
     std::vector<std::string> parts;
     while (std::getline(iss, token, ';')) parts.push_back(token);
 
-    mqss::QuantumTask task(std::stoi(parts[0]), std::stoi(parts[1]), std::stoi(parts[2]),
+    mqss::scheduler::QuantumTask task(std::stoi(parts[0]), std::stoi(parts[1]), std::stoi(parts[2]),
                             std::stoi(parts[3]));
     if (!parts[4].empty()) {
         task.add_circuit_file(parts[4]);
@@ -100,7 +100,7 @@ public:
         // FirstInFirstOut policy (see qrm_sscheduler.cpp) makes this exact
         // FIFO-among-equals behavior explicit rather than a side effect of
         // an unused PriorityBased policy.
-        mqss::QuantumTask task(task_id, /*priority=*/0);
+        mqss::scheduler::QuantumTask task(task_id, /*priority=*/0);
         task.set_n_shots(request->shots());
         task.add_circuit_file(circuit_file);
         task.set_circuit_file_type(request->program_format());

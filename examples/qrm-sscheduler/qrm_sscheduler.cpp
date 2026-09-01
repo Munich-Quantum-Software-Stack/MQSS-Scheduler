@@ -28,8 +28,8 @@
 // here it's adapted to an MPI rank-per-role split:
 //
 //   rank 0: gRPC listener (mqss_grpc_server.cpp) — builds/serializes
-//           mqss::QuantumTask (Scheduler's task type).
-//   rank 1: Scheduler<mqss::QuantumTask> — the MPI_Recv loop below only
+//           mqss::scheduler::QuantumTask (Scheduler's task type).
+//   rank 1: Scheduler<mqss::scheduler::QuantumTask> — the MPI_Recv loop below only
 //           ever calls scheduleTask(); a separate std::thread inside this
 //           same rank owns the QDMI session + Submitter and calls
 //           getNextReadyTask() in a loop, submitting whatever comes back.
@@ -37,7 +37,7 @@
 // One QDMI device, submitted to from one thread — no per-alias fan-out to
 // further MPI ranks, since demonstrating Scheduler's own queuing/dispatch
 // behavior is the point here, not multi-device concurrency. QcAlias-based
-// routing is consequently also not wired up; mqss::QuantumTask carries
+// routing is consequently also not wired up; mqss::scheduler::QuantumTask carries
 // preferred_qpu/scheduled_qpu (mirroring the real protobuf schema) but
 // nothing here reads them yet.
 
@@ -64,8 +64,8 @@
 
 // The older, LLVM/JIT-coupled QuantumTask struct + Submitter class -
 // Submitter::submitTask still expects this type, not Scheduler's
-// mqss::QuantumTask (see scheduler/quantum_task.hpp's header comment).
-// Distinguished from mqss::QuantumTask below by namespace and include path.
+// mqss::scheduler::QuantumTask (see scheduler/quantum_task.hpp's header comment).
+// Distinguished from mqss::scheduler::QuantumTask below by namespace and include path.
 #include <submitter.hpp>
 #include <quantum_task.hpp>
 
@@ -106,12 +106,12 @@
 // yet root-caused; an actual interactive Ctrl+C may behave differently.
 // --------------------------------------------------------------
 
-// Converts Scheduler's lightweight mqss::QuantumTask into the older,
+// Converts Scheduler's lightweight mqss::scheduler::QuantumTask into the older,
 // Submitter-compatible QuantumTask struct - the one adapter point where
 // the two task types meet, kept right next to where it's used (the
 // submitter thread below) rather than in a shared header, since nothing
 // else in this pipeline needs it.
-std::shared_ptr<QuantumTask> to_submitter_task(const mqss::QuantumTask &task) {
+std::shared_ptr<QuantumTask> to_submitter_task(const mqss::scheduler::QuantumTask &task) {
     auto old_task = std::make_shared<QuantumTask>(task.task_id());
     old_task->NumberQbits = task.n_qbits();
     old_task->NumberShots = task.n_shots();
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
 
         // Propagate shutdown to rank 1 over the same MPI pipe real tasks
         // use - see the shutdown-handling comment above.
-        mqss::QuantumTask stop_task(kShutdownTaskId, /*priority=*/0);
+        mqss::scheduler::QuantumTask stop_task(kShutdownTaskId, /*priority=*/0);
         const std::string stop_msg = serialize_quantum_task(stop_task);
         {
             std::lock_guard<std::mutex> lock(mpi_mutex);
@@ -207,7 +207,7 @@ int main(int argc, char **argv) {
     // --------------------------------------------------------------
     } else if (rank == 1) {
         printf("[P%d] Initializing Scheduler\n", rank);
-        mqss::Scheduler<mqss::QuantumTask> scheduler(mqss::SchedulingPolicy::FirstInFirstOut);
+        mqss::scheduler::Scheduler<mqss::scheduler::QuantumTask> scheduler(mqss::scheduler::SchedulingPolicy::FirstInFirstOut);
 
         std::string driver_name = "qdmi_example_driver";
         std::string token = "test_token";
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
             MPI_Recv(buffer, sizeof(buffer), MPI_CHAR, 0, 0, MPI_COMM_WORLD,
                      &sched_status);
             std::string msg(buffer);
-            mqss::QuantumTask task = deserialize_quantum_task(msg);
+            mqss::scheduler::QuantumTask task = deserialize_quantum_task(msg);
 
             if (task.task_id() == kShutdownTaskId) {
                 printf("[P%d] Scheduler: shutdown signal received, "

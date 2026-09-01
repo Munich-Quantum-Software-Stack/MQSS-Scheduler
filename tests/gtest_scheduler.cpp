@@ -33,9 +33,9 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #include "scheduler/scheduler.hpp"
 #include "scheduler/quantum_task.hpp"
 
-using mqss::QuantumTask;
-using mqss::Scheduler;
-using mqss::SchedulingPolicy;
+using mqss::scheduler::QuantumTask;
+using mqss::scheduler::Scheduler;
+using mqss::scheduler::SchedulingPolicy;
 
 namespace {
 
