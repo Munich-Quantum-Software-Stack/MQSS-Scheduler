@@ -1,5 +1,4 @@
-# ------------------------------------------------------------------------------
-# Copyright 2024 - 2026 Munich Quantum Software Stack
+# Copyright (c) 2024 - 2026 Munich Quantum Software Stack
 # All rights reserved.
 #
 # Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -15,7 +14,6 @@
 # the License.
 #
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-# ------------------------------------------------------------------------------
 
 message(STATUS "Running tests from: ${CMAKE_CURRENT_SOURCE_DIR}")
 

@@ -1,5 +1,4 @@
-# ------------------------------------------------------------------------------
-# Copyright 2024 - 2026 Munich Quantum Software Stack
+# Copyright (c) 2024 - 2026 Munich Quantum Software Stack
 # All rights reserved.
 #
 # Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
@@ -15,7 +14,6 @@
 # the License.
 #
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-# ------------------------------------------------------------------------------
 
 # Puts a second, Ubuntu-based pair of containers on the same Docker network
 # (hpcqc-net) from the start, so test/submit_mqss_job_offload.sbatch can

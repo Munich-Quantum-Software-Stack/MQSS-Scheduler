@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 - 2026 Munich Quantum Software Stack
+ * Copyright (c) 2024 - 2026 Munich Quantum Software Stack
  * All rights reserved.
  *
  * Licensed under the Apache License v2.0 with LLVM Exceptions (the "License");
