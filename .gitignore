@@ -58,6 +58,7 @@ external/installed/
 external/qdmi-device-variants/
 
 # ------------------------------------------------------------------------------
-# Deployment at LRZ
+# slurm-spank-plugins/ - not yet ready to fold into this repo's tracked
+# history.
 # ------------------------------------------------------------------------------
-slurm-spank-plugins/lrz-deployment/
+slurm-spank-plugins/
