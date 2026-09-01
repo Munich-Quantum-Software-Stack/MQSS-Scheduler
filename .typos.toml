@@ -1,0 +1,8 @@
+[files]
+extend-exclude = ["external/"]
+
+[default.extend-words]
+# Qiskit Aer, the simulator backend referenced by the example device's
+# real-execution path (see utils/build-setup-env.sh, examples/export_env_vars.sh,
+# slurm-spank-plugins/mqss-spank-plugin/test/*.py) - not a typo of "are".
+aer = "aer"
