@@ -25,3 +25,43 @@ jobs:
       - uses: pre-commit/action@v4.3.0
         with:
           extra_args: --all-files
+
+  build-and-test:
+    name: Build & Test (dev-container)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Same image developers use locally (dev-container/qc-dockerfile/Dockerfile) -
+      # one toolchain definition instead of a second, separately-drifting apt
+      # install list just for CI. GHA layer caching keeps this fast on repeat
+      # runs; only the apt-get layer needs rebuilding when the Dockerfile
+      # itself changes.
+      - name: Build dev-container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: dev-container/qc-dockerfile/Dockerfile
+          tags: scheduler-ci:latest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Repo checkout is bind-mounted, not baked into the image, so this
+      # always builds against the exact commit under test - only the
+      # toolchain itself comes from the (cached) image. Runs as root: this
+      # is a throwaway CI container, and the image's default `admin` user
+      # doesn't own the bind-mounted checkout directory.
+      - name: Configure, build, and test
+        run: |
+          docker run --rm --user root \
+            -v "${{ github.workspace }}:/workspace" -w /workspace \
+            scheduler-ci:latest \
+            bash -c "
+              set -eu
+              cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_SCHEDULER_TESTS=ON
+              cmake --build build -j\$(nproc)
+              ctest --test-dir build --output-on-failure
+            "
