@@ -1,6 +1,0 @@
-[mqss_spank_plugin] hook=slurm_spank_task_init_privileged
-[mqss_spank_plugin] hook=slurm_spank_task_init
-[mqss_spank_plugin] job=10 partition=mqss base_url=set auth=unset tokens_file_ok=n/a license=mqss_iqm_eqe1:ok
-error: Failed to spawn: `/workspace/bell_state_offload.py`
-  Caused by: No such file or directory (os error 2)
-[mqss_spank_plugin] hook=slurm_spank_exit
