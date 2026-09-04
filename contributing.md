@@ -6,6 +6,7 @@ changes are all appreciated.
 ## Reporting Issues
 
 Please [open a GitHub issue](../../issues) and include:
+
 - A short description of the problem or feature request.
 - Steps to reproduce (for bugs), or a brief rationale (for features).
 - Relevant environment details (OS, compiler version, CMake version).

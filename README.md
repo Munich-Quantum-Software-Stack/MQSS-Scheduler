@@ -95,7 +95,7 @@ example/submission toolchain (`examples/qrm-sscheduler/`) alongside the library.
 
 ## Building
 
-To buld `Scheduler` itself, `CMakeLists.txt` currently wires up the example/submission toolchain alongside.
+`CMakeLists.txt` currently wires up the example/submission toolchain alongside it.
 
 ### 1. Configure and build the scheduler
 
