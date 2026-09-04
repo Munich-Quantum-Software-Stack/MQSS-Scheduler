@@ -1,0 +1,3 @@
+## Utilities and Support Scripts
+
+This folder contains helper scripts and utilities used across the project. For example, Python scripts to create sample quantum circuits for submitted jobs, plot or visualization scripts, ...

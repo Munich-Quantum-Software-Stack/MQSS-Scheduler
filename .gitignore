@@ -1,10 +1,64 @@
+# ------------------------------------------------------------------------------
+# Unnecessary files and folders to ignore
+# ------------------------------------------------------------------------------
+.DS_Store
 .cache
-build
 .vscode
 .pytest_cache
 .mypy_cache
 .ruff_cache
+*.egg-info
+*.drawio
 __pycache__
 
-predictor/data/*
-*.egg-info
+# ------------------------------------------------------------------------------
+# CMake build and install outputs
+# ------------------------------------------------------------------------------
+build/
+install/
+**/build/
+**/install/
+
+# CMake generated files that don't belong in source control
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CTestTestfile.cmake
+Testing/
+Makefile
+compile_commands.json
+
+# ...except hand-written example Makefiles (single-mpi-qcscheduler/,
+# grpc-qcscheduler/, etc.) — these aren't CMake output, they're source.
+!examples/**/Makefile
+
+# ------------------------------------------------------------------------------
+# Compiled artifacts
+# ------------------------------------------------------------------------------
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+
+# ------------------------------------------------------------------------------
+# External: externally cloned sources (via clone.sh) and installed binaries
+# are local only. QDMI-Device-Example is NOT one of these — per root
+# README.md's Dependencies table it's "Bundled" (committed source, not
+# cloned), so it must stay out of this list.
+# ------------------------------------------------------------------------------
+external/QDMI/
+external/QInfo/
+external/submitter/
+external/installed/
+# Generated per-alias QDMI device copies (external/generate_qdmi_device_
+# variants.sh) - regenerated fresh on every build, deliberately not committed
+# since they're text-substituted copies of cxx_device.cpp, which itself
+# carries a local, uncommitted patch on top of upstream QDMI.
+external/qdmi-device-variants/
+
+# ------------------------------------------------------------------------------
+# slurm-spank-plugins/ - not yet ready to fold into this repo's tracked
+# history.
+# ------------------------------------------------------------------------------
+slurm-spank-plugins/
