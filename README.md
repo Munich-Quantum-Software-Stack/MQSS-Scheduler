@@ -36,8 +36,7 @@ SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
   </a>
 </p>
 
-A dependency-free, header-driven C++20 task scheduler (`mqss::scheduler::Scheduler<TaskType>`) for
-dispatching quantum circuits to quantum hardware devices. `TaskType` is constrained structurally by the Schedulable concept — any type exposing `task_id()`/`priority()` satisfies it; plug in your own task struct and the scheduler works unmodified.
+A dependency-free, header-driven C++20 task scheduler for dispatching quantum circuits to quantum hardware devices.
 
 ## FAQ
 
@@ -75,8 +74,8 @@ the same license.
 ![Scheduler Architecture](docs/figures/mqss-scheduler-models.webp)
 
 `Scheduler<TaskType>` is constrained by the `Schedulable` concept (`task_id()`, `priority()`). It queues tasks
-(`scheduleTask`/`scheduleTasks`) and dispatches them (`getNextReadyTask`) according to
-a `SchedulingPolicy` fixed at construction — see [Scheduling Policies](#scheduling-policies).
+(`scheduleTask`/`scheduleTasks`) and dispatches them according to
+a `SchedulingPolicy` fixed at construction.
 
 `include/scheduler/quantum_task.hpp`'s `mqss::scheduler::QuantumTask` is a lightweight example task
 type (mirroring the MQSS protocol's `QuantumTask` message) used to exercise the
