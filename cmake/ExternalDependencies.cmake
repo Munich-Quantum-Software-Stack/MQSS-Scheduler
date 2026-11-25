@@ -31,10 +31,9 @@ FetchContent_Declare(
   FIND_PACKAGE_ARGS NAMES GTest)
 list(APPEND FETCH_DEPENDENT_PACKAGES googletest)
 
-# GoogleTest doesn't need to be a shared library just because this project
-# defaults to one (BUILD_SHARED_LIBS ON, set in the CMakeLists.txt file for the
-# Scheduler library itself, and inherited by subdirectory added afterward
-# including this FetchContent population)
+# GoogleTest doesn't need to be a shared library just because a user or parent
+# project sets BUILD_SHARED_LIBS ON, which this FetchContent population would
+# inherit.
 #
 # gtest_main is only ever linked into the private tests/gtest_scheduler
 # executable, never installed or used as a runtime dependency elsewhere. We can
