@@ -114,6 +114,21 @@ bash build.sh    # compile and install the libraries
 
 See [Getting Started](docs/getting-started.md) for the full step-by-step guide.
 
+## Using the Scheduler in Your Project
+
+Pin a release tag with CMake's `FetchContent` and link the `mqss-scheduler::mqss-scheduler` target:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  mqss-scheduler
+  GIT_REPOSITORY https://github.com/Munich-Quantum-Software-Stack/MQSS-Scheduler.git
+  GIT_TAG v0.1.0)
+FetchContent_MakeAvailable(mqss-scheduler)
+
+target_link_libraries(my-target PRIVATE mqss-scheduler::mqss-scheduler)
+```
+
 ## Running Tests
 
 ```bash

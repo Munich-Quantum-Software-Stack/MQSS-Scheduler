@@ -19,16 +19,8 @@
 cmake_minimum_required(VERSION 3.19...4.0)
 project(
   scheduler
-  VERSION 1.1.0
+  VERSION 0.1.0
   LANGUAGES CXX)
-
-# Add C++ language support and enable building shared libs
-enable_language(CXX)
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "-g -DDEBUG")
-set(BUILD_SHARED_LIBS ON)
 
 # Tests and install rules default set OFF when built standalone when pulled in
 # by a parent project (add_subdirectory()/FetchContent). In case building as
@@ -53,7 +45,12 @@ find_package(Threads REQUIRED)
 file(GLOB SCHEDULER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
      "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
 add_library(scheduler SHARED ${SCHEDULER_SRC})
-set_target_properties(scheduler PROPERTIES LINKER_LANGUAGE CXX)
+add_library(mqss-scheduler::mqss-scheduler ALIAS scheduler)
+# No VERSION/SOVERSION: either one changes the SONAME, which breaks consumers
+# that copy libscheduler.so as a single file.
+set_target_properties(scheduler PROPERTIES LINKER_LANGUAGE CXX CXX_EXTENSIONS
+                                                               OFF)
+target_compile_features(scheduler PUBLIC cxx_std_20)
 target_include_directories(
   scheduler PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
                    $<INSTALL_INTERFACE:include>)
